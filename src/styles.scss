@@ -1,0 +1,131 @@
+/* You can add global styles to this file, and also import other style files */
+
+// Global icon font
+@import "./assets/fonts/feather/style.css";
+
+// // 3rd party plugins
+@import "@mdi/font/css/materialdesignicons.min.css";
+@import "perfect-scrollbar/css/perfect-scrollbar.css";
+@import "highlight.js/styles/googlecode.css";
+@import "ngx-owl-carousel-o/lib/styles/prebuilt-themes/owl.carousel.min.css";
+@import "ngx-owl-carousel-o/lib/styles/prebuilt-themes/owl.theme.default.min.css";
+@import "animate.css/animate.min.css";
+@import "@ng-select/ng-select/themes/default.theme.css";
+@import "metismenujs/scss/metismenujs";
+@import "dropzone/dist/min/dropzone.min.css";
+@import "quill/dist/quill.snow.css";
+@import "angular-archwizard/styles/archwizard.css";
+@import "simple-datatables/dist/style.css";
+@import "@swimlane/ngx-datatable/index.css";
+@import "@swimlane/ngx-datatable/themes/bootstrap.css";
+@import "@swimlane/ngx-datatable/assets/icons.css";
+
+// NobleUI styles for LTR
+@import "./assets/scss/style";
+
+// NobleUI styles For RTL
+// @import "./assets/scss/style.rtl.css";
+
+.container {
+  max-width: 1400px; /* Puedes ajustar el valor del ancho máximo según tus necesidades */
+  margin: 0 auto; /* Centrar el contenedor */
+  padding: 0 20px; /* Opcional: agregar relleno a los lados para el contenido */
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--bs-link-color);
+  text-shadow: 0 0 0.25px currentcolor;
+}
+
+.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+  border: 1px solid #d9d9d9;
+}
+
+.form-control {
+  border: 1px solid #d9d9d9;
+}
+:root {
+  --bs-border-color: #d9d9d9;
+}
+
+.ng-dropdown-panel.ng-select-bottom {
+  border-top-color: #d9d9d9;
+}
+
+.ng-dropdown-panel {
+  border-color: #d9d9d9;
+  background-color: #fff;
+}
+
+.ant-card-bordered {
+  border: 1px solid #d9d9d9;
+}
+
+.input-group-text {
+  border: 1px solid #d9d9d9;
+}
+
+.dropdown-menu {
+  //box-shadow: 8px 8px 8px 1px rgba(183, 192, 206, 0.2);
+  box-shadow: 8px 8px 8px 1px rgba(88, 118, 167, 0.2);
+}
+
+.ant-table.ant-table-bordered > .ant-table-container {
+  //border-left: 1px solid #d9d9d9;
+  border-top: 1px solid #d9d9d9;
+  //border-right: 1px solid #d9d9d9;
+  //border-bottom: 1px solid #d9d9d9;
+}
+
+.ant-table tfoot > tr > td,
+.ant-table tfoot > tr > th,
+.ant-table-tbody > tr > td,
+.ant-table-thead > tr > th {
+  position: relative;
+  padding: 10px;
+  overflow-wrap: break-word;
+}
+
+.popover {
+  --bs-popover-border-color: #d0d0d0 !important;
+}
+
+$modal-header-border-color: red;
+
+.modal-header {
+  background: var(--bs-gray-400);
+}
+
+.ant-table table {
+  border-top: 1px solid #d9d9d9;
+  border-right: 1px solid #d9d9d9;
+  border-left: 1px solid #d9d9d9;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.ant-tabs-bottom > .ant-tabs-nav,
+.ant-tabs-bottom > div > .ant-tabs-nav,
+.ant-tabs-top > .ant-tabs-nav,
+.ant-tabs-top > div > .ant-tabs-nav {
+  margin: 0 0 0px;
+}
+
+.read-only {
+  pointer-events: none;
+  background-color: #f9f9f9;
+}
+
+// styles.scss o tu archivo de estilos
+.cdk-overlay-container {
+  z-index: 1060 !important; // Debe ser mayor que el z-index del modal de NgbModal
+}
+
+// Para el modal de NgBootstrap
+.modal {
+  z-index: 1059;
+}
+
+// Para el date picker de ng-zorro
+.ant-picker-dropdown {
+  z-index: 3060 !important;
+}

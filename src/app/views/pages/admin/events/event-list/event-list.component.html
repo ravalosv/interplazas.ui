@@ -1,0 +1,123 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a routerLink=".">Mis eventos</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Listado</li>
+  </ol>
+</nav>
+<nz-card>
+  <div class="row" style="vertical-align: middle">
+    <div class="d-flex flex-row bd-highlight mb-3">
+      <div class="p-2 bd-highlight">
+        <label for="exampleInputPassword1" class="form-label me-2 mt-2"
+          ><strong>Filtrar: </strong></label
+        >
+      </div>
+      <div class="p-2 bd-highlight">
+        <input
+          type="text"
+          class="form-control"
+          autocomplete="off"
+          placeholder="Nombre del evento"
+          [(ngModel)]="searchInput"
+          (ngModelChange)="search()"
+        />
+      </div>
+      <div class="p-2 bd-highlight">
+        <label for="exampleInputPassword1" class="form-label me-2 mt-2"
+          ><strong>Status: </strong></label
+        >
+      </div>
+      <div class="p-2 bd-highlight">
+        <ng-select
+          [items]="eventStatus"
+          [searchable]="false"
+          [clearable]="false"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="searchByStatus()"
+          style="width: 250px"
+        >
+        </ng-select>
+      </div>
+
+      <div class="p-2 bd-highlight">
+        <button
+          class="btn btn-primary me-2 ml-auto"
+          [routerLink]="['../new']"
+          *ngIf="currentUser.user.role == 'admin'"
+        >
+          <i class="feather icon-file-plus pe-2"></i>
+          Nuevo evento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <nz-table #ordersListTable [nzData]="displayData">
+    <thead>
+      <tr>
+        <th *ngFor="let column of orderColumn" [nzSortFn]="column.compare">
+          {{ column.title }}
+        </th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of ordersListTable.data; let i = index">
+        <td>{{ item.nombre }}</td>
+        <td>{{ item.fechaInicio | date : "dd-MMM-yyyy" }}</td>
+        <td>{{ item.fechaFin | date : "dd-MMM-yyyy" }}</td>
+        <td>{{ item.fechaLimite | date : "dd-MMM-yyyy" }}</td>
+        <td style="text-align: center">
+          <span
+            [ngClass]="{
+              badge: true,
+              'rounded-pill': true,
+              'mt-1': true,
+              'bg-warning': item?.eventoStatus?.id == 1,
+              'bg-success':
+                item?.eventoStatus?.id == 2 || item?.eventoStatus?.id == 4,
+              'bg-danger': item?.eventoStatus?.id == 3,
+              'bg-secondary':
+                item?.eventoStatus?.id == 5 || item?.eventoStatus?.id == 6
+            }"
+            >{{ item.eventoStatus.nombre }}</span
+          >
+        </td>
+
+        <td class="text-md-right">
+          <span
+            *ngIf="item.eventoStatus.id != 1"
+            class="badge bg-primary me-2"
+            style="cursor: pointer"
+            [routerLink]="[
+              '../edit',
+              encryptionService.encrypt(item.id.toString())
+            ]"
+            >Editar</span
+          >
+          <span
+            *ngIf="currentUser.user.role == 'admin'"
+            class="badge bg-warning text-dark me-2"
+            style="cursor: pointer"
+            [routerLink]="[
+              '/admin/events/configure',
+              encryptionService.encrypt(item.id.toString())
+            ]"
+            >Configurar</span
+          >
+
+          <span
+            *ngIf="currentUser.user.role == 'admin'"
+            class="badge bg-info text-dark"
+            style="cursor: pointer"
+            [routerLink]="[
+              '/admin/events/cuenta',
+              encryptionService.encrypt(item.id.toString())
+            ]"
+            >Cuenta</span
+          >
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-card>

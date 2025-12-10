@@ -1,0 +1,106 @@
+<ng-template #popContent>
+  <b>{{ mesa.tipoMesa.descripcion }}</b
+  ><br />
+  Máximo: {{ mesa.maximo }} personas.
+  <br />
+  Actualmente:
+  {{ mesa.invitados.length }} personas.
+</ng-template>
+
+<div class="row" style="margin-bottom: 8px">
+  <div class="col-2">
+    <div
+      placement="top"
+      [popoverTitle]="mesa.tipoMesa.tipo"
+      [ngbPopover]="popContent"
+      [openDelay]="1000"
+      [closeDelay]="2000"
+      placement="start"
+      triggers="mouseenter:mouseleave"
+      [ngClass]="{
+        'horizontal-box-enabled':
+          mesa.invitados.length < mesa.maximo && !isDragging,
+        'horizontal-box-disabled': mesa.invitados.length >= mesa.maximo,
+        'horizontal-box-disabled-indicator':
+          mesa.invitados.length < mesa.maximo && isDragging,
+        'cursor-arrow': true
+      }"
+      style="height: 100%"
+      [popoverTitle]="mesa.tipoMesa.tipo"
+      [ngbPopover]="popContent"
+      [openDelay]="1000"
+      [closeDelay]="2000"
+    >
+      <div class="row fw-bolder">
+        {{ mesa.tipoMesa.tipo }}
+      </div>
+
+      <div class="row">
+        Máximo: {{ mesa.maximo }}
+        <br />
+        Actualmente:
+        {{ mesa.invitados.length }}
+      </div>
+    </div>
+  </div>
+  <div class="col-10">
+    <div
+      [id]="habId"
+      cdkDropList
+      [cdkDropListData]="listaInvitados"
+      cdkDropListSortingDisabled
+      [ngClass]="{
+        'horizontal-list': mesa.invitados.length >= mesa.maximo || !isDragging,
+        'horizontal-list-indicator':
+          mesa.invitados.length < mesa.maximo && isDragging,
+        'cursor-block': mesa.invitados.length >= mesa.maximo && isDragging
+      }"
+      cdkDropListOrientation="horizontal"
+      (cdkDropListDropped)="drop($event)"
+      (cdkDropListEntered)="dragEntered($event)"
+      (cdkDropListExited)="dragExited($event)"
+      [cdkDropListEnterPredicate]="validateMaxCapacity"
+    >
+      <div
+        *ngFor="let item of listaInvitados"
+        class="horizontal-box"
+        [class.cursor-move]="!isDragging"
+        cdkDrag
+        [appConditionalDrag]="!readOnlyMode"
+        [cdkDragData]="item"
+        (click)="onClick(item)"
+      >
+        {{ item.nombre }}
+      </div>
+    </div>
+    <div>
+      <!--       <span
+        class="badge"
+        [class.bg-success]="mesa.invitados.length < mesa.maximo"
+        [class.bg-secondary]="mesa.invitados.length >= mesa.maximo"
+        >{{ mesa.invitados.length }} / {{ mesa.maximo }}</span
+      > -->
+
+      <span
+        *ngIf="mesa.invitados.length < mesa.maximo"
+        class="badge"
+        [class.bg-success]="mesa.invitados.length < mesa.maximo"
+        [class.bg-secondary]="mesa.invitados.length >= mesa.maximo"
+        >{{ mesa.maximo - mesa.invitados.length }} espacios disponibles</span
+      >
+
+      <span
+        *ngIf="mesa.invitados.length == mesa.maximo"
+        class="badge"
+        [class.bg-secondary]="mesa.invitados.length == mesa.maximo"
+        >Cupo máximo alcanzado</span
+      >
+      <span
+        *ngIf="mesa.invitados.length > mesa.maximo"
+        class="badge"
+        [class.bg-warning]="mesa.invitados.length > mesa.maximo"
+        >Mesa con sobrecupo</span
+      >
+    </div>
+  </div>
+</div>

@@ -1,0 +1,21 @@
+.navbar .navbar-content .navbar-nav .nav-item .nav-link .indicator .circle {
+  background-color: red;
+}
+
+.navbar
+  .navbar-content
+  .navbar-nav
+  .nav-item
+  .nav-link
+  .indicator
+  .circle::before {
+  background-color: red;
+}
+
+.negritas {
+  font-weight: bold;
+}
+
+.mouse_pointer {
+  cursor: pointer;
+}

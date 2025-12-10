@@ -1,0 +1,95 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="../../list">Mis eventos</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Editar</li>
+  </ol>
+</nav>
+<nz-card>
+  <div class="row">
+    <div class="d-flex flex-row bd-highlight mb-3">
+      <div class="p-2 bd-highlight">
+        <label class="form-label"><strong>Nombre del evento</strong></label>
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            id="exampleInputUsername1"
+            autocomplete="off"
+            placeholder="Nombre del evento"
+            [ngModel]="evento?.nombre"
+            [ngModelOptions]="{ standalone: true }"
+            readonly
+          />
+        </div>
+      </div>
+      <div class="p-2 bd-highlight">
+        <label class="form-label"><strong>Fecha Inicio</strong></label>
+        <input
+          class="form-control"
+          placeholder="yyyy-mm-dd"
+          name="dp"
+          [ngModel]="evento?.fechaInicio | date : 'dd-MMM-yyyy'"
+          [ngModelOptions]="{ standalone: true }"
+          readonly
+        />
+      </div>
+      <div class="p-2 bd-highlight">
+        <label class="form-label"><strong>Fecha Fin</strong></label>
+        <input
+          class="form-control"
+          placeholder="yyyy-mm-dd"
+          [ngModel]="evento?.fechaFin | date : 'dd-MMM-yyyy'"
+          [ngModelOptions]="{ standalone: true }"
+          readonly
+        />
+      </div>
+      <div class="p-2 bd-highlight">
+        <label class="form-label"
+          ><strong>Fecha límite para captura</strong></label
+        >
+        <input
+          class="form-control"
+          placeholder="yyyy-mm-dd"
+          [ngModel]="evento?.fechaLimite | date : 'dd-MMM-yyyy'"
+          [ngModelOptions]="{ standalone: true }"
+          readonly
+        />
+      </div>
+      <div class="p-2 bd-highlight">
+        <label class="form-label" style="color: white"
+          ><strong>Status</strong></label
+        >
+
+        <h4>
+          <span
+            [ngClass]="{
+              badge: true,
+              'mt-1': true,
+              'bg-success':
+                evento?.eventoStatus?.id == 2 || evento?.eventoStatus?.id == 4,
+              'bg-danger': evento?.eventoStatus?.id == 3,
+              'bg-secondary': evento?.eventoStatus?.id == 5
+            }"
+            >{{ evento?.eventoStatus?.nombre }}</span
+          >
+        </h4>
+      </div>
+      <div class="p-2 bd-highlight flex-grow-1"></div>
+    </div>
+  </div>
+
+  <nz-tabset nzType="card">
+    <nz-tab nzTitle="Habitaciones" *ngIf="evento?.incluyeHabitaciones">
+      <nz-card>
+        <app-event-edit-habitaciones></app-event-edit-habitaciones>
+      </nz-card>
+    </nz-tab>
+    <nz-tab nzTitle="Mesas" *ngIf="evento?.incluyeMesas">
+      <nz-card>
+        <app-event-edit-mesas></app-event-edit-mesas>
+      </nz-card>
+    </nz-tab>
+  </nz-tabset>
+</nz-card>

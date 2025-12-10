@@ -1,0 +1,343 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/admin/config/usuarios">Usuarios</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">
+      {{ currentBreadcrumb }}
+    </li>
+  </ol>
+</nav>
+
+<nz-card>
+  <form class="forms-sample" (ngSubmit)="onSubmit()" [formGroup]="form">
+    <div class="row">
+      <div class="col-lg-5 col-md-6 col-sm-6">
+        <!-- Nombre del usuario -->
+        <div class="mb-3">
+          <label class="form-label"><strong>Nombre del usuario</strong></label>
+
+          <div class="mb-3">
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                autocomplete="off"
+                placeholder="Nombre del usuario"
+                formControlName="name"
+              />
+            </div>
+
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('name')?.touched && form.get('name')?.errors?.required
+              "
+            >
+              El nombre del usuario es requerido
+            </div>
+          </div>
+        </div>
+        <!-- Email -->
+        <div class="mb-3">
+          <label class="form-label"><strong>Email</strong></label>
+
+          <div class="mb-3">
+            <div class="input-group">
+              <input
+                type="text"
+                class="form-control"
+                autocomplete="off"
+                placeholder="Email"
+                formControlName="email"
+              />
+            </div>
+
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('email')?.touched &&
+                form.get('email')?.errors?.required
+              "
+            >
+              El email es requerido
+            </div>
+
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('email')?.touched && form.get('email')?.errors?.email
+              "
+            >
+              El formato del email no es válido
+            </div>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="mb-3">
+          <label class="form-label"><strong>Password</strong></label>
+
+          <div class="mb-3">
+            <div class="input-group">
+              <input
+                type="password"
+                class="form-control"
+                autocomplete="off"
+                placeholder="Password"
+                formControlName="password"
+              />
+            </div>
+
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('password')?.touched &&
+                form.get('password')?.errors?.required
+              "
+            >
+              El password es requerido
+            </div>
+          </div>
+        </div>
+        <!-- Confirmar Password -->
+        <div class="mb-3">
+          <label class="form-label"><strong>Confirmar password</strong></label>
+
+          <div class="mb-3">
+            <div class="input-group">
+              <input
+                type="password"
+                class="form-control"
+                autocomplete="off"
+                placeholder="Confirmar password"
+                formControlName="confirmPassword"
+              />
+            </div>
+
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('confirmPassword')?.touched &&
+                form.get('confirmPassword')?.errors?.required
+              "
+            >
+              Favor de confirmar el password
+            </div>
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('confirmPassword')?.touched &&
+                !form.get('confirmPassword')?.errors?.required &&
+                form.errors?.passwordMismatch
+              "
+            >
+              Favor de verificar, los passwords no coinciden
+            </div>
+          </div>
+        </div>
+
+        <!-- Role -->
+        <div class="mb-3">
+          <label for="exampleInputEmail1" class="form-label"
+            ><strong>Role</strong></label
+          >
+          <div class="mb-3">
+            <ng-select
+              [items]="roles"
+              [searchable]="false"
+              [clearable]="false"
+              formControlName="role"
+              bindValue="id"
+              bindLabel="nombre"
+            >
+            </ng-select>
+
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('role')?.touched && form.get('role')?.errors?.required
+              "
+            >
+              Seleccione un role
+            </div>
+          </div>
+        </div>
+
+        <!-- Grupos -->
+        <div class="mb-3" *ngIf="mostrarGrupos">
+          <label for="exampleInputEmail1" class="form-label"
+            ><strong>Grupo</strong></label
+          >
+          <div class="mb-3">
+            <ng-select
+              [items]="grupos"
+              [searchable]="false"
+              formControlName="grupoId"
+              bindValue="id"
+              bindLabel="nombre"
+            >
+            </ng-select>
+
+            <div
+              class="alert alert-danger p-2"
+              *ngIf="
+                form.get('grupoId')?.touched &&
+                form.get('grupoId')?.errors?.required
+              "
+            >
+              Seleccione un role
+            </div>
+          </div>
+        </div>
+
+        <div class="mb-3" *ngIf="mostrarUnidades">
+          <div class="row">
+            <label class="form-label"
+              ><strong
+                >Seleccione las unidades de negocio que este usuario
+                administrará</strong
+              ></label
+            >
+          </div>
+
+          <div class="row">
+            <nz-tree-select
+              style="width: 100%"
+              class="tree-style"
+              [nzNodes]="nodesHabitaciones"
+              formControlName="unidadesNegocio"
+              nzShowSearch
+              nzCheckable
+              nzAllowClear
+            ></nz-tree-select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="floating-buttons mt-3">
+      <button
+        *ngIf="usuarioId != null && isDisabled"
+        type="button"
+        class="btn btn-info me-2"
+        (click)="onActivar()"
+      >
+        Activar usuario
+      </button>
+      <button
+        *ngIf="usuarioId != null && !isDisabled"
+        type="button"
+        class="btn btn-danger me-2"
+        (click)="onDesactivar()"
+      >
+        Desactivar usuario
+      </button>
+      <button
+        *ngIf="usuarioId != null"
+        type="button"
+        class="btn btn-success me-2"
+        (click)="openModal(basicModal)"
+      >
+        Cambiar contraseña
+      </button>
+
+      <button
+        type="submit"
+        class="btn btn-primary me-2"
+        [disabled]="form.invalid"
+      >
+        Guardar cambios
+      </button>
+    </div>
+  </form>
+</nz-card>
+
+<!-- Modal -->
+<ng-template #basicModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" id="exampleModalLabel">Cambiar contraseña</h5>
+    <button
+      type="button"
+      class="btn-close"
+      (click)="modal.close('by: close icon')"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="modal-body">
+    <form
+      class="forms-sample"
+      (ngSubmit)="onCambiarContrasena()"
+      [formGroup]="formPassword"
+    >
+      <!-- Password -->
+      <div class="mb-3">
+        <label class="form-label"><strong>Password</strong></label>
+        <div class="mb-3">
+          <div class="input-group">
+            <input
+              type="password"
+              class="form-control"
+              autocomplete="off"
+              placeholder="Introduce nueva contraseña"
+              formControlName="password"
+            />
+          </div>
+          <div
+            class="alert alert-danger p-2"
+            *ngIf="
+              formPassword.get('password')?.touched &&
+              formPassword.get('password')?.errors?.required
+            "
+          >
+            El password es requerido
+          </div>
+        </div>
+      </div>
+      <!-- Confirmar Password -->
+      <div class="mb-3">
+        <label class="form-label"><strong>Confirmar password</strong></label>
+        <div class="mb-3">
+          <div class="input-group">
+            <input
+              type="password"
+              class="form-control"
+              autocomplete="off"
+              placeholder="Confirmar password"
+              formControlName="confirmPassword"
+            />
+          </div>
+          <div
+            class="alert alert-danger p-2"
+            *ngIf="
+              formPassword.get('confirmPassword')?.touched &&
+              formPassword.get('confirmPassword')?.errors?.required
+            "
+          >
+            Favor de confirmar el password
+          </div>
+          <div
+            class="alert alert-danger p-2"
+            *ngIf="
+              formPassword.get('confirmPassword')?.touched &&
+              !formPassword.get('confirmPassword')?.errors?.required &&
+              formPassword.errors?.passwordMismatch
+            "
+          >
+            Favor de verificar, los passwords no coinciden
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button
+      type="button"
+      class="btn btn-primary me-2"
+      [disabled]="formPassword.invalid"
+      (click)="onCambiarContrasena()"
+    >
+      Cambiar contraseña
+    </button>
+  </div>
+</ng-template>

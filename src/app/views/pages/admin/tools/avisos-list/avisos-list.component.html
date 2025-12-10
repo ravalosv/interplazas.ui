@@ -1,0 +1,79 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item active" aria-current="page">Herramientas</li>
+    <li class="breadcrumb-item">
+      <a routerLink="/admin/herramientas/avisos">Avisos</a>
+    </li>
+  </ol>
+</nav>
+
+<nz-card>
+  <div class="row" style="vertical-align: middle">
+    <div class="d-flex justify-content-end bd-highlight mb-3">
+      <div class="bd-highlight me-2">
+        <button
+          class="btn btn-primary"
+          [routerLink]="[
+            '/admin/herramientas/avisos',
+            encryptionService.encrypt('-1')
+          ]"
+        >
+          <i class="feather icon-file-plus pe-2"></i>
+          Nuevo Aviso
+        </button>
+      </div>
+
+      <div class="bd-highlight">
+        <ng-select
+          [items]="eventStatus"
+          [searchable]="false"
+          [clearable]="false"
+          [(ngModel)]="filterStatus"
+          (ngModelChange)="searchByStatus($event)"
+          style="width: 250px"
+        >
+        </ng-select>
+      </div>
+    </div>
+  </div>
+
+  <nz-table #ordersListTable [nzData]="displayData">
+    <thead>
+      <tr>
+        <th *ngFor="let column of orderColumn" [nzSortFn]="column.compare">
+          {{ column.title }}
+        </th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of ordersListTable.data; let i = index">
+        <td>{{ item.titulo }}</td>
+        <td>{{ item.descripcion }}</td>
+        <td>{{ item.activo ? "Activo" : "Inactivo" }}</td>
+
+        <td class="text-md-right">
+          <button
+            class="pb-4 me-2"
+            nz-button
+            nzType="default"
+            nzShape="circle"
+            nzSize="large"
+            nz-tooltip
+            nzTooltipTitle="Editar"
+          >
+            <i
+              nz-icon
+              nzType="edit"
+              theme="outline"
+              [routerLink]="[
+                '/admin/herramientas/avisos/',
+                encryptionService.encrypt(item.id.toString())
+              ]"
+            ></i>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-card>

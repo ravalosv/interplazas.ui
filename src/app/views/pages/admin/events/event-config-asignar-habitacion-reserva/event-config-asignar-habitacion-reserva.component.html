@@ -1,0 +1,116 @@
+<form action="" [formGroup]="form">
+  <div class="modal-body">
+    <div class="row ms-1 me-1 mb-2">
+      <label class="form-label"><strong>Tipo de Habitación</strong></label>
+      <input
+        type="text"
+        class="form-control read-only"
+        formControlName="tipoHabitacion"
+        readonly="true"
+      />
+    </div>
+
+    <div class="row ms-1 me-1 mb-2">
+      <label class="form-label"><strong>Cantidad disponible</strong></label>
+      <input
+        type="text"
+        class="form-control read-only"
+        formControlName="cantidad"
+        readonly="true"
+      />
+    </div>
+
+    <div class="row ms-1 me-1 mb-2">
+      <label class="form-label"><strong>Grupo</strong></label>
+      <ng-select
+        [items]="grupos"
+        bindValue="id"
+        bindLabel="nombre"
+        [searchable]="false"
+        [clearable]="false"
+        class="margin-zero"
+        (change)="onFiltroGrupoChange($event)"
+        formControlName="grupoId"
+      >
+      </ng-select>
+      <div
+        class="alert alert-danger p-2"
+        *ngIf="
+          form.get('grupoId')?.touched && form.get('grupoId')?.errors?.required
+        "
+      >
+        El grupo es requerido
+      </div>
+    </div>
+    <div class="row ms-1 me-1 mb-2">
+      <label class="form-label"><strong>Unidad de Negocio</strong></label>
+      <ng-select
+        [items]="filtroUN"
+        bindValue="id"
+        bindLabel="nombre"
+        [clearable]="false"
+        class="margin-zero"
+        [searchable]="false"
+        (change)="onFiltroUNChanged($event)"
+        formControlName="unidadNegocioId"
+      >
+      </ng-select>
+
+      <div
+        class="alert alert-danger p-2"
+        *ngIf="
+          form.get('unidadNegocioId')?.touched &&
+          form.get('unidadNegocioId')?.errors?.required
+        "
+      >
+        La unidad de negocio es requerida
+      </div>
+    </div>
+
+    <div class="row ms-1 me-1 mb-2">
+      <label class="form-label"><strong>Cantidad</strong></label>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Cantidad"
+        formControlName="cantidadAsignar"
+      />
+      <div
+        class="alert alert-danger p-2"
+        *ngIf="
+          form.get('cantidadAsignar')?.touched &&
+          (form.get('cantidadAsignar')?.errors?.required ||
+            form.get('cantidadAsignar')?.errors?.pattern != null)
+        "
+      >
+        La cantidad es requerida
+      </div>
+      <div
+        class="alert alert-danger p-2"
+        *ngIf="
+          form.get('cantidadAsignar')?.touched &&
+          (form.get('cantidadAsignar')?.errors?.min ||
+            form.get('cantidadAsignar')?.errors?.pattern != null)
+        "
+      >
+        La cantidad minima es 1
+      </div>
+      <div
+        class="alert alert-danger p-2"
+        *ngIf="noExcederCantidadDisponible(form)"
+      >
+        No exceder la cantidad disponible
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="form.invalid"
+      (click)="saveConfigHabitaciones()"
+    >
+      Guardar
+    </button>
+  </div>
+</form>

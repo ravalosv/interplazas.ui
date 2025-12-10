@@ -1,0 +1,312 @@
+<nz-spin [nzSpinning]="loading" [nzSize]="'large'">
+  <div class="d-flex flex-row bd-highlight">
+    <div class="p-2 bd-highlight flex-grow-1">
+      <div class="btn-group" role="group">
+        <button
+          type="button"
+          (click)="changeHabitacionesView(1)"
+          [ngClass]="{
+            'btn-xs': true,
+            btn: true,
+            'btn-primary': habitacionesViewMode == 1,
+            'btn-secondary': habitacionesViewMode != 1
+          }"
+        >
+          Vista de grupo
+        </button>
+        <button
+          type="button"
+          (click)="changeHabitacionesView(2)"
+          [ngClass]="{
+            'btn-xs': true,
+            btn: true,
+            'btn-primary': habitacionesViewMode == 2,
+            'btn-secondary': habitacionesViewMode != 2
+          }"
+        >
+          Vista de tipo de habitación
+        </button>
+      </div>
+    </div>
+
+    <div class="p-2 bd-highlight">
+      <button
+        type="button"
+        *ngIf="allowEdit"
+        class="btn btn-success btn-xs"
+        (click)="distribuirHabitaciones()"
+      >
+        Distribuir habitaciones
+      </button>
+    </div>
+  </div>
+
+  <!-- Habitaciones por Grupo/Unidad de negocio -->
+  <nz-table
+    #nestedTable
+    [nzData]="listOfGrupoData"
+    [nzPageSize]="10"
+    *ngIf="habitacionesViewMode == 1"
+  >
+    <thead>
+      <tr>
+        <th style="width: 50px"></th>
+        <th>Grupo</th>
+        <th>Unidad de Negocio</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-template ngFor let-data [ngForOf]="nestedTable.data">
+        <tr>
+          <td [(nzExpand)]="data.expand"></td>
+          <td>{{ data.grupo }}</td>
+          <td>
+            {{ data.unidadNegocio }}
+          </td>
+        </tr>
+        <tr [nzExpand]="data.expand">
+          <nz-table
+            #innerTable
+            [nzData]="data.children"
+            nzSize="middle"
+            [nzShowPagination]="true"
+          >
+            <thead>
+              <tr>
+                <th>Tipo Habitación</th>
+                <th>Descripción</th>
+                <th>Cantidad</th>
+                <th style="width: 100px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let child of innerTable.data">
+                <td>{{ child.tipoHabitacion }}</td>
+                <td>{{ child.descripcion }}</td>
+                <td>{{ child.cantidad }}</td>
+                <td style="text-align: center">
+                  <span
+                    class="badge bg-primary me-1"
+                    (click)="
+                      openEditorByGrupoModal(
+                        modalEditorConfigHabitaciones,
+                        data,
+                        child
+                      )
+                    "
+                    *ngIf="permitirEditarHabitacion(data, child)"
+                    style="cursor: pointer"
+                    >Editar
+                  </span>
+
+                  <span
+                    class="badge bg-primary me-1"
+                    (click)="
+                      openReasignarHabitacionReservada(
+                        modalReasignarHabitacion,
+                        data,
+                        child
+                      )
+                    "
+                    style="cursor: pointer"
+                    *ngIf="permitirReasignarHabitacion(data, child)"
+                    >Reasignar
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </tr>
+      </ng-template>
+    </tbody>
+  </nz-table>
+
+  <!-- Habitaciones por Tipo de habitacion -->
+  <nz-table
+    #nestedTable
+    [nzData]="listOfTipoHabitacionData"
+    [nzPageSize]="10"
+    *ngIf="habitacionesViewMode == 2"
+  >
+    <thead>
+      <tr>
+        <th style="width: 50px"></th>
+        <th>Tipo de habitacion</th>
+        <th>Descripción</th>
+      </tr>
+    </thead>
+    <tbody>
+      <ng-template ngFor let-data [ngForOf]="nestedTable.data">
+        <tr>
+          <td [(nzExpand)]="data.expand"></td>
+          <td>{{ data.tipoHabitacion }}</td>
+          <td>
+            {{ data.descripcion }}
+          </td>
+        </tr>
+        <tr [nzExpand]="data.expand">
+          <nz-table
+            #innerTable
+            [nzData]="data.children"
+            nzSize="middle"
+            [nzShowPagination]="true"
+          >
+            <thead>
+              <tr>
+                <th>Grupo</th>
+                <th>Unidad de Negocio</th>
+                <th>Cantidad</th>
+                <th style="width: 100px"></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let child of innerTable.data">
+                <td>{{ child.grupo }}</td>
+                <td>{{ child.unidadNegocio }}</td>
+                <td>{{ child.cantidad }}</td>
+                <td style="text-align: center">
+                  <span
+                    class="badge bg-primary me-1"
+                    (click)="
+                      openEditorByTipoHabitacionModal(
+                        modalEditorConfigHabitaciones,
+                        data,
+                        child
+                      )
+                    "
+                    style="cursor: pointer"
+                    *ngIf="permitirEditarHabitacion2(data, child)"
+                    >Editar
+                  </span>
+                  <span
+                    class="badge bg-primary me-1"
+                    (click)="
+                      openReasignarHabitacionReservada2(
+                        modalReasignarHabitacion,
+                        data,
+                        child
+                      )
+                    "
+                    style="cursor: pointer"
+                    *ngIf="permitirReasignarHabitacion2(data, child)"
+                    >Reasignar
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </nz-table>
+        </tr>
+      </ng-template>
+    </tbody>
+  </nz-table>
+</nz-spin>
+
+<ng-template #modalEditorConfigHabitaciones let-modal>
+  <form action="" [formGroup]="form">
+    <div class="modal-header">
+      <h5 class="modal-title">Editor Habitaciones</h5>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="modal.close('by: close icon')"
+        aria-label="Close"
+      ></button>
+    </div>
+    <div class="modal-body">
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Grupo</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="grupo"
+          readonly="true"
+        />
+      </div>
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Unidad de Negocio</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="unidadNegocio"
+          readonly="true"
+        />
+      </div>
+
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Tipo de Habitación</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="tipoHabitacion"
+          readonly="true"
+        />
+      </div>
+
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Cantidad</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Cantidad"
+          formControlName="cantidad"
+        />
+        <div
+          class="alert alert-danger p-2"
+          *ngIf="
+            form.get('cantidad')?.touched &&
+            (form.get('cantidad')?.errors?.required ||
+              form.get('cantidad')?.errors?.pattern != null)
+          "
+        >
+          La cantidad es requerida
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <!--       {{ form.get("cantidad")?.errors | json }}
+        {{ form.get("cantidad")?.errors?.pattern | json }} -->
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="form.invalid"
+        (click)="saveConfigHabitaciones()"
+      >
+        Guardar
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #modalAsignarReservas let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Asignar habitación</h5>
+    <button
+      type="button"
+      class="btn-close"
+      (click)="modal.close('by: close icon')"
+      aria-label="Close"
+    ></button>
+  </div>
+  <app-event-config-asignar-habitacion-reserva
+    [eventoId]="eventoId"
+    [habitacionAReservar]="habitacionAReservar"
+    (habitacionAsignada)="habitacionAsignada($event)"
+  ></app-event-config-asignar-habitacion-reserva>
+</ng-template>
+
+<ng-template #modalReasignarHabitacion let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Reasignar habitación</h5>
+    <button
+      type="button"
+      class="btn-close"
+      (click)="modal.close('by: close icon')"
+      aria-label="Close"
+    ></button>
+  </div>
+  <app-event-config-reasignar-habitacion
+    [eventoId]="eventoId"
+    [habitacionAReservar]="habitacionAReservar"
+    (habitacionAsignada)="habitacionAsignada($event)"
+  ></app-event-config-reasignar-habitacion>
+</ng-template>

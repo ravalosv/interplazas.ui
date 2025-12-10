@@ -1,0 +1,705 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/admin/events/list">Mis eventos</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">
+      {{ currentBreadcrumb }}
+    </li>
+  </ol>
+</nav>
+
+<div class="d-flex">
+  <div class="flex-grow-1">
+    <label class="fs-2"
+      ><strong>{{ nombreEvento }}</strong></label
+    >
+  </div>
+  <div class="p-2">
+    <button
+      type="button"
+      class="btn btn-outline-primary me-1 btn-xs"
+      (click)="reporteRooming()"
+    >
+      Reporte rooming <i nz-icon nzType="download" class="ms-1"></i>
+    </button>
+    <!--     <button type="button" class="btn btn-outline-primary me-1 btn-xs">
+      Reporte mesas <i nz-icon nzType="download" class="ms-1"></i>
+    </button> -->
+  </div>
+</div>
+
+<nz-card>
+  <nz-tabset nzType="card">
+    <nz-tab nzTitle="Datos del Evento">
+      <nz-card>
+        <form class="forms-sample" (ngSubmit)="onSubmit()" [formGroup]="form">
+          <div class="row">
+            <div class="col-lg-5 col-md-6 col-sm-6">
+              <!-- STATUS -->
+              <div class="row">
+                <div class="d-flex flex-row bd-highlight">
+                  <div
+                    class="p-2 bd-highlight flex-grow-1"
+                    style="text-align: end"
+                  >
+                    <label class="form-label"><strong>Status:</strong></label>
+                  </div>
+                  <div class="p-2 bd-highlight">
+                    {{
+                      evento?.eventoStatus == null
+                        ? "No generado"
+                        : evento?.eventoStatus?.nombre
+                    }}
+                  </div>
+                </div>
+              </div>
+              <!-- Nombre del evento -->
+              <div class="mb-3">
+                <label class="form-label"
+                  ><strong>Nombre del evento</strong></label
+                >
+
+                <div class="mb-3">
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="exampleInputUsername1"
+                      autocomplete="off"
+                      placeholder="Nombre del evento"
+                      formControlName="nombre"
+                      [readOnly]="allowSave == false"
+                    />
+                  </div>
+
+                  <div
+                    class="alert alert-danger p-2"
+                    *ngIf="
+                      form.get('nombre')?.touched &&
+                      form.get('nombre')?.errors?.required
+                    "
+                  >
+                    El nombre del evento es requerido
+                  </div>
+                </div>
+              </div>
+
+              <!-- Capacidad del evento -->
+              <div class="mb-3">
+                <label class="form-label"
+                  ><strong>Capacidad del evento</strong></label
+                >
+
+                <div class="mb-3">
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="exampleInputUsername1"
+                      autocomplete="off"
+                      placeholder="Capacidad"
+                      formControlName="capacidadMaxima"
+                      [readOnly]="allowSave == false"
+                    />
+                  </div>
+
+                  <div
+                    class="alert alert-danger p-2"
+                    *ngIf="
+                      form.get('capacidadMaxima')?.touched &&
+                      form.get('capacidadMaxima')?.errors?.required
+                    "
+                  >
+                    La capacidad máxima del evento es requerida
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fecha del evento -->
+              <div class="mb-3">
+                <label for="exampleInputEmail1" class="form-label"
+                  ><strong>Fecha del Evento</strong></label
+                >
+                <div class="mb-3">
+                  <ngb-datepicker
+                    class="range-selection"
+                    #dp
+                    (dateSelect)="onDateSelection($event)"
+                    [displayMonths]="2"
+                    [dayTemplate]="t"
+                    outsideDays="hidden"
+                    [startDate]="fromDate!"
+                    [markDisabled]="isCalendarDisabled"
+                  >
+                  </ngb-datepicker>
+
+                  <ng-template #t let-date let-focused="focused">
+                    <span
+                      class="custom-day"
+                      [class.focused]="focused"
+                      [class.range]="isRange(date)"
+                      [class.faded]="isHovered(date) || isInside(date)"
+                      (mouseenter)="hoveredDate = date"
+                      (mouseleave)="hoveredDate = null"
+                    >
+                      {{ date.day }}
+                    </span>
+                  </ng-template>
+                </div>
+              </div>
+
+              <!-- Tipo de formulario -->
+              <div class="mb-3">
+                <label for="exampleInputEmail1" class="form-label"
+                  ><strong>Tipo de formulario</strong></label
+                >
+                <div class="mb-3">
+                  <ng-select
+                    [items]="tiposFormulario"
+                    [searchable]="false"
+                    formControlName="tipoFormulario"
+                    bindValue="id"
+                    bindLabel="nombre"
+                    [readonly]="allowSave == false"
+                  >
+                  </ng-select>
+
+                  <div
+                    class="alert alert-danger p-2"
+                    *ngIf="
+                      form.get('tipoFormulario')?.touched &&
+                      form.get('tipoFormulario')?.errors?.required
+                    "
+                  >
+                    Seleccione un tipo de formulario
+                  </div>
+                </div>
+              </div>
+
+              <!-- Fecha límite para captura -->
+              <div class="mb-3">
+                <label for="exampleInputEmail1" class="form-label"
+                  ><strong>Fecha límite para captura</strong></label
+                >
+
+                <div class="mb-3">
+                  <div class="input-group">
+                    <input
+                      class="form-control"
+                      placeholder="yyyy-mm-dd"
+                      name="dp"
+                      ngbDatepicker
+                      #d="ngbDatepicker"
+                      formControlName="fechaLimite"
+                      [readOnly]="allowSave == false"
+                    />
+                    <button
+                      class="input-group-text"
+                      type="button"
+                      (click)="d.toggle()"
+                      [disabled]="allowSave == false"
+                    >
+                      <i class="feather icon-calendar icon-md text-muted"></i>
+                    </button>
+                  </div>
+                  <div
+                    class="alert alert-danger p-2"
+                    *ngIf="
+                      form.get('fechaLimite')?.touched &&
+                      form.get('fechaLimite')?.errors?.required
+                    "
+                  >
+                    La fecha límite del evento es requerida
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="floating-buttons">
+            <button
+              type="button"
+              class="btn btn-success me-1"
+              *ngIf="evento?.eventoStatusId == 1"
+              (click)="onOpen()"
+            >
+              Abrir captura
+            </button>
+            <button
+              type="button"
+              class="btn btn-warning me-1"
+              *ngIf="evento?.eventoStatusId == 2 || evento?.eventoStatusId == 4"
+              (click)="onCerrar()"
+            >
+              Cerrar registro
+            </button>
+            <button
+              type="button"
+              class="btn btn-success me-1"
+              *ngIf="evento?.eventoStatusId == 3"
+              (click)="onReabrir()"
+            >
+              Reabrir registro
+            </button>
+            <button
+              type="button"
+              class="btn btn-secondary me-1"
+              *ngIf="evento?.eventoStatusId == 3"
+              (click)="onArchivarEvento()"
+            >
+              Archivar evento
+            </button>
+
+            <button
+              type="button"
+              class="btn btn-secondary me-1"
+              *ngIf="evento?.eventoStatusId == 1 || evento?.eventoStatusId == 4"
+              (click)="onCancelEvent()"
+            >
+              Cancelar evento
+            </button>
+
+            <button
+              *ngIf="allowSave"
+              type="submit"
+              class="btn btn-primary me-2 ms-3"
+              [disabled]="form.invalid"
+            >
+              Guardar cambios
+            </button>
+          </div>
+        </form>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="Grupos" [nzDisabled]="eventoId == null">
+      <nz-card>
+        <div class="mb-3">
+          <label for="exampleInputPassword1" class="form-label"
+            ><strong>Grupos asistentes al evento</strong></label
+          >
+          <div class="d-flex flex-row bd-highlight mb-3">
+            <div class="p-2 bd-highlight flex-grow-1">
+              <ng-select
+                [items]="listOfGroups"
+                bindLabel="nombre"
+                bindValue="id"
+                [searchable]="false"
+                class="mb-2"
+                (change)="onSelectGroupChange($event)"
+                [(ngModel)]="selectedGroupId"
+                [ngModelOptions]="{ standalone: true }"
+              >
+              </ng-select>
+            </div>
+            <div class="p-2 bd-highlight" style="text-align: right">
+              <input
+                type="text"
+                class="form-control mb-1"
+                autocomplete="off"
+                placeholder="Asistentes"
+                [(ngModel)]="selectedGroupInvitados"
+                [ngModelOptions]="{ standalone: true }"
+              />
+              <h6>
+                <span class="badge bg-primary"
+                  >Disponible: {{ capacidadDisponible }}</span
+                >
+              </h6>
+            </div>
+            <div class="p-2 bd-highlight">
+              <button
+                [disabled]="allowEdit == false"
+                type="button"
+                class="btn btn-success btn-xs mt-1 mb-3"
+                (click)="onSeleccionarGrupo()"
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grupos -->
+        <div class="row">
+          <div class="col-6">
+            <div class="mb-3">
+              <!-- DATATABLE DEL GRUPO -->
+              <nz-table
+                #editRowTable
+                nzBordered
+                [nzData]="selectedListOfGroups"
+              >
+                <thead>
+                  <tr>
+                    <th nzWidth="70%">Grupo</th>
+                    <th>Asistentes</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let data of editRowTable.data; let i = index"
+                    class="editable-row"
+                  >
+                    <td>{{ data.nombre }}</td>
+                    <td>
+                      <div class="editable-cell">
+                        {{ data.invitados }}
+                      </div>
+                    </td>
+                    <td>
+                      <button
+                        nz-button
+                        nzType="default"
+                        nzShape="circle"
+                        nz-tooltip
+                        nzTooltipTitle="Editar"
+                        *ngIf="allowEdit"
+                        (click)="
+                          openInvitadosGrupoModal(
+                            invitadosPorGrupoModal,
+                            data,
+                            i
+                          )
+                        "
+                      >
+                        <i nz-icon nzType="edit" theme="outline"></i>
+                      </button>
+                      <button
+                        nz-button
+                        nzType="default"
+                        nzShape="circle"
+                        nz-tooltip
+                        *ngIf="allowEdit"
+                        nzTooltipTitle="Eliminar"
+                        (click)="onRemoveGroup(data.id)"
+                      >
+                        <i nz-icon nzType="delete" theme="outline"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </nz-table>
+            </div>
+          </div>
+
+          <div class="col-6">
+            <div class="mb-3 bordered">
+              <label
+                *ngIf="treeSelectedGroupsData.length > 0"
+                for="exampleInputPassword1"
+                class="form-label"
+                ><strong
+                  >Seleccione las unidades de negocio y filiales de cada grupo
+                  invitado al evento</strong
+                ></label
+              >
+
+              <!-- TREE VIEW -->
+              <nz-tree-view
+                [nzTreeControl]="treeControl"
+                [nzDataSource]="dataSource"
+              >
+                <!-- El ultimo nodo que no tiene hijos -->
+                <nz-tree-node *nzTreeNodeDef="let node" nzTreeNodePadding>
+                  <nz-tree-node-toggle
+                    nzTreeNodeNoopToggle
+                  ></nz-tree-node-toggle>
+                  <!-- [nzDisabled]="allowEdit == false" -->
+                  <nz-tree-node-checkbox
+                    [nzChecked]="checklistSelection.isSelected(node)"
+                    (nzClick)="leafItemSelectionToggle(node)"
+                  ></nz-tree-node-checkbox>
+                  <!-- [nzDisabled]="allowEdit == false" -->
+                  <nz-tree-node-option
+                    (nzClick)="leafItemSelectionToggle(node)"
+                  >
+                    {{ node.name }}
+                  </nz-tree-node-option>
+                </nz-tree-node>
+
+                <!-- Los nodos que tienen hijos -->
+                <nz-tree-node
+                  *nzTreeNodeDef="let node; when: hasChild"
+                  nzTreeNodePadding
+                >
+                  <nz-tree-node-toggle>
+                    <span
+                      nz-icon
+                      nzType="caret-down"
+                      nzTreeNodeToggleRotateIcon
+                    ></span>
+                  </nz-tree-node-toggle>
+                  <!-- [nzDisabled]="allowEdit == false" -->
+                  <nz-tree-node-checkbox
+                    [nzChecked]="descendantsAllSelected(node)"
+                    [nzIndeterminate]="descendantsPartiallySelected(node)"
+                    (nzClick)="itemSelectionToggle(node)"
+                  ></nz-tree-node-checkbox>
+                  <!-- [nzDisabled]="allowEdit == false" -->
+                  <nz-tree-node-option (nzClick)="itemSelectionToggle(node)">
+                    {{ node.name }}
+                  </nz-tree-node-option>
+                </nz-tree-node>
+              </nz-tree-view>
+            </div>
+          </div>
+        </div>
+      </nz-card>
+    </nz-tab>
+    <nz-tab nzTitle="Unidades de Negocio" [nzDisabled]="eventoId == null">
+      <nz-card>
+        <div class="row border rounded mb-2">
+          <div class="col-lg-6 col-md-12">
+            <label class="form-label mt-2"
+              ><strong>Seleccione Grupo</strong></label
+            >
+            <div class="d-flex flex-row bd-highlight mb-3">
+              <div class="bd-highlight flex-grow-1">
+                <ng-select
+                  class="me-2"
+                  [items]="gruposEvento"
+                  bindLabel="grupo.nombre"
+                  bindValue="grupo.id"
+                  [searchable]="false"
+                  (change)="onEventoGrupoChanged($event)"
+                >
+                </ng-select>
+              </div>
+              <div class="bd-highlight">
+                <!-- [disabled]="allowEdit == false" -->
+                <button
+                  type="button"
+                  class="btn btn-info btn-xs mt-1"
+                  (click)="cargarGruposEvento(true)"
+                >
+                  Recargar
+                </button>
+              </div>
+            </div>
+
+            <div
+              *ngIf="this.eventoGrupos"
+              class="d-flex flex-row bd-highlight justify-content-end mb-1"
+            >
+              <span class="badge bg-success">
+                {{ this.eventoGrupos.grupo?.nombre }}:
+                {{ this.eventoGrupos.invitados }} invitados
+              </span>
+            </div>
+
+            <div class="bd-highlight">
+              <nz-table #editRowUN nzBordered [nzData]="eventoUnidadesNegocio">
+                <thead>
+                  <tr>
+                    <th nzWidth="70%">Unidad de negocio</th>
+                    <th>Invitados</th>
+                    <th nzWidth="70px"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let data of editRowUN.data; let i = index"
+                    class="editable-row"
+                  >
+                    <td>{{ data.unidadNegocio?.nombre }}</td>
+                    <td>
+                      <div class="editable-cell">
+                        {{ data.invitados }}
+                      </div>
+                    </td>
+                    <td>
+                      <div class="flex-row">
+                        <i
+                          nz-icon
+                          nzType="edit"
+                          theme="outline"
+                          class="me-2 link-pointer"
+                          nz-tooltip
+                          nzTooltipTitle="Guardar"
+                          *ngIf="allowEdit"
+                          (click)="
+                            openInvitadosUnidadModal(
+                              invitadosPorUnidadModal,
+                              data,
+                              i
+                            )
+                          "
+                        ></i>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </nz-table>
+            </div>
+          </div>
+        </div>
+      </nz-card>
+    </nz-tab>
+
+    <!-- TAB HABITACIONES -->
+    <nz-tab nzTitle="Habitaciones" [nzDisabled]="eventoId == null">
+      <nz-card>
+        <nz-tabset nzType="card">
+          <nz-tab nzTitle="Cantidad">
+            <nz-card>
+              <app-event-config-habitaciones-list
+                [eventoId]="eventoId"
+                [allowEdit]="allowEdit"
+              ></app-event-config-habitaciones-list>
+            </nz-card>
+          </nz-tab>
+          <nz-tab nzTitle="Distribución">
+            <nz-card>
+              <app-event-config-habitaciones-distribucion
+                [eventoId]="eventoId"
+                [allowEdit]="allowEdit"
+                [evento]="evento!"
+              >
+              </app-event-config-habitaciones-distribucion>
+            </nz-card>
+          </nz-tab>
+        </nz-tabset>
+      </nz-card>
+    </nz-tab>
+
+    <!-- TAB MESAS -->
+    <nz-tab nzTitle="Mesas" [nzDisabled]="eventoId == null">
+      <nz-card>
+        <nz-tabset nzType="card">
+          <nz-tab nzTitle="Cantidad">
+            <nz-card>
+              <app-event-config-mesas-list
+                [eventoId]="eventoId"
+                [allowEdit]="allowEdit"
+              ></app-event-config-mesas-list>
+            </nz-card>
+          </nz-tab>
+          <nz-tab nzTitle="Distribución">
+            <nz-card>
+              <app-event-config-mesas-distribucion
+                [eventoId]="eventoId"
+                [allowEdit]="allowEdit"
+                [evento]="evento!"
+              ></app-event-config-mesas-distribucion>
+            </nz-card>
+          </nz-tab>
+        </nz-tabset>
+      </nz-card>
+    </nz-tab>
+
+    <nz-tab nzTitle="Histórico de cambios" [nzDisabled]="eventoId == null">
+      <app-evento-tracking [eventoId]="eventoId"> </app-evento-tracking>
+    </nz-tab>
+  </nz-tabset>
+</nz-card>
+
+<!-- Modal -->
+
+<ng-template #invitadosPorUnidadModal let-modal>
+  <form action="" [formGroup]="formInvitadosUN">
+    <div class="modal-header">
+      <h5 class="modal-title">Invitados por unidad de negocio</h5>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="modal.close('by: close icon')"
+        aria-label="Close"
+      ></button>
+    </div>
+    <div class="modal-body">
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Unidad de Negocio</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="unidadNegocioName"
+          [disabled]="true"
+        />
+      </div>
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Invitados</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Invitados"
+          formControlName="invitados"
+        />
+        <div
+          class="alert alert-danger p-2"
+          *ngIf="
+            formInvitadosUN.get('invitados')?.touched &&
+            formInvitadosUN.get('invitados')?.errors?.required
+          "
+        >
+          La cantidad de invitados es requerida
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="formInvitadosUN.invalid"
+        (click)="updateInvitadosPorUN(true)"
+      >
+        Guardar y cerrar
+      </button>
+    </div>
+  </form>
+</ng-template>
+
+<ng-template #invitadosPorGrupoModal let-modal>
+  <form action="" [formGroup]="formInvitadosGrupo">
+    <div class="modal-header">
+      <h5 class="modal-title">Invitados por grupo</h5>
+      <button
+        type="button"
+        class="btn-close"
+        (click)="modal.close('by: close icon')"
+        aria-label="Close"
+      ></button>
+    </div>
+    <div class="modal-body">
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Grupo</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          formControlName="grupoName"
+          [disabled]="true"
+        />
+      </div>
+      <div class="row ms-1 me-1 mb-2">
+        <label class="form-label"><strong>Invitados</strong></label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Invitados"
+          formControlName="invitados"
+        />
+        <div
+          class="alert alert-danger p-2"
+          *ngIf="
+            formInvitadosGrupo.get('invitados')?.touched &&
+            formInvitadosGrupo.get('invitados')?.errors?.required
+          "
+        >
+          La cantidad de invitados es requerida
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="formInvitadosGrupo.invalid"
+        (click)="updateInvitadosPorGrupo(true)"
+      >
+        Guardar y cerrar
+      </button>
+    </div>
+  </form>
+</ng-template>

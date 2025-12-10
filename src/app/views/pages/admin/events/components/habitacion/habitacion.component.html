@@ -1,0 +1,401 @@
+<ng-template #popContent>
+  <b>{{ habitacion.tipoHabitacion.descripcion }}</b
+  ><br />
+  Máximo: {{ habitacion.maximo }} personas.
+  <br />
+  Actualmente: {{ habitacion.invitados.length }} personas.
+  <br />
+  Fecha de ocupación:
+  <a
+    *ngIf="habitacion.fechaOcupacionInicio == null"
+    href="javascript:void(0)"
+    (click)="cambiarFechaOcupacion(fechaOcupacionModal)"
+  >
+    Misma que el evento
+  </a>
+  <a
+    *ngIf="habitacion.fechaOcupacionInicio != null"
+    href="javascript:void(0)"
+    (click)="cambiarFechaOcupacion(fechaOcupacionModal)"
+  >
+    {{ habitacion.fechaOcupacionInicio | date : "dd/MMM" }} -
+    {{ habitacion.fechaOcupacionFin | date : "dd/MMM" }}
+  </a>
+  <span
+    class="badge bg-warning text-dark"
+    *ngIf="
+      habitacion.invitados.length == 0 &&
+      this.currentUser?.user?.role == 'admin' &&
+      !readOnlyMode
+    "
+  >
+    <a
+      href="javascript:void(0)"
+      (click)="showMoverHabitacionDeGrupoDialog(moverHabitacionDeGrupoTemplate)"
+      class="text-dark"
+    >
+      Mover de grupo
+    </a>
+  </span>
+</ng-template>
+
+<div class="row" style="margin-bottom: 8px">
+  <div class="col-2">
+    <div
+      placement="top"
+      triggers="mouseenter:mouseleave"
+      [ngClass]="{
+        'horizontal-box-enabled':
+          habitacion.invitados.length < habitacion.maximo && !isDragging,
+        'horizontal-box-disabled':
+          habitacion.invitados.length >= habitacion.maximo,
+        'horizontal-box-disabled-indicator':
+          habitacion.invitados.length < habitacion.maximo && isDragging,
+        'cursor-arrow': true
+      }"
+      style="height: 100%"
+      [popoverTitle]="habitacion.tipoHabitacion.tipoHabitacion"
+      [ngbPopover]="popContent"
+      [openDelay]="1000"
+      [closeDelay]="2000"
+    >
+      <div class="row fw-bolder">
+        {{ habitacion.tipoHabitacion.tipoHabitacion }}
+      </div>
+      <div class="row">
+        Máximo: {{ habitacion.maximo }}
+        <br />
+        Actualmente: {{ habitacion.invitados.length }}
+      </div>
+      <div class="row" *ngIf="habitacion.fechaOcupacionInicio != null">
+        Fecha Ocupación:
+        <a
+          href="javascript:void(0)"
+          (click)="cambiarFechaOcupacion(fechaOcupacionModal)"
+        >
+          {{ habitacion.fechaOcupacionInicio | date : "dd/MMM" }} -
+          {{ habitacion.fechaOcupacionFin | date : "dd/MMM" }}
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="col-10">
+    <div
+      [id]="habId"
+      cdkDropList
+      [cdkDropListData]="listaInvitados"
+      cdkDropListSortingDisabled
+      [ngClass]="{
+        'horizontal-list':
+          habitacion.invitados.length >= habitacion.maximo || !isDragging,
+        'horizontal-list-indicator':
+          habitacion.invitados.length < habitacion.maximo && isDragging,
+        'cursor-block':
+          habitacion.invitados.length >= habitacion.maximo && isDragging
+      }"
+      cdkDropListOrientation="horizontal"
+      (cdkDropListDropped)="drop($event)"
+      (cdkDropListEntered)="dragEntered($event)"
+      (cdkDropListExited)="dragExited($event)"
+      [cdkDropListEnterPredicate]="validateMaxCapacity"
+    >
+      <div
+        *ngFor="let item of listaInvitados"
+        class="horizontal-box"
+        [class.cursor-move]="!isDragging"
+        [class.horizontal-box-menor]="item.edad === 'Menor'"
+        [class.horizontal-box-infante]="item.edad === 'Infante'"
+        cdkDrag
+        [appConditionalDrag]="!readOnlyMode"
+        [cdkDragData]="item"
+        (click)="onClick(item)"
+      >
+        <span>
+          {{ item.nombre }}
+        </span>
+        <img 
+          *ngIf="item.edad === 'Menor' || item.edad === 'Infante'"
+          src="assets/images/toy.png" 
+          alt="Menor/Infante" 
+          class="toy-icon"
+        />
+      </div>
+    </div>
+    <div>
+      <span
+        *ngIf="habitacion.invitados.length < habitacion.maximo"
+        class="badge"
+        [class.bg-success]="habitacion.invitados.length < habitacion.maximo"
+        [class.bg-secondary]="habitacion.invitados.length >= habitacion.maximo"
+        >{{ habitacion.maximo - habitacion.invitados.length }} espacios
+        disponibles</span
+      >
+
+      <span
+        *ngIf="habitacion.invitados.length == habitacion.maximo"
+        class="badge"
+        [class.bg-secondary]="habitacion.invitados.length == habitacion.maximo"
+      >
+        Cupo máximo alcanzado
+      </span>
+      <span
+        *ngIf="habitacion.invitados.length > habitacion.maximo"
+        class="badge"
+        [class.bg-warning]="habitacion.invitados.length > habitacion.maximo"
+      >
+        Habitación con sobrecupo
+      </span>
+    </div>
+  </div>
+</div>
+
+<ng-template #fechaOcupacionModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" id="exampleModalLabel">
+      Cambiar fecha de ocupación
+    </h5>
+    <button
+      type="button"
+      class="btn-close"
+      (click)="modal.close('by: close icon')"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="modal-body">
+    <form action="" [formGroup]="form">
+      <div class="row mb-3">
+        <div class="col-12">
+          <!-- INICIO -->
+          <div class="row mb-3">
+            <div class="col-2">
+              <label for="exampleInputPassword2" class="col-form-label"
+                ><strong>Inicio</strong></label
+              >
+            </div>
+            <div class="col">
+              <div class="form-check form-switch">
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    placeholder="yyyy-mm-dd"
+                    name="dp"
+                    ngbDatepicker
+                    #fd="ngbDatepicker"
+                    formControlName="fechaOcupacionInicio"
+                  />
+                  <button
+                    class="input-group-text"
+                    type="button"
+                    (click)="fd.toggle()"
+                  >
+                    <i class="feather icon-calendar icon-md text-muted"></i>
+                  </button>
+                </div>
+                <div
+                  class="alert alert-danger p-2"
+                  *ngIf="
+                    form.get('fechaOcupacionInicio')?.touched &&
+                    form.get('fechaOcupacionInicio')?.errors?.required
+                  "
+                >
+                  La fecha de inicio es requerida
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- FIN -->
+          <div class="row mb-3">
+            <div class="col-2">
+              <label for="exampleInputPassword2" class="col-form-label"
+                ><strong>Fin</strong></label
+              >
+            </div>
+            <div class="col">
+              <div class="form-check form-switch">
+                <div class="input-group">
+                  <input
+                    class="form-control"
+                    placeholder="yyyy-mm-dd"
+                    name="dp"
+                    ngbDatepicker
+                    #f2="ngbDatepicker"
+                    formControlName="fechaOcupacionFin"
+                  />
+                  <button
+                    class="input-group-text"
+                    type="button"
+                    (click)="f2.toggle()"
+                  >
+                    <i class="feather icon-calendar icon-md text-muted"></i>
+                  </button>
+                </div>
+                <div
+                  class="alert alert-danger p-2"
+                  *ngIf="
+                    form.get('fechaOcupacionFin')?.touched &&
+                    form.get('fechaOcupacionFin')?.errors?.required
+                  "
+                >
+                  La fecha fin requerida
+                </div>
+              </div>
+            </div>
+            <div *ngIf="form.hasError('dates')" class="alert alert-danger p-2">
+              {{ form.getError("dates") }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button
+      type="button"
+      class="btn btn-success"
+      [disabled]="readOnlyMode"
+      (click)="guardarFechaOcupacion(true)"
+    >
+      Misma que el evento
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="form.invalid || readOnlyMode"
+      (click)="guardarFechaOcupacion()"
+    >
+      Guardar
+    </button>
+  </div>
+</ng-template>
+
+<ng-template #moverHabitacionDeGrupoTemplate let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" id="exampleModalLabel">
+      Cambiar habitación de grupo
+    </h5>
+    <button
+      type="button"
+      class="btn-close"
+      (click)="modal.close('by: close icon')"
+      aria-label="Close"
+    ></button>
+  </div>
+  <div class="modal-body">
+    <form action="" [formGroup]="form">
+      <div class="row mb-3">
+        <div class="col-12">
+          <!-- INICIO -->
+          <div class="row mb-3">
+            <div class="col-4">
+              <label for="exampleInputPassword2" class="col-form-label"
+                ><strong>Tipo de Habitación:</strong></label
+              >
+            </div>
+            <div class="col">
+              <div class="form-check form-switch">
+                <label for="exampleInputPassword2" class="col-form-label"
+                  ><strong>{{
+                    this.habitacion.tipoHabitacion.tipoHabitacion
+                  }}</strong>
+                  <br />
+                  {{ this.habitacion.tipoHabitacion.descripcion }}</label
+                >
+              </div>
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-4">
+              <label for="exampleInputPassword2" class="col-form-label"
+                ><strong>Grupo actual:</strong></label
+              >
+            </div>
+            <div class="col">
+              <div class="form-check form-switch">
+                <label for="exampleInputPassword2" class="col-form-label"
+                  ><strong>{{ this.grupoActual.nombre }}</strong></label
+                >
+              </div>
+            </div>
+          </div>
+          <!-- FIN -->
+          <div class="row mb-3">
+            <div class="col-4">
+              <label for="exampleInputPassword2" class="col-form-label"
+                ><strong>Grupo destino:</strong></label
+              >
+            </div>
+            <div class="col">
+              <div class="form-check form-switch">
+                <ng-select
+                  style="width: 250px"
+                  [items]="grupos"
+                  bindValue="id"
+                  bindLabel="nombre"
+                  [searchable]="false"
+                  [clearable]="false"
+                  [(ngModel)]="grupoDest"
+                  [ngModelOptions]="{ standalone: true }"
+                  (ngModelChange)="onGrupoToMoveChange($event)"
+                  #lstGrupos
+                >
+                </ng-select>
+                <div
+                  class="alert alert-danger p-2"
+                  *ngIf="grupoDest == grupoActual.id"
+                >
+                  Los grupos no pueden ser iguales
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mb-3">
+            <div class="col-4">
+              <label for="exampleInputPassword2" class="col-form-label"
+                ><strong>Unidad de Negocio destino:</strong></label
+              >
+            </div>
+            <div class="col">
+              <div class="form-check form-switch">
+                <ng-select
+                  style="width: 250px"
+                  [items]="unidadesNegocio"
+                  bindValue="id"
+                  bindLabel="nombre"
+                  [searchable]="false"
+                  [clearable]="false"
+                  [(ngModel)]="unidadNegocioDest"
+                  [ngModelOptions]="{ standalone: true }"
+                  #lstGrupos
+                >
+                </ng-select>
+                <div
+                  class="alert alert-danger p-2"
+                  *ngIf="unidadNegocioDest == null"
+                >
+                  Seleccionar Unidad de Negocio
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="modal-footer">
+    <button
+      type="button"
+      class="btn btn-success"
+      [disabled]="
+        grupoDest == grupoActual.id ||
+        grupoDest == null ||
+        unidadNegocioDest == null
+      "
+      (click)="moverHabitacionDeGrupo()"
+    >
+      Cambiar habitación
+    </button>
+  </div>
+</ng-template>

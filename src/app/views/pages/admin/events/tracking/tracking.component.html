@@ -1,0 +1,199 @@
+<div *ngIf="allData.length == 0">
+  <div class="p-2 bd-highlight">
+    <label for="exampleInputPassword1" class="form-label me-2 mt-2"
+      ><strong>No hay información para mostrar </strong></label
+    >
+  </div>
+</div>
+
+<div *ngIf="allData.length > 0">
+  <nz-card>
+    <div class="p-1 bd-highlight">
+      <nz-tabset nzType="card">
+        <nz-tab nzTitle="General" *ngIf="invitadoId == undefined">
+          <nz-card>
+            <div class="row" style="vertical-align: middle">
+              <div class="d-flex flex-row bd-highlight mb-3">
+                <div class="p-2 bd-highlight">
+                  <label
+                    for="exampleInputPassword1"
+                    class="form-label me-2 mt-2"
+                    ><strong>Filtrar: </strong></label
+                  >
+                </div>
+                <div class="p-2 bd-highlight">
+                  <input
+                    nz-input
+                    type="text"
+                    autocomplete="off"
+                    [(ngModel)]="searchInput2"
+                    (ngModelChange)="search2()"
+                  />
+                </div>
+
+                <div class="p-2 bd-highlight">
+                  <label
+                    for="exampleInputPassword1"
+                    class="form-label me-2 mt-2"
+                    ><strong>Rango de fechas: </strong></label
+                  >
+                </div>
+
+                <div class="p-2 bd-highlight">
+                  <nz-range-picker
+                    [(ngModel)]="rangeDateFilter2"
+                    (ngModelChange)="onDateRangeChange2($event)"
+                    [nzFormat]="'yyyy-MMM-dd HH:mm'"
+                    [nzPlaceHolder]="['Fecha inicio', 'Fecha fin']"
+                    [nzShowTime]="{ nzFormat: 'HH:mm' }"
+                    nzShowTime="true"
+                  ></nz-range-picker>
+                </div>
+                <div class="p-2 bd-highlight">
+                  <button
+                    nz-button
+                    nzType="primary"
+                    (click)="getTrackingResumedList()"
+                  >
+                    Cargar
+                  </button>
+                </div>
+                <div class="p-2 bd-highlight">
+                  <button
+                    nz-button
+                    nzType="primary"
+                    (click)="exportHistorical2()"
+                  >
+                    <i nz-icon nzType="download"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <nz-table
+              #ordersListTable2
+              [nzData]="displayResumedData"
+              style="min-height: 450px"
+            >
+              <thead>
+                <tr>
+                  <th
+                    *ngFor="let column of orderColumn2"
+                    [nzSortFn]="column.compare"
+                  >
+                    {{ column.title }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of ordersListTable2.data; let i = index">
+                  <td>{{ item.invitadoNombre }}</td>
+                  <td>{{ item.accion_desc }}</td>
+                  <td>{{ item.detalles }}</td>
+                  <td>{{ item.createdAt | date : "dd-MMM-yyyy hh:mm" }}</td>
+                </tr>
+              </tbody>
+            </nz-table>
+          </nz-card>
+        </nz-tab>
+        <nz-tab nzTitle="Histórico Detallado">
+          <nz-card>
+            <div class="row" style="vertical-align: middle">
+              <div class="d-flex flex-row bd-highlight mb-3">
+                <div class="p-2 bd-highlight">
+                  <label
+                    for="exampleInputPassword1"
+                    class="form-label me-2 mt-2"
+                    ><strong>Filtrar: </strong></label
+                  >
+                </div>
+                <div class="p-2 bd-highlight">
+                  <input
+                    nz-input
+                    type="text"
+                    autocomplete="off"
+                    [(ngModel)]="searchInput"
+                    (ngModelChange)="search()"
+                  />
+                </div>
+
+                <div class="p-2 bd-highlight">
+                  <label
+                    for="exampleInputPassword1"
+                    class="form-label me-2 mt-2"
+                    ><strong>Evento: </strong></label
+                  >
+                </div>
+                <div class="p-2 bd-highlight">
+                  <nz-tree-select
+                    style="width: 250px"
+                    class="tree-style"
+                    [(ngModel)]="habitacionTreeSelectedValue"
+                    [nzNodes]="nodesHabitaciones"
+                    (ngModelChange)="onHabitacionesFilterChanged($event)"
+                    nzShowSearch
+                    nzCheckable
+                    nzAllowClear
+                    #treeHabitaciones
+                  ></nz-tree-select>
+                </div>
+
+                <div class="p-2 bd-highlight">
+                  <label
+                    for="exampleInputPassword1"
+                    class="form-label me-2 mt-2"
+                    ><strong>Rango de fechas: </strong></label
+                  >
+                </div>
+
+                <div class="p-2 bd-highlight">
+                  <nz-range-picker
+                    [(ngModel)]="rangeDateFilter"
+                    (ngModelChange)="onDateRangeChange($event)"
+                    [nzFormat]="'dd-MMM'"
+                    [nzPlaceHolder]="['Fecha inicio', 'Fecha fin']"
+                  ></nz-range-picker>
+                </div>
+                <div class="p-2 bd-highlight">
+                  <button
+                    nz-button
+                    nzType="primary"
+                    (click)="exportHistorical()"
+                  >
+                    <i nz-icon nzType="download"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <nz-table
+              #ordersListTable
+              [nzData]="displayData"
+              style="min-height: 450px"
+            >
+              <thead>
+                <tr>
+                  <th
+                    *ngFor="let column of orderColumn"
+                    [nzSortFn]="column.compare"
+                  >
+                    {{ column.title }}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of ordersListTable.data; let i = index">
+                  <td>{{ item.invitadoId }}</td>
+                  <td>{{ item.invitadoNombre }}</td>
+                  <td>{{ item.accion_desc }}</td>
+                  <td>{{ item.detalles }}</td>
+                  <td>{{ item.usuario.name }}</td>
+                  <td>{{ item.createdAt | date : "dd-MMM-yyyy hh:mm" }}</td>
+                </tr>
+              </tbody>
+            </nz-table>
+          </nz-card>
+        </nz-tab>
+      </nz-tabset>
+    </div>
+  </nz-card>
+</div>
