@@ -95,16 +95,16 @@ export class AuthenticationService {
   }
 
   isAdmin() {
-    const userRoles = this.decodedToken.role; //as Array<string>;
-    return userRoles == 'admin';
+    const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
+    return userRoles == 1;
   }
   isRepresentante() {
-    const userRoles = this.decodedToken.role; //as Array<string>;
+    const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
     return userRoles == 'repre';
   }
 
   isReportsUser() {
-    const userRoles = this.decodedToken.role; //as Array<string>;
+    const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
     return userRoles == 'reports';
   }
 
@@ -118,7 +118,7 @@ export class AuthenticationService {
 
     const refreshToken = user.refreshToken;
 
-    const url = `${this.baseUrl}/auth/renew-token`;
+    const url = `${this.baseUrl}/auth/renew-token/`;
     return this.http.post<ApiReturn<IUser>>(url, { refreshToken }).pipe(
       map((ret) => {
         if (ret.success) {

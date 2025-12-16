@@ -616,7 +616,7 @@ export class InvitadoEditComponent implements OnInit {
             } else {
               if (
                 ret.error.includes('máximo de invitados') &&
-                this.currentUser?.user.role == 'admin'
+                this.currentUser?.user.tipoUsuarioId == 1
               ) {
                 this.confirmOverCapacity().then((res) => {
                   if (res) {

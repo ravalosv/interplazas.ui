@@ -4,6 +4,8 @@ export interface IUsersPayload {
   email: string;
   role: string;
   grupoId: string;
+  tipoUsuarioId?: number;
+  filialId?: number | null;
   isDisabled: boolean;
   createdByUserId: number;
   grupo?: IGrupoPayload;

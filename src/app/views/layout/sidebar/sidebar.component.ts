@@ -52,7 +52,7 @@ export class SidebarComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.authService.currentUser.subscribe((user) => {
-      if (user?.user.role == 'admin') {
+      if (user?.user.tipoUsuarioId == 1) {
         this.menuItems = MENU_ADMIN;
       } else {
         this.menuItems = MENU_CLIENTE;

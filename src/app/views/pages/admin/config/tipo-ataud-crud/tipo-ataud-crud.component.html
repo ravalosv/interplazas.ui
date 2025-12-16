@@ -1,0 +1,60 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/admin/config/tipo-ataud-admin">Tipos de Ataúd</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Listado</li>
+  </ol>
+  <div class="d-flex justify-content-end bd-highlight mb-3">
+    <div class="bd-highlight me-2">
+      <button class="btn btn-primary" (click)="openCreate(modalEditor)">
+        <i class="feather icon-file-plus pe-2"></i>
+        Nuevo Tipo
+      </button>
+    </div>
+  </div>
+  <ng-template #modalEditor let-modal>
+    <form [formGroup]="form">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ modalTitle }}</h5>
+        <button type="button" class="btn-close" (click)="modal.close('by: close icon')" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Nombre</strong></label>
+          <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre del tipo de ataúd" />
+          <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
+            El nombre es requerido
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" [disabled]="form.invalid" (click)="save(true)">Guardar y cerrar</button>
+        <button type="button" class="btn btn-success" [disabled]="form.invalid" (click)="save(false)">Guardar y nuevo</button>
+      </div>
+    </form>
+  </ng-template>
+</nav>
+
+<nz-card>
+  <nz-table [nzData]="tipos" [nzLoading]="loading">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of tipos">
+        <td>{{ item.nombre }}</td>
+        <td class="text-end">
+          <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
+            Editar
+          </button>
+          <button nz-button nzType="default" nzDanger (click)="onDelete(item)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+  </nz-card>
+

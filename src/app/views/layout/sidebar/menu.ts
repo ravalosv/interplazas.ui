@@ -12,51 +12,38 @@ export const MENU_ADMIN: MenuItem[] = [
     icon: 'book-open',
     link: 'events/list',
   },
-  /*   {
-    label: 'Nuevo evento',
-    icon: 'file-plus',
-    link: 'events/new',
-  }, */
-
-  // Herramientas
-  {
-    label: 'Herramientas',
-    isTitle: true,
-  },
-
-  {
-    label: 'Avisos',
-    icon: 'bell',
-    link: 'herramientas/avisos',
-  },
 
   // Configuración
   {
     label: 'Configuración',
     isTitle: true,
   },
-
-  {
-    label: 'Organización',
-    icon: 'settings',
-    link: 'config/estructura',
-  },
-  /*   {
-    label: 'Grupos',
-    icon: 'settings',
-    link: 'config/grupos',
-  },
-  {
-    label: 'Unidades de negocio',
-    icon: 'settings',
-    link: 'config/unidades-negocio',
-  },
   {
     label: 'Filiales',
     icon: 'settings',
-    link: 'config/filiales',
+    link: 'config/filiales-admin',
   },
- */ {
+  {
+    label: 'Tipos de documento',
+    icon: 'file-text',
+    link: 'config/tipo-documento-admin',
+  },
+  {
+    label: 'Tipos de servicio',
+    icon: 'briefcase',
+    link: 'config/tipo-servicio-admin',
+  },
+  {
+    label: 'Tipos de ataúd',
+    icon: 'box',
+    link: 'config/tipo-ataud-admin',
+  },
+  {
+    label: 'Motivos no otorgado',
+    icon: 'slash',
+    link: 'config/motivo-no-otorgado-admin',
+  },
+ {
     label: 'Usuarios',
     icon: 'users',
     link: 'config/usuarios',

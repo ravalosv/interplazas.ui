@@ -3,9 +3,8 @@ import { CommonModule } from '@angular/common';
 
 import { ConfigRoutingModule } from './config-routing.module';
 import { ConfigComponent } from './config.component';
-import { GruposComponent } from './grupos/grupos.component';
-import { UnidadesNegocioComponent } from './unidades-negocio/unidades-negocio.component';
 import { FilialesComponent } from './filiales/filiales.component';
+import { FilialesCrudComponent } from './filiales-crud/filiales-crud.component';
 import { UsuariosComponent } from './usuarios/usuarios.component';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
@@ -37,7 +36,13 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UsuariosNewComponent } from './usuarios-new/usuarios-new.component';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgZorroModule } from 'src/app/ng-zorro.module';
-import { EstructuraComponent } from './estructura/estructura.component';
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+import { TipoDocumentoCrudComponent } from './tipo-documento-crud/tipo-documento-crud.component';
+import { StatusCrudComponent } from './status-crud/status-crud.component';
+import { TipoServicioCrudComponent } from './tipo-servicio-crud/tipo-servicio-crud.component';
+import { TipoAtaudCrudComponent } from './tipo-ataud-crud/tipo-ataud-crud.component';
+import { MotivoNoOtorgadoCrudComponent } from './motivo-no-otorgado-crud/motivo-no-otorgado-crud.component';
+import { EstadoCtaStatusCrudComponent } from './estado-cta-status-crud/estado-cta-status-crud.component';
 
 const antdModule = [
   NzButtonModule,
@@ -71,17 +76,22 @@ const antdModule = [
 @NgModule({
   declarations: [
     ConfigComponent,
-    GruposComponent,
-    UnidadesNegocioComponent,
     FilialesComponent,
+    FilialesCrudComponent,
+    TipoDocumentoCrudComponent,
+    TipoServicioCrudComponent,
+    TipoAtaudCrudComponent,
+    MotivoNoOtorgadoCrudComponent,
+    EstadoCtaStatusCrudComponent,
+    StatusCrudComponent,
     UsuariosComponent,
     UsuariosNewComponent,
-    EstructuraComponent,
   ],
   imports: [
     CommonModule,
     ConfigRoutingModule,
     NgZorroModule,
+    NgbModule,
     ...antdModule,
     FormsModule,
     ReactiveFormsModule,

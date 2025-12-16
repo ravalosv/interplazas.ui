@@ -154,7 +154,7 @@ export class EventEditHabitacionesComponent implements OnInit {
             this.onFiltroGrupoChange(this.filtroGrupos[0]);
 
             // poner formulario en modo de solo lectura si está cerrado o cancelado
-            if (this.currentUser.user.role !== 'admin') {
+            if (this.currentUser.user.tipoUsuarioId !== 1) {
               const statusReadOnlyMode = [3, 5, 6];
               this.readOnlyMode = statusReadOnlyMode.includes(
                 this.evento.eventoStatusId
@@ -775,7 +775,7 @@ export class EventEditHabitacionesComponent implements OnInit {
               }`
             );
 
-            if (this.currentUser?.user.role == 'admin') {
+            if (this.currentUser?.user.tipoUsuarioId == 1) {
               this.listoParaCargar = true;
               this.sustituirValores();
               this.seExcedeCapacidadInvitadosBatch = true;
@@ -1099,7 +1099,7 @@ export class EventEditHabitacionesComponent implements OnInit {
     var overCapacityConfirmed = false;
 
     if (this.seExcedeCapacidadInvitadosBatch) {
-      if (this.currentUser?.user.role !== 'admin') return;
+      if (this.currentUser?.user.tipoUsuarioId !== 1) return;
 
       const result = await this.confirmOverCapacity();
       if (!result) {

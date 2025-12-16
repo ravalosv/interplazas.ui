@@ -55,7 +55,7 @@ export class MesaComponent implements OnInit {
     this.isDragging = false;
 
     if (this.mesa.maximo <= this.mesa.invitados.length) {
-      if (this.currentUser?.user.role !== 'admin') return;
+      if (this.currentUser?.user.tipoUsuarioId !== 1) return;
 
       const result = await this.confirmOverCapacity();
       if (!result) {

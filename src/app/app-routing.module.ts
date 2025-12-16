@@ -47,13 +47,6 @@ const routes: Routes = [
       desc: 'Oopps!! La página que estas buscando, parece que no existe.',
     },
   },
-  {
-    path: 'tools',
-    loadChildren: () =>
-      import('./views/pages/admin/tools/tools.module').then(
-        (m) => m.ToolsModule
-      ),
-  },
   { path: '**', redirectTo: 'error/404', pathMatch: 'full' },
 ];
 

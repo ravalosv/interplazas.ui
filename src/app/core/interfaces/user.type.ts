@@ -8,13 +8,12 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: string;
+  tipoUsuarioId: number;
   isDisabled: boolean;
   createdByUserId: number;
-  grupoId: null;
+  filialId: null;
   createdAt: Date;
   updatedAt: Date;
-  unidadesNegocio: UnidadesNegocio[];
 }
 
 export interface UnidadesNegocio {

@@ -7,15 +7,16 @@ import {
   ValidatorFn,
   Validators,
 } from '@angular/forms';
-import { GrupoPayload } from 'src/app/core/interfaces/payloads/config.payload';
 import { AlertsService } from 'src/app/core/services/alerts.service';
-import { ConfigService } from 'src/app/core/services/config.service';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EncryptionService } from 'src/app/core/services/encryption.service';
 import { UsersService } from 'src/app/core/services/users.service';
-import { IUsersUNPayload } from 'src/app/core/interfaces/models/users';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { TipoUsuarioService } from 'src/app/core/services/tipo-usuario.service';
+import { TipoUsuarioPayload } from 'src/app/core/interfaces/payloads/tipo_usuario.payload';
+import { FilialService } from 'src/app/core/services/filial.service';
+import { FilialAdminPayload } from 'src/app/core/interfaces/payloads/filial.payload';
 
 @Component({
   selector: 'app-usuarios-new',
@@ -32,45 +33,25 @@ export class UsuariosNewComponent implements OnInit {
 
   mostrarGrupos = false;
   mostrarUnidades = false;
-
-  grupos: GrupoPayload[] = [];
-
-  unidadesNegocio: any[] = [];
-
-  nodesHabitaciones: Array<{
-    title: string;
-    key: string;
-    isLeaf: boolean;
-    children: Array<any>;
-  }> = [];
   onCambiarContrase: any;
+  tiposUsuario: TipoUsuarioPayload[] = [];
+  filiales: FilialAdminPayload[] = [];
+  mostrarFilial = false;
 
   constructor(
     private fb: FormBuilder,
     private alertsService: AlertsService,
-    private configService: ConfigService,
     private authService: AuthenticationService,
     private router: Router,
     private route: ActivatedRoute,
     private encryptionService: EncryptionService,
     private modalService: NgbModal,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private tipoUsuarioService: TipoUsuarioService,
+    private filialService: FilialService
   ) {}
 
-  roles: any = [
-    {
-      id: 'admin',
-      nombre: 'Administrador',
-    },
-    {
-      id: 'repre',
-      nombre: 'Representante',
-    },
-    {
-      id: 'reportes',
-      nombre: 'Reportes',
-    },
-  ];
+  // Roles removidos
 
   ngOnInit(): void {
     this.usuarioId = this.route.snapshot.paramMap.get('id');
@@ -86,10 +67,16 @@ export class UsuariosNewComponent implements OnInit {
 
     this.initForm();
     this.initPasswordForm();
+    if (!this.usuarioId) {
+      this.resetFormToDefaults();
+    }
 
-    this.loadGrupos();
+    this.mostrarGrupos = false;
 
     this.loadData();
+    this.loadTiposUsuario();
+    this.loadFiliales();
+    this.setupTipoUsuarioWatcher();
   }
 
   initForm() {
@@ -99,21 +86,13 @@ export class UsuariosNewComponent implements OnInit {
         email: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required]],
         confirmPassword: ['', [Validators.required]],
-        role: ['', [Validators.required]],
-        grupoId: ['', []],
-        unidadesNegocio: [[], []],
+        tipoUsuarioId: [null, [Validators.required]],
+        filialId: [null, []],
       },
       { validators: this.passwordMatchValidator }
     );
 
-    this.form.get('role')?.valueChanges.subscribe((value) => {
-      this.setGrupoValidator(value);
-    });
-
-    this.form.get('grupoId')?.valueChanges.subscribe((value) => {
-      console.log('valueChanges(grupoId)', value);
-      this.loadUnidadesFromGroup(value);
-    });
+    // Grupos eliminados
   }
 
   initPasswordForm() {
@@ -136,19 +115,18 @@ export class UsuariosNewComponent implements OnInit {
           this.form.get('email')?.setValue(data.data.email);
           this.form.get('password')?.setValue('data.data.email');
           this.form.get('confirmPassword')?.setValue('data.data.email');
-          this.form.get('role')?.setValue(data.data.role);
-          this.form.get('grupoId')?.setValue(data.data.grupoId);
-
-          this.form.get('grupoId')?.updateValueAndValidity();
+          this.form.get('tipoUsuarioId')?.setValue(data.data.tipoUsuarioId);
+          this.form.get('filialId')?.setValue(
+            data.data.filialId !== undefined ? data.data.filialId : null
+          );
+          // Grupos eliminados
 
           this.form.get('email')?.disable();
           this.form.get('password')?.disable();
           this.form.get('confirmPassword')?.disable();
 
           this.isDisabled = data.data.isDisabled;
-          this.unidadesNegocio = data.data.unidadesNegocio.map((n) =>
-            n.id.toString()
-          );
+          // Unidades eliminadas
         } else {
           this.alertsService.error(data.error);
         }
@@ -159,69 +137,87 @@ export class UsuariosNewComponent implements OnInit {
     });
   }
 
-  seleccionarUnidadesEnTree(data: IUsersUNPayload[]) {}
-
-  setGrupoValidator(value: string) {
-    if (value === 'repre') {
-      this.form.get('grupoId')?.setValidators([Validators.required]);
-      this.form.get('unidadesNegocio')?.setValidators([Validators.required]);
-      this.mostrarGrupos = true;
+  setupTipoUsuarioWatcher() {
+    const control = this.form.get('tipoUsuarioId');
+    control?.valueChanges.subscribe((val: any) => {
+      const isEmpty =
+        val === null || val === undefined || val === '' || isNaN(Number(val));
+      const filialCtrl = this.form.get('filialId');
+      if (isEmpty) {
+        this.mostrarFilial = false;
+        filialCtrl?.setValue(null);
+        filialCtrl?.clearValidators();
+        filialCtrl?.updateValueAndValidity();
+        return;
+      }
+      const isAdmin = Number(val) === 1;
+      this.mostrarFilial = !isAdmin;
+      if (isAdmin) {
+        filialCtrl?.setValue(null);
+        filialCtrl?.clearValidators();
+        filialCtrl?.updateValueAndValidity();
+      } else {
+        filialCtrl?.setValidators([Validators.required]);
+        filialCtrl?.updateValueAndValidity();
+      }
+    });
+    const initialVal = control?.value;
+    const filialCtrl = this.form.get('filialId');
+    const initialIsEmpty =
+      initialVal === null ||
+      initialVal === undefined ||
+      initialVal === '' ||
+      isNaN(Number(initialVal));
+    if (initialIsEmpty) {
+      this.mostrarFilial = false;
+      filialCtrl?.setValue(null);
+      filialCtrl?.clearValidators();
+      filialCtrl?.updateValueAndValidity();
     } else {
-      this.mostrarGrupos = false;
-      this.mostrarUnidades = false;
-      this.form.get('grupoId')?.clearValidators();
-      this.form.get('unidadesNegocio')?.clearValidators();
-      this.form.get('grupoId')?.setValue(null);
-      this.form.get('unidadesNegocio')?.setValue([]);
+      const isAdmin = Number(initialVal) === 1;
+      this.mostrarFilial = !isAdmin;
+      if (isAdmin) {
+        filialCtrl?.setValue(null);
+        filialCtrl?.clearValidators();
+        filialCtrl?.updateValueAndValidity();
+      } else {
+        filialCtrl?.setValidators([Validators.required]);
+        filialCtrl?.updateValueAndValidity();
+      }
     }
-
-    this.form.get('grupoId')?.updateValueAndValidity();
-    this.form.get('unidadesNegocio')?.updateValueAndValidity();
   }
 
-  loadUnidadesFromGroup(grupoId: string) {
-    if (!grupoId) {
-      this.mostrarUnidades = false;
-      return;
-    }
-
-    this.configService.getUnidadesNegocioFromGroup(grupoId).subscribe({
-      next: (data) => {
-        if (data.success) {
-          this.mostrarUnidades = true;
-
-          this.convertToHabitacionesTreeNodes(data.data);
-
-          if (this.unidadesNegocio.length == 0) {
-            this.unidadesNegocio = ['-1'];
-          }
-          this.form.get('unidadesNegocio')?.setValue(this.unidadesNegocio);
+  loadTiposUsuario() {
+    this.tipoUsuarioService.getAll().subscribe({
+      next: (ret) => {
+        if (ret.success) {
+          this.tiposUsuario = ret.data;
         } else {
-          this.alertsService.error(data.error);
+          this.alertsService.error(ret.error);
         }
       },
-      error: (error) => {
-        this.mostrarUnidades = false;
-
-        this.alertsService.error(error);
+      error: (e) => {
+        this.alertsService.error(e);
       },
     });
   }
-
-  loadGrupos() {
-    this.configService.getGrupos().subscribe({
-      next: (data) => {
-        if (data.success) {
-          this.grupos = data.data;
+  loadFiliales() {
+    this.filialService.getAll().subscribe({
+      next: (ret) => {
+        if (ret.success) {
+          this.filiales = ret.data;
         } else {
-          this.alertsService.error(data.error);
+          this.alertsService.error(ret.error);
         }
       },
-      error: (error) => {
-        this.alertsService.error(error);
+      error: (e) => {
+        this.alertsService.error(e);
       },
     });
   }
+  // Lógica de roles eliminada; grupos y unidades removidos
+
+  // Métodos de grupos y unidades removidos
 
   passwordMatchValidator: ValidatorFn = (
     control: AbstractControl
@@ -244,33 +240,26 @@ export class UsuariosNewComponent implements OnInit {
     }
 
     try {
-      var unidadesSeleccionadas = this.form.get('unidadesNegocio')?.value;
-
-      const todas = unidadesSeleccionadas.find((n: any) => n === '-1');
-
-      if (todas) {
-        unidadesSeleccionadas = [];
-      } else {
-        unidadesSeleccionadas = unidadesSeleccionadas.map((n: any) => ({
-          id: n,
-        }));
-      }
-
       if (!this.usuarioId) {
+        const tipoId = Number(this.form.get('tipoUsuarioId')?.value);
         const payload = {
-          name: this.form.get('name')?.value,
           email: this.form.get('email')?.value,
           password: this.form.get('password')?.value,
-          role: this.form.get('role')?.value,
-          grupoId: this.form.get('grupoId')?.value,
-          unidadesNegocio: unidadesSeleccionadas,
+          name: this.form.get('name')?.value,
+          tipoUsuarioId: tipoId,
+          filialId:
+            tipoId === 1
+              ? null
+              : this.form.get('filialId')?.value
+              ? Number(this.form.get('filialId')?.value)
+              : null,
         };
 
         this.authService.createUser(payload).subscribe({
           next: (data) => {
             if (data.success) {
               this.alertsService.success('Usuario creado exitosamente');
-              this.router.navigate(['admin/config/usuarios']);
+              this.resetFormToDefaults();
             } else {
               this.alertsService.error(data.error);
             }
@@ -280,18 +269,22 @@ export class UsuariosNewComponent implements OnInit {
           },
         });
       } else {
+        const tipoId = Number(this.form.get('tipoUsuarioId')?.value);
         const payload = {
           name: this.form.get('name')?.value,
-          role: this.form.get('role')?.value,
-          grupoId: this.form.get('grupoId')?.value,
-          unidadesNegocio: unidadesSeleccionadas,
+          tipoUsuarioId: tipoId,
+          filialId:
+            tipoId === 1
+              ? null
+              : this.form.get('filialId')?.value
+              ? Number(this.form.get('filialId')?.value)
+              : null,
         };
 
         this.authService.updateUser(this.usuarioId, payload).subscribe({
           next: (data) => {
             if (data.success) {
               this.alertsService.success('Usuario actualizado exitosamente');
-              this.router.navigate(['admin/config/usuarios']);
             } else {
               this.alertsService.error(data.error);
             }
@@ -303,48 +296,43 @@ export class UsuariosNewComponent implements OnInit {
       }
     } catch (error) {}
   }
-
-  convertToHabitacionesTreeNodes(data: any[]) {
-    this.nodesHabitaciones = [];
-    //this.habitacionTreeSelectedValue = ['-1'];
-
-    var nodeTodos = {
-      title: 'Todas las unidades',
-      key: `-1`,
-      isLeaf: false,
-      children: Array<any>(),
-    };
-
-    this.nodesHabitaciones.push(nodeTodos);
-
-    // obtener un listado con los diferentes tipos de habitaciones
-
-    data.forEach((element: any) => {
-      var found = nodeTodos.children.find(
-        (n) => n.key == element.id.toString()
-      );
-
-      if (found == null) {
-        var node = {
-          title: element.nombre,
-          key: element.id.toString(),
-          isLeaf: true,
-          children: Array<any>(),
-        };
-
-        nodeTodos.children.push(node);
-      }
+  resetFormToDefaults() {
+    this.form.reset({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      tipoUsuarioId: null,
+      filialId: null,
+    });
+    this.form.get('email')?.enable();
+    this.form.get('password')?.enable();
+    this.form.get('confirmPassword')?.enable();
+    Object.values(this.form.controls).forEach((c) => {
+      c.markAsPristine();
+      c.markAsUntouched();
+    });
+    const filialCtrl = this.form.get('filialId');
+    filialCtrl?.clearValidators();
+    filialCtrl?.updateValueAndValidity();
+    this.mostrarFilial = false;
+    this.formPassword.reset({
+      password: '',
+      confirmPassword: '',
+    });
+    Object.values(this.formPassword.controls).forEach((c) => {
+      c.markAsPristine();
+      c.markAsUntouched();
     });
   }
-
   openModal(content: TemplateRef<any>) {
     // Size: xl, lg, md, sm
     this.modalService
       .open(content, { size: 'md' })
-      .result.then((result) => {
+      .result.then(() => {
         //this.basicModalCloseResult = 'Modal closed' + result;
       })
-      .catch((res) => {});
+      .catch(() => {});
   }
 
   onCambiarContrasena() {
@@ -354,8 +342,8 @@ export class UsuariosNewComponent implements OnInit {
 
     this.confirmaCambiarContrasena();
   }
-  async confirmaCambiarContrasena() {
-    await this.alertsService.confirm({
+  confirmaCambiarContrasena() {
+    this.alertsService.confirm({
       titulo: 'Cambiar contraseña',
       message: '¿Desea cambiar la contraseña?',
       okCallback: () => {

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { environment } from 'src/environments/environment';
 import {
   Router,
   Event,
@@ -18,6 +19,8 @@ export class AppComponent implements OnInit {
   constructor(private router: Router) {}
 
   ngOnInit(): void {
+    const theme = environment.theme || 'ocean';
+    document.body.classList.add(`theme-${theme}`);
     this.router.events.subscribe((event: Event) => {
       if (event instanceof NavigationStart) {
         //console.log('NavigationStart: ', event);

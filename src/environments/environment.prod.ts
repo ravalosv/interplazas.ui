@@ -9,4 +9,5 @@ export const environment = {
 
   user: '',
   pass: '',
+  theme: 'modern',
 };

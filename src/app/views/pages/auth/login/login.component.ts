@@ -5,7 +5,6 @@ import {
   Validators,
 } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { LoginModel } from 'src/app/core/interfaces/models/auth';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { environment } from 'src/environments/environment';
@@ -37,7 +36,7 @@ export class LoginComponent implements OnInit {
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
-      userName: [environment.user, [Validators.required]],
+      email: [environment.user, [Validators.required, Validators.email]],
       password: [environment.pass, [Validators.required]],
     });
 
@@ -59,12 +58,10 @@ export class LoginComponent implements OnInit {
       return;
     }
 
-    var model: LoginModel = {
-      UserName: this.loginForm.get('userName')!.value,
-      password: this.loginForm.get('password')!.value,
-    };
+    const email = this.loginForm.get('email')!.value;
+    const password = this.loginForm.get('password')!.value;
 
-    this.authService.login(model.UserName, model.password).subscribe({
+    this.authService.login(email, password).subscribe({
       next: (ret) => {
         if (ret.success) {
           this.alertsService.success('Bienvenido!');

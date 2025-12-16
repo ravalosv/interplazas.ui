@@ -25,7 +25,7 @@
     class="badge bg-warning text-dark"
     *ngIf="
       habitacion.invitados.length == 0 &&
-      this.currentUser?.user?.role == 'admin' &&
+      this.currentUser?.user?.tipoUsuarioId == 1 &&
       !readOnlyMode
     "
   >

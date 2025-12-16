@@ -54,23 +54,15 @@
 
         <td class="text-md-right">
           <button
-            class="pb-4 me-2"
             nz-button
             nzType="default"
-            nzShape="circle"
-            nzSize="large"
-            nz-tooltip
-            nzTooltipTitle="Editar"
+            class="me-2"
+            [routerLink]="[
+              '/admin/config/usuarios/',
+              encryptionService.encrypt(item.id.toString())
+            ]"
           >
-            <i
-              nz-icon
-              nzType="edit"
-              theme="outline"
-              [routerLink]="[
-                '/admin/config/usuarios/',
-                encryptionService.encrypt(item.id.toString())
-              ]"
-            ></i>
+            Editar
           </button>
         </td>
       </tr>

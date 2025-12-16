@@ -1,12 +1,16 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ConfigComponent } from './config.component';
-import { GruposComponent } from './grupos/grupos.component';
-import { UnidadesNegocioComponent } from './unidades-negocio/unidades-negocio.component';
 import { FilialesComponent } from './filiales/filiales.component';
+import { FilialesCrudComponent } from './filiales-crud/filiales-crud.component';
 import { UsuariosComponent } from './usuarios/usuarios.component';
 import { UsuariosNewComponent } from './usuarios-new/usuarios-new.component';
-import { EstructuraComponent } from './estructura/estructura.component';
+import { TipoDocumentoCrudComponent } from './tipo-documento-crud/tipo-documento-crud.component';
+import { StatusCrudComponent } from './status-crud/status-crud.component';
+import { TipoServicioCrudComponent } from './tipo-servicio-crud/tipo-servicio-crud.component';
+import { TipoAtaudCrudComponent } from './tipo-ataud-crud/tipo-ataud-crud.component';
+import { MotivoNoOtorgadoCrudComponent } from './motivo-no-otorgado-crud/motivo-no-otorgado-crud.component';
+import { EstadoCtaStatusCrudComponent } from './estado-cta-status-crud/estado-cta-status-crud.component';
 
 const routes: Routes = [
   {
@@ -14,10 +18,14 @@ const routes: Routes = [
     redirectTo: 'grupos',
     pathMatch: 'full',
   },
-  { path: 'estructura', component: EstructuraComponent },
-  { path: 'grupos', component: GruposComponent },
-  { path: 'unidades-negocio', component: UnidadesNegocioComponent },
   { path: 'filiales', component: FilialesComponent },
+  { path: 'filiales-admin', component: FilialesCrudComponent },
+  { path: 'tipo-documento-admin', component: TipoDocumentoCrudComponent },
+  { path: 'tipo-servicio-admin', component: TipoServicioCrudComponent },
+  { path: 'tipo-ataud-admin', component: TipoAtaudCrudComponent },
+  { path: 'motivo-no-otorgado-admin', component: MotivoNoOtorgadoCrudComponent },
+  { path: 'estado-cta-status-admin', component: EstadoCtaStatusCrudComponent },
+  { path: 'status-admin', component: StatusCrudComponent },
   { path: 'usuarios', component: UsuariosComponent },
   { path: 'usuarios/:id', component: UsuariosNewComponent },
 ];

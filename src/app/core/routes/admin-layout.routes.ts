@@ -32,19 +32,5 @@ export const AdminLayout_ROUTES: Routes = [
       },
     ],
   },
-  {
-    path: 'herramientas',
-    data: {
-      title: 'Dashboard',
-    },
-    children: [
-      {
-        path: '',
-        loadChildren: () =>
-          import('../../views/pages/admin/tools/tools.module').then(
-            (m) => m.ToolsModule
-          ),
-      },
-    ],
-  },
+
 ];

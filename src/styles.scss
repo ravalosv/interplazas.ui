@@ -129,3 +129,48 @@ $modal-header-border-color: red;
 .ant-picker-dropdown {
   z-index: 3060 !important;
 }
+
+/* Paletas de color dinámicas por variable de entorno */
+:root {
+  --theme-primary: var(--bs-primary);
+  --theme-link: var(--bs-link-color);
+}
+
+.theme-ocean {
+  --bs-primary: #6571ff;
+  --bs-link-color: #6571ff;
+  --bs-link-hover-color: #515acc;
+}
+
+.theme-forest {
+  --bs-primary: #05a34a;
+  --bs-link-color: #05a34a;
+  --bs-link-hover-color: #047a38;
+}
+
+.theme-teal {
+  --bs-primary: #20c997;
+  --bs-link-color: #20c997;
+  --bs-link-hover-color: #1aa37a;
+}
+
+.theme-rose {
+  --bs-primary: #d63384;
+  --bs-link-color: #d63384;
+  --bs-link-hover-color: #ad296a;
+}
+
+.theme-orange {
+  --bs-primary: #fd7e14;
+  --bs-link-color: #fd7e14;
+  --bs-link-hover-color: #c86510;
+}
+
+.theme-modern {
+  --bs-body-color: #2C2C2C;
+  --bs-body-bg: #FFFFFF;
+  --bs-primary: #009B77;
+  --bs-link-color: #009B77;
+  --bs-link-hover-color: #00725A;
+  --bs-warning: #FFDD57;
+}

@@ -29,6 +29,7 @@ export const environment = {
   pass: 'admindev.123', */
   user: 'admin@admin.com',
   pass: 'admin',
+  theme: 'ocean',
 };
 
 /*

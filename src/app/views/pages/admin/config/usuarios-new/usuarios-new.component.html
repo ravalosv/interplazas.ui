@@ -137,82 +137,59 @@
           </div>
         </div>
 
-        <!-- Role -->
+        <!-- Role removido -->
+
+        <!-- Tipo de usuario -->
         <div class="mb-3">
-          <label for="exampleInputEmail1" class="form-label"
-            ><strong>Role</strong></label
-          >
+          <label class="form-label"><strong>Tipo de usuario</strong></label>
           <div class="mb-3">
             <ng-select
-              [items]="roles"
+              [items]="tiposUsuario"
               [searchable]="false"
               [clearable]="false"
-              formControlName="role"
+              formControlName="tipoUsuarioId"
               bindValue="id"
               bindLabel="nombre"
             >
             </ng-select>
-
             <div
               class="alert alert-danger p-2"
               *ngIf="
-                form.get('role')?.touched && form.get('role')?.errors?.required
+                form.get('tipoUsuarioId')?.touched &&
+                form.get('tipoUsuarioId')?.errors?.required
               "
             >
-              Seleccione un role
+              El tipo de usuario es requerido
             </div>
           </div>
         </div>
 
-        <!-- Grupos -->
-        <div class="mb-3" *ngIf="mostrarGrupos">
-          <label for="exampleInputEmail1" class="form-label"
-            ><strong>Grupo</strong></label
-          >
+        <!-- Filial -->
+        <div class="mb-3" *ngIf="mostrarFilial">
+          <label class="form-label"><strong>Filial</strong></label>
           <div class="mb-3">
             <ng-select
-              [items]="grupos"
+              [items]="filiales"
               [searchable]="false"
-              formControlName="grupoId"
+              [clearable]="true"
+              formControlName="filialId"
               bindValue="id"
               bindLabel="nombre"
             >
             </ng-select>
-
             <div
               class="alert alert-danger p-2"
               *ngIf="
-                form.get('grupoId')?.touched &&
-                form.get('grupoId')?.errors?.required
+                form.get('filialId')?.touched &&
+                form.get('filialId')?.errors?.required
               "
             >
-              Seleccione un role
+              La filial es requerida
             </div>
           </div>
         </div>
 
-        <div class="mb-3" *ngIf="mostrarUnidades">
-          <div class="row">
-            <label class="form-label"
-              ><strong
-                >Seleccione las unidades de negocio que este usuario
-                administrará</strong
-              ></label
-            >
-          </div>
-
-          <div class="row">
-            <nz-tree-select
-              style="width: 100%"
-              class="tree-style"
-              [nzNodes]="nodesHabitaciones"
-              formControlName="unidadesNegocio"
-              nzShowSearch
-              nzCheckable
-              nzAllowClear
-            ></nz-tree-select>
-          </div>
-        </div>
+        <!-- Grupos y unidades removidos -->
       </div>
     </div>
 

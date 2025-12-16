@@ -94,7 +94,7 @@ export class HabitacionComponent implements OnInit {
     this.isDragging = false;
 
     if (this.habitacion.maximo <= this.habitacion.invitados.length) {
-      if (this.currentUser?.user.role !== 'admin') return;
+      if (this.currentUser?.user.tipoUsuarioId !== 1) return;
 
       const result = await this.confirmOverCapacity();
       if (!result) {

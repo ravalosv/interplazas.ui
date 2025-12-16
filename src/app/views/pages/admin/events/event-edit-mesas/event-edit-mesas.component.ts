@@ -122,7 +122,7 @@ export class EventEditMesasComponent implements OnInit {
             this.onFiltroGrupoChange(this.filtroGrupos[0]);
 
             // poner formulario en modo de solo lectura si está cerrado o cancelado
-            if (this.currentUser.user.role !== 'admin') {
+            if (this.currentUser.user.tipoUsuarioId !== 1) {
               const statusReadOnlyMode = [3, 5, 6];
               this.readOnlyMode = statusReadOnlyMode.includes(
                 this.evento.eventoStatusId
