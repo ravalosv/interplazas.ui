@@ -3,7 +3,7 @@ import { Routes } from '@angular/router';
 export const AdminLayout_ROUTES: Routes = [
   //Insights
   {
-    path: 'servicios',
+    path: 'operacion',
     data: {
       title: 'Servicios',
     },
@@ -11,8 +11,8 @@ export const AdminLayout_ROUTES: Routes = [
       {
         path: '',
         loadChildren: () =>
-          import('../../views/pages/admin/servicios/servicios.module').then(
-            (m) => m.ServiciosModule
+          import('../../views/pages/admin/operacion/operacion.module').then(
+            (m) => m.OperacionModule
           ),
       },
     ],

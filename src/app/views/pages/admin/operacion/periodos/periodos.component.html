@@ -1,0 +1,45 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a routerLink="/admin/operacion">Operación</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Periodos</li>
+  </ol>
+</nav>
+
+<nz-card>
+  <nz-table #table [nzData]="displayPeriodos" [nzLoading]="loading">
+    <thead>
+      <tr>
+        <th [nzSortFn]="sortId">ID</th>
+        <th [nzSortFn]="sortNombre">Nombre</th>
+        <th [nzSortFn]="sortMes">Mes</th>
+        <th [nzSortFn]="sortAnio">Año</th>
+        <th [nzSortFn]="sortEstado">Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of table.data">
+        <td>{{ p.id }}</td>
+        <td>{{ p.nombre }}</td>
+        <td>{{ p.mes }}</td>
+        <td>{{ p.anio }}</td>
+        <td>
+          <span class="badge" [ngClass]="p.activo ? 'bg-success' : 'bg-danger'">
+            {{ p.activo ? 'Abierto' : 'Cerrado' }}
+          </span>
+        </td>
+        <td>
+          <button *ngIf="p.activo" nz-button nzType="default" class="me-2" (click)="cerrarPeriodo(p)" title="Cerrar Periodo">
+            <i class="feather icon-lock me-2"></i> Cerrar
+          </button>
+          <button *ngIf="!p.activo" nz-button nzType="primary" (click)="abrirPeriodo(p)" title="Abrir Periodo">
+            <i class="feather icon-unlock me-2"></i> Abrir
+          </button>
+          <button nz-button nzType="default" class="ms-2" (click)="generarCedulas(p)" title="Generar Cédulas">
+            <i class="feather icon-file-text me-2"></i> Cédulas
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-card>

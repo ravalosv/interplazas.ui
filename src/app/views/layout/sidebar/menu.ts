@@ -4,13 +4,18 @@ import { MenuItem } from './menu.model';
 export const MENU_ADMIN: MenuItem[] = [
   // OFFERS
   {
-    label: 'Servicios',
+    label: 'Operación',
     isTitle: true,
   },
   {
     label: 'Servicios',
     icon: 'activity',
-    link: 'servicios',
+    link: 'operacion/servicios',
+  },
+  {
+    label: 'Periodos',
+    icon: 'activity',
+    link: 'operacion/periodos',
   },
 
   // Configuración

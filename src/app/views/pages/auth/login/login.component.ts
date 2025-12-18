@@ -70,7 +70,7 @@ export class LoginComponent implements OnInit {
             this.router.navigate([this.returnUrl]);
           } else {
             if (this.authService.isAdmin()) {
-              this.router.navigate(['admin/servicios']);
+              this.router.navigate(['admin/operacion/servicios']);
             } else {
               this.router.navigate(['client/servicios']);
             }
