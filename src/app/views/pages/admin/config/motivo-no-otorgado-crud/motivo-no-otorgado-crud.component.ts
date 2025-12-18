@@ -1,9 +1,9 @@
 import { Component, OnInit, TemplateRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { AlertsService } from 'src/app/core/services/alerts.service';
 import { MotivoNoOtorgadoService } from 'src/app/core/services/motivo-no-otorgado.service';
 import { MotivoNoOtorgadoAdminPayload } from 'src/app/core/interfaces/payloads/motivo_no_otorgado.payload';
+import { AlertsService } from 'src/app/core/services/alerts.service';
 
 @Component({
   selector: 'app-motivo-no-otorgado-crud',

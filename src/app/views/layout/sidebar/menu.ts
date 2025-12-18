@@ -4,13 +4,13 @@ import { MenuItem } from './menu.model';
 export const MENU_ADMIN: MenuItem[] = [
   // OFFERS
   {
-    label: 'Eventos',
+    label: 'Servicios',
     isTitle: true,
   },
   {
-    label: 'Mis eventos',
-    icon: 'book-open',
-    link: 'events/list',
+    label: 'Servicios',
+    icon: 'activity',
+    link: 'servicios',
   },
 
   // Configuración
@@ -18,6 +18,7 @@ export const MENU_ADMIN: MenuItem[] = [
     label: 'Configuración',
     isTitle: true,
   },
+
   {
     label: 'Filiales',
     icon: 'settings',
@@ -52,7 +53,7 @@ export const MENU_ADMIN: MenuItem[] = [
 
 export const MENU_CLIENTE: MenuItem[] = [
   // OFFERS
-  {
+/*   {
     label: 'Eventos',
     isTitle: true,
   },
@@ -60,5 +61,5 @@ export const MENU_CLIENTE: MenuItem[] = [
     label: 'Mis eventos',
     icon: 'book-open',
     link: 'events/list',
-  },
+  }, */
 ];

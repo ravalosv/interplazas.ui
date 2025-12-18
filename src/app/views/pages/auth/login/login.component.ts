@@ -70,9 +70,9 @@ export class LoginComponent implements OnInit {
             this.router.navigate([this.returnUrl]);
           } else {
             if (this.authService.isAdmin()) {
-              this.router.navigate(['admin/events/list']);
+              this.router.navigate(['admin/servicios']);
             } else {
-              this.router.navigate(['client/events/list']);
+              this.router.navigate(['client/servicios']);
             }
           }
         } else {

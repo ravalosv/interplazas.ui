@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { IUsersPayload } from 'src/app/core/interfaces/models/users';
-import { EventoPayload } from 'src/app/core/interfaces/payloads/evento.payload';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { EncryptionService } from 'src/app/core/services/encryption.service';
 import { UsersService } from 'src/app/core/services/users.service';

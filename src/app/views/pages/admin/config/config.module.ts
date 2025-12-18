@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 
 import { ConfigRoutingModule } from './config-routing.module';
 import { ConfigComponent } from './config.component';
-import { FilialesComponent } from './filiales/filiales.component';
 import { FilialesCrudComponent } from './filiales-crud/filiales-crud.component';
 import { UsuariosComponent } from './usuarios/usuarios.component';
 import { NzAvatarModule } from 'ng-zorro-antd/avatar';
@@ -44,6 +43,7 @@ import { TipoAtaudCrudComponent } from './tipo-ataud-crud/tipo-ataud-crud.compon
 import { MotivoNoOtorgadoCrudComponent } from './motivo-no-otorgado-crud/motivo-no-otorgado-crud.component';
 import { EstadoCtaStatusCrudComponent } from './estado-cta-status-crud/estado-cta-status-crud.component';
 
+
 const antdModule = [
   NzButtonModule,
   NzCardModule,
@@ -76,7 +76,6 @@ const antdModule = [
 @NgModule({
   declarations: [
     ConfigComponent,
-    FilialesComponent,
     FilialesCrudComponent,
     TipoDocumentoCrudComponent,
     TipoServicioCrudComponent,

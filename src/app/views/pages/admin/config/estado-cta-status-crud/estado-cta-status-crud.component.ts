@@ -1,9 +1,9 @@
 import { Component, OnInit, TemplateRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { AlertsService } from 'src/app/core/services/alerts.service';
 import { EstadoCtaStatusService } from 'src/app/core/services/estado-cta-status.service';
 import { EstadoCtaStatusAdminPayload } from 'src/app/core/interfaces/payloads/estado_cta_status.payload';
+import { AlertsService } from 'src/app/core/services/alerts.service';
 
 @Component({
   selector: 'app-estado-cta-status-crud',

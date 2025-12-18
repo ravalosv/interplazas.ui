@@ -11,7 +11,6 @@ import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { IUser } from 'src/app/core/interfaces/user.type';
-import { AvisosService } from 'src/app/core/services/avisos.service';
 import { IAvisoPayload } from 'src/app/core/interfaces/payloads/aviso.payload';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -35,7 +34,6 @@ export class NavbarComponent implements OnInit {
   constructor(
     @Inject(DOCUMENT) private document: Document,
     private authService: AuthenticationService,
-    private avisosService: AvisosService,
     private alertsService: AlertsService,
     private fb: FormBuilder,
     private modalService: NgbModal
@@ -46,7 +44,6 @@ export class NavbarComponent implements OnInit {
       this.currentUser = user!;
     });
 
-    this.getAvisos();
     this.initForm();
   }
 
@@ -73,17 +70,6 @@ export class NavbarComponent implements OnInit {
     this.authService.logout();
   }
 
-  getAvisos() {
-    this.avisosService.getAvisoByUser().subscribe((res) => {
-      this.notificaciones = res.data;
-
-      // verificar si hay notificaciones sin leer
-      this.notificacionesSinLeer = this.notificaciones.some(
-        (aviso) => !aviso.visto
-      );
-    });
-  }
-
   onClickNotificacion(content: TemplateRef<any>, aviso: IAvisoPayload) {
     this.tituloModal = aviso.titulo;
     this.formAviso.get('descripcion')?.setValue(aviso.descripcion);
@@ -94,33 +80,5 @@ export class NavbarComponent implements OnInit {
       .open(content, { size: 'md' })
       .result.then((result) => {})
       .catch((res) => {});
-  }
-
-  marcarComoVisto() {
-    this.avisosService
-      .marcarComoVisto(this.currentAviso!.id)
-      .subscribe((ret) => {
-        if (ret.success) {
-          this.getAvisos();
-          this.modalService.dismissAll();
-          this.alertsService.success('Actualizado correctamente');
-        } else {
-          this.alertsService.error(ret.error);
-        }
-      });
-  }
-
-  marcarComoNoVisto() {
-    this.avisosService
-      .marcarComoNoVisto(this.currentAviso!.id)
-      .subscribe((ret) => {
-        if (ret.success) {
-          this.getAvisos();
-          this.modalService.dismissAll();
-          this.alertsService.success('Actualizado correctamente');
-        } else {
-          this.alertsService.error(ret.error);
-        }
-      });
   }
 }

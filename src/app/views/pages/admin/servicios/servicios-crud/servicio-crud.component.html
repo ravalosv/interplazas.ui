@@ -1,0 +1,316 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/admin/servicios">Servicios</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Listado</li>
+  </ol>
+  <div class="d-flex justify-content-end bd-highlight mb-3">
+    <div class="bd-highlight me-2">
+      <button class="btn btn-primary" (click)="openCreate(modalEditor)">
+        <i class="feather icon-file-plus pe-2"></i>
+        Nuevo Servicio
+      </button>
+    </div>
+  </div>
+
+  <ng-template #modalEditor let-modal>
+    <form [formGroup]="form">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ modalTitle }}</h5>
+        <button type="button" class="btn-close" (click)="modal.close('by: close icon')" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-12">
+            <div class="mb-3 text-end">
+              <label class="form-label fw-bold">Fecha Captura: {{ form.get('displayFechaCaptura')?.value | date:'dd-MMM-yyyy' }}</label>
+            </div>
+          </div>
+        </div>
+        <ul ngbNav #nav="ngbNav" class="nav-tabs" [(activeId)]="activeTab">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>General</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Teléfono (WhatsApp)</label>
+                    <input type="text" class="form-control" formControlName="whatsapp" />
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink>Filial Otorgante</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3 justify-content-end">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Fecha del Servicio <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" formControlName="fo_Fecha_Servicio" [max]="maxDate"
+                           [ngClass]="{'is-invalid': form.get('fo_Fecha_Servicio')?.invalid && (form.get('fo_Fecha_Servicio')?.dirty || form.get('fo_Fecha_Servicio')?.touched)}" />
+                    <div class="invalid-feedback">Este campo es requerido</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Filial Otorgante <span class="text-danger">*</span></label>
+                    <ng-select [items]="filiales" bindLabel="nombre" bindValue="id" formControlName="fo_Filial_otorgante_Id"
+                               [ngClass]="{'is-invalid': form.get('fo_Filial_otorgante_Id')?.invalid && (form.get('fo_Filial_otorgante_Id')?.dirty || form.get('fo_Filial_otorgante_Id')?.touched)}"></ng-select>
+                    <div class="invalid-feedback d-block" *ngIf="form.get('fo_Filial_otorgante_Id')?.invalid && (form.get('fo_Filial_otorgante_Id')?.dirty || form.get('fo_Filial_otorgante_Id')?.touched)">Este campo es requerido</div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Filial Origen <span class="text-danger">*</span></label>
+                    <ng-select [items]="filiales" bindLabel="nombre" bindValue="id" formControlName="fo_Filial_Origen_Id"
+                               [ngClass]="{'is-invalid': form.get('fo_Filial_Origen_Id')?.invalid && (form.get('fo_Filial_Origen_Id')?.dirty || form.get('fo_Filial_Origen_Id')?.touched)}"></ng-select>
+                    <div class="invalid-feedback d-block" *ngIf="form.get('fo_Filial_Origen_Id')?.invalid && (form.get('fo_Filial_Origen_Id')?.dirty || form.get('fo_Filial_Origen_Id')?.touched)">Este campo es requerido</div>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Contrato <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="fo_Contrato" 
+                           [ngClass]="{'is-invalid': form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)}" />
+                    <div class="invalid-feedback">Este campo es requerido</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-5">
+                  <div class="mb-3">
+                    <label class="form-label">Titular <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="fo_Nombre_Titular" 
+                           [ngClass]="{'is-invalid': form.get('fo_Nombre_Titular')?.invalid && (form.get('fo_Nombre_Titular')?.dirty || form.get('fo_Nombre_Titular')?.touched)}" />
+                    <div class="invalid-feedback">Este campo es requerido</div>
+                  </div>
+                </div>
+                <div class="col-md-5">
+                  <div class="mb-3">
+                    <label class="form-label">Finado <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" formControlName="fo_Nombre_Finado" 
+                           [ngClass]="{'is-invalid': form.get('fo_Nombre_Finado')?.invalid && (form.get('fo_Nombre_Finado')?.dirty || form.get('fo_Nombre_Finado')?.touched)}" />
+                    <div class="invalid-feedback">Este campo es requerido</div>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="mb-3">
+                    <label class="form-label">Documento del cliente</label>
+                    <ng-select [items]="tiposDocumento" bindLabel="nombre" bindValue="id" formControlName="fo_Documento_Cliente_Id"></ng-select>
+                  </div>
+                </div>
+              </div>
+              <h6 class="mb-3 mt-4">Jefe de Turno</h6>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-control" formControlName="fo_Jefe_Turno_Nombre" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Puesto</label>
+                    <input type="text" class="form-control" formControlName="fo_Jefe_Turno_Puesto" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Teléfono (WhatsApp)</label>
+                    <input type="text" class="form-control" formControlName="fo_Jefe_Turno_WhatsApp" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="row mt-4">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Cual fue el monto recuperado del Saldo PABS?</label>
+                    <input type="number" class="form-control" formControlName="fo_Contrato_Monto_Recuperado" />
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Monto del convenio?</label>
+                    <input type="number" class="form-control" formControlName="fo_Contrato_Monto_Convenio" />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">El servicio fue Inhumación o cremación?</label>
+                    <ng-select [items]="tiposServicio" bindLabel="nombre" bindValue="id" formControlName="fo_Tipo_Servicio_Id"></ng-select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Que tipo de ataúd o urna fue otorgado</label>
+                    <ng-select [items]="tiposAtaud" bindLabel="nombre" bindValue="id" formControlName="fo_Tipo_Ataud_Id"></ng-select>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="3">
+            <a ngbNavLink>Filial Origen</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Estatus</label>
+                    <ng-select [items]="statuses" bindLabel="nombre" bindValue="id" formControlName="fori_Status_Contrato_Id"></ng-select>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Saldo PABS</label>
+                    <input type="number" class="form-control" formControlName="fori_Saldo_Contrato" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3 form-check pt-4">
+                    <input type="checkbox" class="form-check-input" formControlName="fori_Acepta_Convenio" id="checkConvenio">
+                    <label class="form-check-label ms-2" for="checkConvenio">Se le puede dar convenio</label>
+                  </div>
+                </div>
+              </div>
+              
+              <h6 class="mb-3 mt-3">Persona que otorga información</h6>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Nombre</label>
+                    <input type="text" class="form-control" formControlName="fori_Otorga_Info_Nombre" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Puesto</label>
+                    <input type="text" class="form-control" formControlName="fori_Otorga_Info_Puesto" />
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Teléfono (WhatsApp)</label>
+                    <input type="text" class="form-control" formControlName="fori_Otorga_Info_Telefono" />
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="4">
+            <a ngbNavLink>Expediente</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Solicitud del Servicio</label>
+                    <ng-select [items]="estadoCtaStatuses" bindLabel="nombre" bindValue="id" formControlName="exp_Solicitud_Servicio_Status_id"></ng-select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Comprobante del pago (si aplica)</label>
+                    <ng-select [items]="estadoCtaStatuses" bindLabel="nombre" bindValue="id" formControlName="exp_Comprobante_Pago_Status_Id"></ng-select>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Convenio (si aplica)</label>
+                    <ng-select [items]="estadoCtaStatuses" bindLabel="nombre" bindValue="id" formControlName="exp_Convenio_Status_Id"></ng-select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Motivo No Otorgado</label>
+                    <ng-select [items]="motivos" bindLabel="nombre" bindValue="id" formControlName="exp_Motivo_De_No_Otorgado_Id"></ng-select>
+                  </div>
+                  <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" formControlName="exp_Enviado_Grupo_Whats" id="checkWhats">
+                    <label class="form-check-label" for="checkWhats">Enviado al grupo interno</label>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <div class="mb-3">
+                    <label class="form-label">Observaciones</label>
+                    <textarea class="form-control" rows="3" formControlName="exp_Observaciones"></textarea>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+        </ul>
+        <div [ngbNavOutlet]="nav" class="mt-3"></div>
+      </div>
+      <div class="modal-footer">
+        <div class="me-auto">
+          <div class="alert alert-danger mb-0 p-2" *ngIf="isPenalizado">
+            <i class="feather icon-alert-triangle me-2"></i>Servicio capturado fuera de periodo
+          </div>
+        </div>
+        <button type="button" class="btn btn-warning" *ngIf="isAdmin && editingId" (click)="togglePenalizado()">
+          {{ isPenalizado ? 'Despenalizar' : 'Penalizar' }}
+        </button>
+        <button type="button" class="btn btn-primary" [disabled]="form.invalid" (click)="save(true)">Guardar y cerrar</button>
+        <button type="button" class="btn btn-success" [disabled]="form.invalid" (click)="save(false)">Guardar y nuevo</button>
+      </div>
+    </form>
+  </ng-template>
+</nav>
+
+<nz-card>
+  <div class="row mb-3 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label">Mes</label>
+      <ng-select [items]="months" bindLabel="name" bindValue="id" [(ngModel)]="selectedMonth" [clearable]="false"></ng-select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Año</label>
+      <ng-select [items]="years" [(ngModel)]="selectedYear" [clearable]="false"></ng-select>
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-primary w-100" (click)="searchByDate()">
+        <i class="feather icon-search pe-2"></i>Buscar
+      </button>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Filtrar</label>
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Buscar por Contrato, Titular o Finado"
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="search()"
+      />
+    </div>
+  </div>
+  <nz-table #table [nzData]="displayServicios" [nzLoading]="loading">
+    <thead>
+      <tr>
+        <th [nzSortFn]="sortContrato">Contrato</th>
+        <th [nzSortFn]="sortTitular">Titular</th>
+        <th [nzSortFn]="sortFinado">Finado</th>
+        <th [nzSortFn]="sortFecha">Fecha Servicio</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of table.data">
+        <td>{{ item.fo_Contrato }}</td>
+        <td>{{ item.fo_Nombre_Titular }}</td>
+        <td>{{ item.fo_Nombre_Finado }}</td>
+        <td>{{ item.fo_Fecha_Servicio | date:'dd-MMM-yyyy' }}</td>
+        <td class="text-end">
+          <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
+            Editar
+          </button>
+          <button nz-button nzType="default" nzDanger (click)="onDelete(item.id)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-card>

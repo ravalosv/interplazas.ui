@@ -8,13 +8,13 @@ export const ClientLayout_ROUTES: Routes = [
       title: 'Dashboard',
     },
     children: [
-      {
+/*       {
         path: '',
         loadChildren: () =>
           import('../../views/pages/admin/events/events.module').then(
             (m) => m.EventsModule
           ),
-      },
+      }, */
     ],
   },
 ];

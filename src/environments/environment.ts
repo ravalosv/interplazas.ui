@@ -11,7 +11,7 @@ export const environment = {
   apiUrl: 'http://localhost:3165/api',
   fotosUrl: 'http://localhost:3165/api/storage',
 
-  enable_routing_debug: false,
+  enable_routing_debug: true,
 
   //apiUrl: 'http://54.70.207.245:3165',
   //fotosUrl: 'http://54.70.207.245:3000/api',
