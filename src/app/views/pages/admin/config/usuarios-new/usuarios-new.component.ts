@@ -197,7 +197,7 @@ export class UsuariosNewComponent implements OnInit {
         }
       },
       error: (e) => {
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
     });
   }
@@ -211,7 +211,7 @@ export class UsuariosNewComponent implements OnInit {
         }
       },
       error: (e) => {
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
     });
   }
@@ -234,8 +234,9 @@ export class UsuariosNewComponent implements OnInit {
       : { passwordMismatch: true };
   };
 
-  onSubmit() {
+  save(redirectToList: boolean) {
     if (this.form.invalid) {
+      Object.values(this.form.controls).forEach((c) => c.markAsTouched());
       return;
     }
 
@@ -259,7 +260,11 @@ export class UsuariosNewComponent implements OnInit {
           next: (data) => {
             if (data.success) {
               this.alertsService.success('Usuario creado exitosamente');
-              this.resetFormToDefaults();
+              if (redirectToList) {
+                this.router.navigate(['admin/config/usuarios']);
+              } else {
+                this.resetFormToDefaults();
+              }
             } else {
               this.alertsService.error(data.error);
             }
@@ -285,6 +290,16 @@ export class UsuariosNewComponent implements OnInit {
           next: (data) => {
             if (data.success) {
               this.alertsService.success('Usuario actualizado exitosamente');
+              if (redirectToList) {
+                this.router.navigate(['admin/config/usuarios']);
+              } else {
+                this.resetFormToDefaults();
+                this.usuarioId = null;
+                this.currentBreadcrumb = 'Nuevo';
+                this.isDisabled = false;
+                // Optional: Update URL to reflect new state without reload
+                // this.location.go(...) - requires Location service
+              }
             } else {
               this.alertsService.error(data.error);
             }

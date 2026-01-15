@@ -5,8 +5,16 @@
     </li>
     <li class="breadcrumb-item active" aria-current="page">Listado</li>
   </ol>
-  <div class="d-flex justify-content-end bd-highlight mb-3">
-    <div class="bd-highlight me-2">
+  <div class="d-flex justify-content-between align-items-center bd-highlight mb-3">
+    <div class="flex-grow-1 bd-highlight me-2">
+      <input
+        type="text"
+        class="form-control w-100"
+        placeholder="Filtrar por nombre o grupo"
+        [(ngModel)]="filtro"
+      />
+    </div>
+    <div class="bd-highlight ms-2">
       <button class="btn btn-primary" (click)="openCreate(modalFilialEditor)">
         <i class="feather icon-file-plus pe-2"></i>
         Nueva Filial
@@ -28,6 +36,14 @@
           </div>
         </div>
         <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Grupo</strong></label>
+          <ng-select [items]="grupos" bindLabel="nombre" bindValue="id" formControlName="grupoId" placeholder="Seleccione un grupo">
+          </ng-select>
+          <div class="alert alert-danger p-2" *ngIf="form.get('grupoId')?.touched && form.get('grupoId')?.errors?.required">
+            El grupo es requerido
+          </div>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
           <label class="form-label"><strong>Extranjera</strong></label>
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" id="extranjeraSwitch" formControlName="extranjera" />
@@ -44,10 +60,11 @@
 </nav>
 
 <nz-card>
-  <nz-table #filialesTable [nzData]="filiales" [nzLoading]="loading" [nzFrontPagination]="true" [nzPageSize]="10">
+  <nz-table #filialesTable [nzData]="filialesFiltradas" [nzLoading]="loading" [nzFrontPagination]="true" [nzPageSize]="10">
     <thead>
       <tr>
         <th>Nombre</th>
+        <th>Grupo</th>
         <th>Extranjera</th>
         <th></th>
       </tr>
@@ -55,6 +72,7 @@
     <tbody>
       <tr *ngFor="let item of filialesTable.data">
         <td>{{ item.nombre }}</td>
+        <td>{{ item.grupo?.nombre }}</td>
         <td>{{ item.extranjera ? 'Sí' : 'No' }}</td>
         <td class="text-end">
           <button nz-button nzType="default" class="me-2" (click)="openEdit(modalFilialEditor, item)">

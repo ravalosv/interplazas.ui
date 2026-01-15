@@ -1,12 +1,15 @@
 export interface ServicioPayload {
   id: number;
-  whatsapp: string;
-  fo_Filial_otorgante_Id: number;
-  fo_Filial_Origen_Id: number;
+  canalComunicacionId: number | null;
+  fo_Sucursal_otorgante_Id: number;
+  fo_Sucursal_Origen_Id: number;
   fo_Contrato: string;
   fo_Nombre_Titular: string;
   fo_Nombre_Finado: string;
   fo_Documento_Cliente_Id: number;
+  fo_Documento_Cliente_url: string;
+  fo_Monto_Devuelto: string | number;
+  fo_Monto_devuelto_documento_url: string;
   fo_Jefe_Turno_Nombre: string;
   fo_Jefe_Turno_Puesto: string;
   fo_Jefe_Turno_WhatsApp: string;
@@ -20,17 +23,17 @@ export interface ServicioPayload {
   fo_Contrato_Monto_Recuperado: string | number;
   fo_Contrato_Monto_Convenio: string | number;
   fo_Tipo_Servicio_Id: number;
-  fo_Tipo_Ataud_Id: number;
+  fo_Concepto_Id: number;
   exp_Solicitud_Servicio_Status_id: number;
-  exp_Solicitud_Servicio_File_Name: string;
+  exp_Solicitud_Servicio_url: string;
   exp_Comprobante_Pago_Status_Id: number;
-  exp_Comprobante_Pago_File_Name: string;
+  exp_Comprobante_Pago_url: string;
   exp_Convenio_Status_Id: number;
-  exp_Convenio_File_Name: string;
+  exp_Convenio_url: string;
   exp_Enviado_Grupo_Whats: boolean;
   exp_Motivo_De_No_Otorgado_Id: number | null;
   exp_Expediente_Completo: string;
-  exp_Observaciones: string;
+  exp_Observaciones_cierre: string;
   penalizado: boolean;
   Usuario_CapturaId: number;
   Fecha_Captura: string;
@@ -41,7 +44,7 @@ export interface ServicioPayload {
   tipoDocumento?: any;
   statusContrato?: any;
   tipoServicio?: any;
-  tipoAtaud?: any;
+  concepto?: any;
   solicitudServicioStatus?: any;
   comprobantePagoStatus?: any;
   convenioStatus?: any;
@@ -50,13 +53,15 @@ export interface ServicioPayload {
 }
 
 export interface ServicioCreatePayload {
-  whatsapp: string;
-  fo_Filial_otorgante_Id: number;
-  fo_Filial_Origen_Id: number;
+  canalComunicacionId: number | null;
+  fo_Sucursal_otorgante_Id: number;
+  fo_Sucursal_Origen_Id: number;
   fo_Contrato: string;
   fo_Nombre_Titular: string;
   fo_Nombre_Finado: string;
   fo_Documento_Cliente_Id: number;
+  fo_Documento_Cliente_url: string;
+  fo_Monto_devuelto_documento_url: string;
   fo_Jefe_Turno_Nombre: string;
   fo_Jefe_Turno_Puesto: string;
   fo_Jefe_Turno_WhatsApp: string;
@@ -69,14 +74,15 @@ export interface ServicioCreatePayload {
   fori_Otorga_Info_Telefono: string;
   fo_Contrato_Monto_Recuperado: number;
   fo_Contrato_Monto_Convenio: number;
+  fo_Monto_Devuelto: number;
   fo_Tipo_Servicio_Id: number;
-  fo_Tipo_Ataud_Id: number;
+  fo_Concepto_Id: number;
   exp_Solicitud_Servicio_Status_id: number;
-  exp_Solicitud_Servicio_File_Name: string;
+  exp_Solicitud_Servicio_url: string;
   exp_Comprobante_Pago_Status_Id: number;
-  exp_Comprobante_Pago_File_Name: string;
+  exp_Comprobante_Pago_url: string;
   exp_Convenio_Status_Id: number;
-  exp_Convenio_File_Name: string;
+  exp_Convenio_url: string;
   exp_Enviado_Grupo_Whats: boolean;
   exp_Motivo_De_No_Otorgado_Id: number | null;
   exp_Expediente_Completo: string;

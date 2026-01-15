@@ -29,47 +29,26 @@
           </div>
         </div>
         <ul ngbNav #nav="ngbNav" class="nav-tabs" [(activeId)]="activeTab">
-          <li [ngbNavItem]="1">
-            <a ngbNavLink>General</a>
-            <ng-template ngbNavContent>
-              <div class="row mt-3">
-                <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Teléfono (WhatsApp)</label>
-                    <input type="text" class="form-control" formControlName="whatsapp" />
-                  </div>
-                </div>
-              </div>
-            </ng-template>
-          </li>
+          <!-- Datos del Servicio -->
           <li [ngbNavItem]="2">
-            <a ngbNavLink>Filial Otorgante</a>
+            <a ngbNavLink>Datos del Servicio</a>
             <ng-template ngbNavContent>
-              <div class="row mt-3 justify-content-end">
-                <div class="col-md-4">
-                  <div class="mb-3">
-                    <label class="form-label">Fecha del Servicio <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" formControlName="fo_Fecha_Servicio" [max]="maxDate"
-                           [ngClass]="{'is-invalid': form.get('fo_Fecha_Servicio')?.invalid && (form.get('fo_Fecha_Servicio')?.dirty || form.get('fo_Fecha_Servicio')?.touched)}" />
-                    <div class="invalid-feedback">Este campo es requerido</div>
-                  </div>
-                </div>
-              </div>
+
               <div class="row">
                 <div class="col-md-4">
                   <div class="mb-3">
-                    <label class="form-label">Filial Otorgante <span class="text-danger">*</span></label>
-                    <ng-select [items]="filiales" bindLabel="nombre" bindValue="id" formControlName="fo_Filial_otorgante_Id"
-                               [ngClass]="{'is-invalid': form.get('fo_Filial_otorgante_Id')?.invalid && (form.get('fo_Filial_otorgante_Id')?.dirty || form.get('fo_Filial_otorgante_Id')?.touched)}"></ng-select>
-                    <div class="invalid-feedback d-block" *ngIf="form.get('fo_Filial_otorgante_Id')?.invalid && (form.get('fo_Filial_otorgante_Id')?.dirty || form.get('fo_Filial_otorgante_Id')?.touched)">Este campo es requerido</div>
+                    <label class="form-label">Sucursal Otorgante <span class="text-danger">*</span></label>
+                    <ng-select [items]="sucursales" bindLabel="nombre" bindValue="id" formControlName="fo_Sucursal_otorgante_Id"
+                               [ngClass]="{'is-invalid': form.get('fo_Sucursal_otorgante_Id')?.invalid && (form.get('fo_Sucursal_otorgante_Id')?.dirty || form.get('fo_Sucursal_otorgante_Id')?.touched)}"></ng-select>
+                    <div class="invalid-feedback d-block" *ngIf="form.get('fo_Sucursal_otorgante_Id')?.invalid && (form.get('fo_Sucursal_otorgante_Id')?.dirty || form.get('fo_Sucursal_otorgante_Id')?.touched)">Este campo es requerido</div>
                   </div>
                 </div>
                 <div class="col-md-4">
                   <div class="mb-3">
-                    <label class="form-label">Filial Origen <span class="text-danger">*</span></label>
-                    <ng-select [items]="filiales" bindLabel="nombre" bindValue="id" formControlName="fo_Filial_Origen_Id"
-                               [ngClass]="{'is-invalid': form.get('fo_Filial_Origen_Id')?.invalid && (form.get('fo_Filial_Origen_Id')?.dirty || form.get('fo_Filial_Origen_Id')?.touched)}"></ng-select>
-                    <div class="invalid-feedback d-block" *ngIf="form.get('fo_Filial_Origen_Id')?.invalid && (form.get('fo_Filial_Origen_Id')?.dirty || form.get('fo_Filial_Origen_Id')?.touched)">Este campo es requerido</div>
+                    <label class="form-label">Sucursal Origen <span class="text-danger">*</span></label>
+                    <ng-select [items]="sucursales" bindLabel="nombre" bindValue="id" formControlName="fo_Sucursal_Origen_Id"
+                               [ngClass]="{'is-invalid': form.get('fo_Sucursal_Origen_Id')?.invalid && (form.get('fo_Sucursal_Origen_Id')?.dirty || form.get('fo_Sucursal_Origen_Id')?.touched)}"></ng-select>
+                    <div class="invalid-feedback d-block" *ngIf="form.get('fo_Sucursal_Origen_Id')?.invalid && (form.get('fo_Sucursal_Origen_Id')?.dirty || form.get('fo_Sucursal_Origen_Id')?.touched)">Este campo es requerido</div>
                   </div>
                 </div>
                 <div class="col-md-4">
@@ -100,11 +79,47 @@
                 </div>
                 <div class="col-md-2">
                   <div class="mb-3">
+                    <label class="form-label">Fecha del Servicio <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" formControlName="fo_Fecha_Servicio" [max]="maxDate"
+                           [ngClass]="{'is-invalid': form.get('fo_Fecha_Servicio')?.invalid && (form.get('fo_Fecha_Servicio')?.dirty || form.get('fo_Fecha_Servicio')?.touched)}" />
+                    <div class="invalid-feedback">Este campo es requerido</div>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
                     <label class="form-label">Documento del cliente</label>
                     <ng-select [items]="tiposDocumento" bindLabel="nombre" bindValue="id" formControlName="fo_Documento_Cliente_Id"></ng-select>
                   </div>
                 </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <div class="d-flex align-items-center gap-2">
+                      <input type="file" #fileInput style="display:none" (change)="onFileSelected($event, 'fo_Documento_Cliente_url')" accept=".pdf,image/*" />
+                      
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileInput)">
+                        <i class="feather icon-upload"></i> {{ hasDocument('fo_Documento_Cliente_url') ? 'Cambiar' : 'Cargar documento' }}
+                      </button>
+
+                      <button type="button" class="btn btn-info btn-sm" (click)="viewDocument('fo_Documento_Cliente_url')" *ngIf="hasDocument('fo_Documento_Cliente_url')">
+                        <i class="feather icon-eye"></i> Ver documento
+                      </button>
+
+                      <button type="button" class="btn btn-danger btn-sm" (click)="deleteDocument('fo_Documento_Cliente_url')" *ngIf="hasDocument('fo_Documento_Cliente_url')">
+                        <i class="feather icon-trash-2"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </ng-template>
+          </li>
+          <!-- Datos Filial Otorgante -->
+          <li [ngbNavItem]="5">
+            <a ngbNavLink>Datos Filial Otorgante</a>
+            <ng-template ngbNavContent>
               <h6 class="mb-3 mt-4">Jefe de Turno</h6>
               <div class="row">
                 <div class="col-md-4">
@@ -126,18 +141,45 @@
                   </div>
                 </div>
               </div>
-
               <div class="row mt-4">
-                <div class="col-md-6">
+                <div class="col-md-4">
                   <div class="mb-3">
                     <label class="form-label">Cual fue el monto recuperado del Saldo PABS?</label>
                     <input type="number" class="form-control" formControlName="fo_Contrato_Monto_Recuperado" />
                   </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                   <div class="mb-3">
                     <label class="form-label">Monto del convenio?</label>
                     <input type="number" class="form-control" formControlName="fo_Contrato_Monto_Convenio" />
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Monto devuelto a Sucursal Origen</label>
+                    <input type="number" class="form-control" formControlName="fo_Monto_Devuelto" />
+                  </div>
+                </div>
+                <div class="col-md-8">
+                  <div class="mb-3">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <div class="d-flex align-items-center gap-2">
+                      <input type="file" #fileMontoDevueltoInput style="display:none" (change)="onFileSelected($event, 'fo_Monto_devuelto_documento_url')" accept=".pdf,image/*" />
+                      
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileMontoDevueltoInput)">
+                        <i class="feather icon-upload"></i> {{ hasDocument('fo_Monto_devuelto_documento_url') ? 'Cambiar' : 'Cargar documento' }}
+                      </button>
+
+                      <button type="button" class="btn btn-info btn-sm" (click)="viewDocument('fo_Monto_devuelto_documento_url')" *ngIf="hasDocument('fo_Monto_devuelto_documento_url')">
+                        <i class="feather icon-eye"></i> Ver documento
+                      </button>
+
+                      <button type="button" class="btn btn-danger btn-sm" (click)="deleteDocument('fo_Monto_devuelto_documento_url')" *ngIf="hasDocument('fo_Monto_devuelto_documento_url')">
+                        <i class="feather icon-trash-2"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -151,14 +193,23 @@
                 <div class="col-md-6">
                   <div class="mb-3">
                     <label class="form-label">Que tipo de ataúd o urna fue otorgado</label>
-                    <ng-select [items]="tiposAtaud" bindLabel="nombre" bindValue="id" formControlName="fo_Tipo_Ataud_Id"></ng-select>
+                    <ng-select [items]="conceptos" bindLabel="nombre" bindValue="id" formControlName="fo_Concepto_Id"></ng-select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Motivo No Otorgado</label>
+                    <ng-select [items]="motivos" bindLabel="nombre" bindValue="id" formControlName="exp_Motivo_De_No_Otorgado_Id"></ng-select>
                   </div>
                 </div>
               </div>
             </ng-template>
           </li>
+          <!-- Datos Filial Origen -->
           <li [ngbNavItem]="3">
-            <a ngbNavLink>Filial Origen</a>
+            <a ngbNavLink>Datos Filial Origen</a>
             <ng-template ngbNavContent>
               <div class="row mt-3">
                 <div class="col-md-4">
@@ -204,6 +255,7 @@
               </div>
             </ng-template>
           </li>
+          <!-- Expediente -->
           <li [ngbNavItem]="4">
             <a ngbNavLink>Expediente</a>
             <ng-template ngbNavContent>
@@ -211,33 +263,259 @@
                 <div class="col-md-6">
                   <div class="mb-3">
                     <label class="form-label">Solicitud del Servicio</label>
-                    <ng-select [items]="estadoCtaStatuses" bindLabel="nombre" bindValue="id" formControlName="exp_Solicitud_Servicio_Status_id"></ng-select>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Comprobante del pago (si aplica)</label>
-                    <ng-select [items]="estadoCtaStatuses" bindLabel="nombre" bindValue="id" formControlName="exp_Comprobante_Pago_Status_Id"></ng-select>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Convenio (si aplica)</label>
-                    <ng-select [items]="estadoCtaStatuses" bindLabel="nombre" bindValue="id" formControlName="exp_Convenio_Status_Id"></ng-select>
+                    <ng-select
+                      [items]="estadoCtaStatuses"
+                      bindLabel="nombre"
+                      bindValue="id"
+                      formControlName="exp_Solicitud_Servicio_Status_id">
+                    </ng-select>
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label">Motivo No Otorgado</label>
-                    <ng-select [items]="motivos" bindLabel="nombre" bindValue="id" formControlName="exp_Motivo_De_No_Otorgado_Id"></ng-select>
-                  </div>
-                  <div class="mb-3 form-check">
-                    <input type="checkbox" class="form-check-input" formControlName="exp_Enviado_Grupo_Whats" id="checkWhats">
-                    <label class="form-check-label" for="checkWhats">Enviado al grupo interno</label>
+      <div class="mb-3">
+        <label class="form-label d-block">&nbsp;</label>
+        <div class="d-flex align-items-center gap-2">
+          <input
+            type="file"
+            #fileSolicitudServicioInput
+            style="display:none"
+            (change)="onFileSelected($event, 'exp_Solicitud_Servicio_url')"
+            accept=".pdf,image/*"
+          />
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileSolicitudServicioInput)">
+                        <i class="feather icon-upload"></i>
+                        {{ hasDocument('exp_Solicitud_Servicio_url') ? 'Cambiar' : 'Cargar documento' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-info btn-sm"
+                        (click)="viewDocument('exp_Solicitud_Servicio_url')"
+                        *ngIf="hasDocument('exp_Solicitud_Servicio_url')"
+                      >
+                        <i class="feather icon-eye"></i> Ver documento
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        (click)="deleteDocument('exp_Solicitud_Servicio_url')"
+                        *ngIf="hasDocument('exp_Solicitud_Servicio_url')"
+                      >
+                        <i class="feather icon-trash-2"></i>
+                      </button>
+                    </div>
+
                   </div>
                 </div>
               </div>
               <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Comprobante del pago (si aplica)</label>
+                    <ng-select
+                      [items]="estadoCtaStatuses"
+                      bindLabel="nombre"
+                      bindValue="id"
+                      formControlName="exp_Comprobante_Pago_Status_Id">
+                    </ng-select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+      <div class="mb-3">
+        <label class="form-label d-block">&nbsp;</label>
+        <div class="d-flex align-items-center gap-2">
+          <input
+            type="file"
+            #fileComprobantePagoInput
+            style="display:none"
+            (change)="onFileSelected($event, 'exp_Comprobante_Pago_url')"
+            accept=".pdf,image/*"
+          />
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileComprobantePagoInput)">
+                        <i class="feather icon-upload"></i>
+                        {{ hasDocument('exp_Comprobante_Pago_url') ? 'Cambiar' : 'Cargar documento' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-info btn-sm"
+                        (click)="viewDocument('exp_Comprobante_Pago_url')"
+                        *ngIf="hasDocument('exp_Comprobante_Pago_url')"
+                      >
+                        <i class="feather icon-eye"></i> Ver documento
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        (click)="deleteDocument('exp_Comprobante_Pago_url')"
+                        *ngIf="hasDocument('exp_Comprobante_Pago_url')"
+                      >
+                        <i class="feather icon-trash-2"></i>
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Convenio (si aplica)</label>
+                    <ng-select
+                      [items]="estadoCtaStatuses"
+                      bindLabel="nombre"
+                      bindValue="id"
+                      formControlName="exp_Convenio_Status_Id">
+                    </ng-select>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label d-block">&nbsp;</label>
+                    <div class="d-flex align-items-center gap-2">
+                      <input
+                        type="file"
+                        #fileConvenioInput
+                        style="display:none"
+                        (change)="onFileSelected($event, 'exp_Convenio_url')"
+                        accept=".pdf,image/*"
+                      />
+                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileConvenioInput)">
+                        <i class="feather icon-upload"></i>
+                        {{ hasDocument('exp_Convenio_url') ? 'Cambiar' : 'Cargar documento' }}
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-info btn-sm"
+                        (click)="viewDocument('exp_Convenio_url')"
+                        *ngIf="hasDocument('exp_Convenio_url')"
+                      >
+                        <i class="feather icon-eye"></i> Ver documento
+                      </button>
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        (click)="deleteDocument('exp_Convenio_url')"
+                        *ngIf="hasDocument('exp_Convenio_url')"
+                      >
+                        <i class="feather icon-trash-2"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <!-- Observaciones -->
+          <li [ngbNavItem]="6">
+            <a ngbNavLink>Observaciones</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3" *ngIf="!editingId">
+                <div class="col-md-12">
+                  <div class="alert alert-info">
+                    Guarde el servicio para poder agregar observaciones.
+                  </div>
+                </div>
+              </div>
+              <div *ngIf="editingId">
+                <div class="row mt-3">
+                  <div class="col-md-12">
+                    <div class="mb-3">
+                      <label class="form-label">Nueva observación</label>
+                      <textarea
+                        class="form-control"
+                        rows="3"
+                        [(ngModel)]="nuevaObservacion"
+                        [ngModelOptions]="{ standalone: true }"
+                      ></textarea>
+                    </div>
+                    <div class="text-end">
+                      <button
+                        type="button"
+                        class="btn btn-primary btn-sm"
+                        (click)="addObservacion()"
+                        [disabled]="loadingObservaciones"
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="row mt-3">
+                  <div class="col-md-12">
+                    <div *ngIf="loadingObservaciones" class="text-muted">
+                      Cargando observaciones...
+                    </div>
+                    <div *ngIf="!loadingObservaciones && observaciones.length === 0" class="text-muted">
+                      No hay observaciones registradas.
+                    </div>
+                    <table class="table table-sm" *ngIf="!loadingObservaciones && observaciones.length > 0">
+                      <thead>
+                        <tr>
+                          <th>Fecha</th>
+                          <th>Usuario</th>
+                          <th>Observación</th>
+                          <th class="text-end">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr *ngFor="let obs of observaciones">
+                          <td>{{ obs.createdAt | date: 'dd-MMM-yyyy HH:mm' }}</td>
+                          <td>{{ obs.usuario?.name || '-' }}</td>
+                          <td>{{ obs.observacion }}</td>
+                          <td class="text-end">
+                            <button
+                              type="button"
+                              class="btn btn-danger btn-sm"
+                              (click)="onDeleteObservacion(obs)"
+                              [disabled]="loadingObservaciones"
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <!-- Cierre -->
+          <li [ngbNavItem]="7">
+            <a ngbNavLink>Cierre</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3">
                 <div class="col-md-12">
                   <div class="mb-3">
-                    <label class="form-label">Observaciones</label>
-                    <textarea class="form-control" rows="3" formControlName="exp_Observaciones"></textarea>
+                    <label class="form-label">Observaciones de cierre</label>
+                    <textarea
+                      class="form-control"
+                      rows="3"
+                      formControlName="exp_Observaciones_cierre"
+                    ></textarea>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <!-- Comunicación -->
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Comunicación</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Canal de Comunicación</label>
+                    <ng-select [items]="canalesComunicacion" bindLabel="nombre" bindValue="id" formControlName="canalComunicacionId"></ng-select>
+                  </div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <div class="form-check">
+                      <input type="checkbox" class="form-check-input" formControlName="exp_Enviado_Grupo_Whats" id="checkWhats">
+                      <label class="form-check-label" for="checkWhats">Enviado al grupo interno</label>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -264,18 +542,16 @@
 
 <nz-card>
   <div class="row mb-3 align-items-end">
-    <div class="col-md-3">
-      <label class="form-label">Mes</label>
-      <ng-select [items]="months" bindLabel="name" bindValue="id" [(ngModel)]="selectedMonth" [clearable]="false"></ng-select>
-    </div>
-    <div class="col-md-2">
-      <label class="form-label">Año</label>
-      <ng-select [items]="years" [(ngModel)]="selectedYear" [clearable]="false"></ng-select>
-    </div>
-    <div class="col-md-2">
-      <button class="btn btn-primary w-100" (click)="searchByDate()">
-        <i class="feather icon-search pe-2"></i>Buscar
-      </button>
+    <div class="col-md-4">
+      <label class="form-label">Periodo</label>
+      <ng-select
+        [items]="periodos"
+        bindLabel="nombre"
+        bindValue="id"
+        [(ngModel)]="selectedPeriodoId"
+        [clearable]="false"
+        (change)="searchByPeriodo()">
+      </ng-select>
     </div>
     <div class="col-md-5">
       <label class="form-label">Filtrar</label>
@@ -291,6 +567,8 @@
   <nz-table #table [nzData]="displayServicios" [nzLoading]="loading">
     <thead>
       <tr>
+        <th>Filial Origen</th>
+        <th>Filial Otorgante</th>
         <th [nzSortFn]="sortContrato">Contrato</th>
         <th [nzSortFn]="sortTitular">Titular</th>
         <th [nzSortFn]="sortFinado">Finado</th>
@@ -300,6 +578,8 @@
     </thead>
     <tbody>
       <tr *ngFor="let item of table.data">
+        <td>{{ item.filialOrigen?.nombre }}</td>
+        <td>{{ item.filialOtorgante?.nombre }}</td>
         <td>{{ item.fo_Contrato }}</td>
         <td>{{ item.fo_Nombre_Titular }}</td>
         <td>{{ item.fo_Nombre_Finado }}</td>

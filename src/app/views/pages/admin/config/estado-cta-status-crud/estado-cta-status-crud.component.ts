@@ -50,7 +50,7 @@ export class EstadoCtaStatusCrudComponent implements OnInit {
       },
       error: (e) => {
         this.loading = false;
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
     });
   }
@@ -93,7 +93,7 @@ export class EstadoCtaStatusCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e),
+        error: (e) => this.alertsService.error(e.error),
       });
     } else {
       this.estadoService.update(this.editingId, payload).subscribe({
@@ -112,7 +112,7 @@ export class EstadoCtaStatusCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e),
+        error: (e) => this.alertsService.error(e.error),
       });
     }
   }
@@ -131,7 +131,7 @@ export class EstadoCtaStatusCrudComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e),
+          error: (e) => this.alertsService.error(e.error),
         });
       },
     });

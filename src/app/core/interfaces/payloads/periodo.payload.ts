@@ -6,4 +6,5 @@ export interface PeriodoPayload {
   activo: boolean;
   createdAt: Date;
   updatedAt: Date;
+  cedulas?: { id: number }[];
 }

@@ -4,14 +4,19 @@ import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { ServicioService } from 'src/app/core/services/servicio.service';
-import { FilialService } from 'src/app/core/services/filial.service';
+import { SucursalService } from 'src/app/core/services/sucursal.service';
 import { TipoDocumentoService } from 'src/app/core/services/tipo-documento.service';
 import { TipoServicioService } from 'src/app/core/services/tipo-servicio.service';
-import { TipoAtaudService } from 'src/app/core/services/tipo-ataud.service';
+import { ConceptoService } from 'src/app/core/services/concepto.service';
 import { MotivoNoOtorgadoService } from 'src/app/core/services/motivo-no-otorgado.service';
 import { StatusService } from 'src/app/core/services/status.service';
 import { EstadoCtaStatusService } from 'src/app/core/services/estado-cta-status.service';
+import { CanalComunicacionService } from 'src/app/core/services/canal-comunicacion.service';
 import { ServicioCreatePayload, ServicioPayload } from 'src/app/core/interfaces/payloads/servicio.payload';
+import { ServicioObservacionService, ServicioObservacionPayload } from 'src/app/core/services/servicio-observacion.service';
+import { PeriodoService } from 'src/app/core/services/periodo.service';
+import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-servicio-crud',
@@ -23,30 +28,30 @@ export class ServicioCrudComponent implements OnInit {
   servicios: ServicioPayload[] = [];
   displayServicios: ServicioPayload[] = [];
   searchTerm = '';
-  activeTab = 1;
+  activeTab = 2;
   maxDate: string = '';
   isPenalizado: boolean = false;
   isAdmin: boolean = false;
+  apiUrl = environment.apiUrl;
+  selectedFiles: Map<string, File> = new Map();
   
-  // Date Filter
-  selectedMonth: number = new Date().getMonth() + 1;
-  selectedYear: number = new Date().getFullYear();
-  months = [
-    { id: 1, name: 'Enero' }, { id: 2, name: 'Febrero' }, { id: 3, name: 'Marzo' },
-    { id: 4, name: 'Abril' }, { id: 5, name: 'Mayo' }, { id: 6, name: 'Junio' },
-    { id: 7, name: 'Julio' }, { id: 8, name: 'Agosto' }, { id: 9, name: 'Septiembre' },
-    { id: 10, name: 'Octubre' }, { id: 11, name: 'Noviembre' }, { id: 12, name: 'Diciembre' }
-  ];
-  years: number[] = [];
+  // Periodo Filter
+  periodos: PeriodoPayload[] = [];
+  selectedPeriodoId: number | null = null;
 
   // Catalogs
-  filiales: any[] = [];
+  sucursales: any[] = [];
   tiposDocumento: any[] = [];
   tiposServicio: any[] = [];
-  tiposAtaud: any[] = [];
+  conceptos: any[] = [];
   motivos: any[] = [];
   statuses: any[] = [];
   estadoCtaStatuses: any[] = [];
+  canalesComunicacion: any[] = [];
+
+  observaciones: ServicioObservacionPayload[] = [];
+  nuevaObservacion = '';
+  loadingObservaciones = false;
 
   form!: FormGroup;
   editingId: number | null = null;
@@ -55,49 +60,48 @@ export class ServicioCrudComponent implements OnInit {
 
   constructor(
     private servicioService: ServicioService,
-    private filialService: FilialService,
+    private sucursalService: SucursalService,
     private tipoDocumentoService: TipoDocumentoService,
     private tipoServicioService: TipoServicioService,
-    private tipoAtaudService: TipoAtaudService,
+    private conceptoService: ConceptoService,
     private motivoNoOtorgadoService: MotivoNoOtorgadoService,
     private statusService: StatusService,
     private estadoCtaStatusService: EstadoCtaStatusService,
+    private canalComunicacionService: CanalComunicacionService,
+    private periodoService: PeriodoService,
     private alertsService: AlertsService,
     private authService: AuthenticationService,
     private fb: FormBuilder,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private servicioObservacionService: ServicioObservacionService
   ) {}
 
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
-    this.generateYears();
     this.initForm();
     this.loadCatalogs();
-    this.searchByDate(); // Load current month by default
+    this.loadPeriodos();
   }
-
-  generateYears() {
-    const currentYear = new Date().getFullYear();
-    for (let i = currentYear; i >= currentYear - 5; i--) {
-      this.years.push(i);
-    }
-  }
+ 
 
   initForm() {
     const now = new Date();
     const localDate = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
     this.maxDate = localDate;
+    this.selectedFiles.clear();
 
     this.form = this.fb.group({
       // fecha: [localDate, [Validators.required]], // Removed from payload
       displayFechaCaptura: [localDate, []], // For display only
-      whatsapp: ['', []],
-      fo_Filial_otorgante_Id: [null, [Validators.required]],
-      fo_Filial_Origen_Id: [null, [Validators.required]],
+      canalComunicacionId: [null, []],
+      fo_Sucursal_otorgante_Id: [null, [Validators.required]],
+      fo_Sucursal_Origen_Id: [null, [Validators.required]],
       fo_Contrato: ['', [Validators.required]],
       fo_Nombre_Titular: ['', [Validators.required]],
       fo_Nombre_Finado: ['', [Validators.required]],
       fo_Documento_Cliente_Id: [null, []],
+      fo_Documento_Cliente_url: ['', []],
+      fo_Monto_devuelto_documento_url: ['', []],
       fo_Jefe_Turno_Nombre: ['', []],
       fo_Jefe_Turno_Puesto: ['', []],
       fo_Jefe_Turno_WhatsApp: ['', []],
@@ -110,39 +114,93 @@ export class ServicioCrudComponent implements OnInit {
       fori_Otorga_Info_Telefono: ['', []],
       fo_Contrato_Monto_Recuperado: [0, []],
       fo_Contrato_Monto_Convenio: [0, []],
+      fo_Monto_Devuelto: [0, []],
       fo_Tipo_Servicio_Id: [null, []],
-      fo_Tipo_Ataud_Id: [null, []],
+      fo_Concepto_Id: [null, []],
       exp_Solicitud_Servicio_Status_id: [null, []],
-      exp_Solicitud_Servicio_File_Name: ['', []],
+      exp_Solicitud_Servicio_url: ['', []],
       exp_Comprobante_Pago_Status_Id: [null, []],
-      exp_Comprobante_Pago_File_Name: ['', []],
+      exp_Comprobante_Pago_url: ['', []],
       exp_Convenio_Status_Id: [null, []],
-      exp_Convenio_File_Name: ['', []],
+      exp_Convenio_url: ['', []],
       exp_Enviado_Grupo_Whats: [false, []],
       exp_Motivo_De_No_Otorgado_Id: [null, []],
       exp_Expediente_Completo: ['NO', []],
-      exp_Observaciones: ['', []],
+      exp_Observaciones_cierre: ['', []],
       // Usuario_CapturaId & Fecha_Captura handled by backend usually
     });
+    
+    this.setupConditionalValidation();
+  }
+
+  setupConditionalValidation() {
+    const convenioCheck = this.form.get('fori_Acepta_Convenio');
+    const montoControl = this.form.get('fo_Contrato_Monto_Convenio');
+
+    if (convenioCheck && montoControl) {
+      // Initial state
+      if (!convenioCheck.value) {
+        montoControl.disable();
+      }
+
+      // Subscription
+      convenioCheck.valueChanges.subscribe(val => {
+        if (val) {
+          montoControl.enable();
+        } else {
+          montoControl.setValue(0);
+          montoControl.disable();
+        }
+      });
+    }
   }
 
   loadCatalogs() {
-    this.filialService.getAll().subscribe(ret => { if(ret.success) this.filiales = ret.data; });
+    this.sucursalService.getAll().subscribe(ret => { if(ret.success) this.sucursales = ret.data; });
     this.tipoDocumentoService.getAll().subscribe(ret => { if(ret.success) this.tiposDocumento = ret.data; });
     this.tipoServicioService.getAll().subscribe(ret => { if(ret.success) this.tiposServicio = ret.data; });
-    this.tipoAtaudService.getAll().subscribe(ret => { if(ret.success) this.tiposAtaud = ret.data; });
+    this.conceptoService.getAll().subscribe(ret => { if(ret.success) this.conceptos = ret.data; });
     this.motivoNoOtorgadoService.getAll().subscribe(ret => { if(ret.success) this.motivos = ret.data; });
     this.statusService.getAll().subscribe(ret => { if(ret.success) this.statuses = ret.data; });
     this.estadoCtaStatusService.getAll().subscribe(ret => { if(ret.success) this.estadoCtaStatuses = ret.data; });
+    this.canalComunicacionService.getAll().subscribe(ret => { if(ret.success) this.canalesComunicacion = ret.data; });
+  }
+
+  loadPeriodos() {
+    this.loading = true;
+    this.periodoService.getAll().subscribe({
+      next: (ret) => {
+        this.loading = false;
+        if (ret.success) {
+          this.periodos = ret.data;
+          const activo = this.periodos.find(p => p.activo);
+          this.selectedPeriodoId = activo ? activo.id : (this.periodos[0]?.id ?? null);
+          if (this.selectedPeriodoId != null) {
+            this.searchByPeriodo();
+          }
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.loading = false;
+        this.alertsService.error(e.error);
+      },
+    });
   }
 
   loadServicios() {
-    this.searchByDate();
+    this.searchByPeriodo();
   }
 
-  searchByDate() {
+  searchByPeriodo() {
+    if (this.selectedPeriodoId == null) {
+      this.servicios = [];
+      this.displayServicios = [];
+      return;
+    }
     this.loading = true;
-    this.servicioService.getByDate(this.selectedYear, this.selectedMonth).subscribe({
+    this.servicioService.getByPeriodo(this.selectedPeriodoId).subscribe({
       next: (ret) => {
         this.loading = false;
         if (ret.success) {
@@ -154,7 +212,7 @@ export class ServicioCrudComponent implements OnInit {
       },
       error: (e) => {
         this.loading = false;
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
     });
   }
@@ -173,26 +231,31 @@ export class ServicioCrudComponent implements OnInit {
   openCreate(modalTpl: TemplateRef<any>) {
     this.editingId = null;
     this.initForm(); // Reset to defaults
-    this.activeTab = 1;
+    this.activeTab = 2;
     this.isPenalizado = false;
+    this.observaciones = [];
+    this.nuevaObservacion = '';
     this.modalTitle = 'Nuevo Servicio';
     this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'xl' });
   }
 
   openEdit(modalTpl: TemplateRef<any>, item: ServicioPayload) {
+    this.selectedFiles.clear();
     this.editingId = item.id;
-    this.activeTab = 1;
+    this.activeTab = 2;
     this.isPenalizado = item.penalizado;
     this.form.patchValue({
-      // fecha: item.fecha ? item.fecha.split('T')[0] : '', // Removed
-      displayFechaCaptura: item.Fecha_Captura ? item.Fecha_Captura.split('T')[0] : '', // Display purpose
-      whatsapp: item.whatsapp,
-      fo_Filial_otorgante_Id: item.fo_Filial_otorgante_Id,
-      fo_Filial_Origen_Id: item.fo_Filial_Origen_Id,
+      // displayFechaCaptura: item.Fecha_Captura ? item.Fecha_Captura.split('T')[0] : '', // Display purpose
+      displayFechaCaptura: item.Fecha_Captura, // Keep full date string for DatePipe
+      canalComunicacionId: item.canalComunicacionId,
+      fo_Sucursal_otorgante_Id: item.fo_Sucursal_otorgante_Id,
+      fo_Sucursal_Origen_Id: item.fo_Sucursal_Origen_Id,
       fo_Contrato: item.fo_Contrato,
       fo_Nombre_Titular: item.fo_Nombre_Titular,
       fo_Nombre_Finado: item.fo_Nombre_Finado,
       fo_Documento_Cliente_Id: item.fo_Documento_Cliente_Id,
+      fo_Documento_Cliente_url: item.fo_Documento_Cliente_url,
+      fo_Monto_devuelto_documento_url: item.fo_Monto_devuelto_documento_url,
       fo_Jefe_Turno_Nombre: item.fo_Jefe_Turno_Nombre,
       fo_Jefe_Turno_Puesto: item.fo_Jefe_Turno_Puesto,
       fo_Jefe_Turno_WhatsApp: item.fo_Jefe_Turno_WhatsApp,
@@ -205,21 +268,186 @@ export class ServicioCrudComponent implements OnInit {
       fori_Otorga_Info_Telefono: item.fori_Otorga_Info_Telefono,
       fo_Contrato_Monto_Recuperado: item.fo_Contrato_Monto_Recuperado,
       fo_Contrato_Monto_Convenio: item.fo_Contrato_Monto_Convenio,
+      fo_Monto_Devuelto: item.fo_Monto_Devuelto,
       fo_Tipo_Servicio_Id: item.fo_Tipo_Servicio_Id,
-      fo_Tipo_Ataud_Id: item.fo_Tipo_Ataud_Id,
+      fo_Concepto_Id: item.fo_Concepto_Id,
       exp_Solicitud_Servicio_Status_id: item.exp_Solicitud_Servicio_Status_id,
-      exp_Solicitud_Servicio_File_Name: item.exp_Solicitud_Servicio_File_Name,
+      exp_Solicitud_Servicio_url: item.exp_Solicitud_Servicio_url,
       exp_Comprobante_Pago_Status_Id: item.exp_Comprobante_Pago_Status_Id,
-      exp_Comprobante_Pago_File_Name: item.exp_Comprobante_Pago_File_Name,
+      exp_Comprobante_Pago_url: item.exp_Comprobante_Pago_url,
       exp_Convenio_Status_Id: item.exp_Convenio_Status_Id,
-      exp_Convenio_File_Name: item.exp_Convenio_File_Name,
+      exp_Convenio_url: item.exp_Convenio_url,
       exp_Enviado_Grupo_Whats: item.exp_Enviado_Grupo_Whats,
       exp_Motivo_De_No_Otorgado_Id: item.exp_Motivo_De_No_Otorgado_Id,
       exp_Expediente_Completo: item.exp_Expediente_Completo,
-      exp_Observaciones: item.exp_Observaciones,
+      exp_Observaciones_cierre: item.exp_Observaciones_cierre,
     });
+    this.observaciones = [];
+    this.nuevaObservacion = '';
+    this.loadObservaciones(item.id);
     this.modalTitle = 'Editar Servicio';
     this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'xl' });
+  }
+
+  loadObservaciones(servicioId: number) {
+    this.loadingObservaciones = true;
+    this.servicioObservacionService.getByServicio(servicioId).subscribe({
+      next: (ret) => {
+        this.loadingObservaciones = false;
+        if (ret.success) {
+          this.observaciones = ret.data;
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.loadingObservaciones = false;
+        this.alertsService.error(e.error);
+      },
+    });
+  }
+
+  addObservacion() {
+    if (!this.editingId) {
+      this.alertsService.error('Guarde el servicio antes de agregar observaciones');
+      return;
+    }
+    const texto = (this.nuevaObservacion || '').trim();
+    if (!texto) {
+      this.alertsService.error('La observación no puede estar vacía');
+      return;
+    }
+    this.loadingObservaciones = true;
+    this.servicioObservacionService.create(this.editingId, texto).subscribe({
+      next: (ret) => {
+        this.loadingObservaciones = false;
+        if (ret.success) {
+          this.alertsService.success('Observación agregada');
+          this.nuevaObservacion = '';
+          this.loadObservaciones(this.editingId!);
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.loadingObservaciones = false;
+        this.alertsService.error(e.error);
+      },
+    });
+  }
+
+  onDeleteObservacion(item: ServicioObservacionPayload) {
+    if (!this.editingId) {
+      return;
+    }
+    this.alertsService.confirm({
+      titulo: '¿Eliminar observación?',
+      message: 'Esta acción no se puede deshacer',
+      okCallback: () => {
+        this.loadingObservaciones = true;
+        this.servicioObservacionService.delete(this.editingId!, item.id).subscribe({
+          next: (ret) => {
+            this.loadingObservaciones = false;
+            if (ret.success) {
+              this.alertsService.success('Observación eliminada');
+              this.loadObservaciones(this.editingId!);
+            } else {
+              this.alertsService.error(ret.error);
+            }
+          },
+          error: (e) => {
+            this.loadingObservaciones = false;
+            this.alertsService.error(e.error);
+          },
+        });
+      },
+    });
+  }
+
+  updatePenalizado() {
+    if (this.editingId && this.isAdmin) {
+      this.servicioService.updatePenalizado(this.editingId, this.isPenalizado).subscribe({
+        next: (ret) => {
+          if (ret.success) {
+            this.alertsService.success('Status Penalizado actualizado');
+            this.loadServicios();
+          }
+        },
+        error: (e) => this.alertsService.error(e.error),
+      });
+    }
+  }
+
+  hasDocument(fieldName: string): boolean {
+    return !!this.form.get(fieldName)?.value || this.selectedFiles.has(fieldName);
+  }
+
+  triggerFileUpload(fileInput: HTMLInputElement) {
+    fileInput.click();
+  }
+
+  onFileSelected(event: any, fieldName: string) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+      this.alertsService.error('Solo se permiten archivos PDF o Imágenes (JPG, PNG)');
+      return;
+    }
+
+    if (this.editingId) {
+      this.servicioService.uploadDocument(this.editingId, fieldName, file).subscribe({
+        next: (ret) => {
+          if (ret.success) {
+            this.alertsService.success('Documento cargado correctamente');
+            // @ts-ignore
+            this.form.patchValue({ [fieldName]: ret.data[fieldName] });
+            this.loadServicios();
+          } else {
+            this.alertsService.error(ret.error);
+          }
+        },
+        error: (e) => this.alertsService.error(e.error)
+      });
+    } else {
+      this.selectedFiles.set(fieldName, file);
+      this.form.patchValue({ [fieldName]: file.name });
+    }
+  }
+
+  deleteDocument(fieldName: string) {
+    if (this.editingId) {
+      this.alertsService.confirm({
+        titulo: '¿Eliminar documento?',
+        message: 'Esta acción eliminará el archivo permanentemente.',
+        okCallback: () => {
+          this.servicioService.deleteDocument(this.editingId!, fieldName).subscribe({
+            next: (ret) => {
+              if (ret.success) {
+                this.alertsService.success('Documento eliminado');
+                this.form.patchValue({ [fieldName]: null });
+                this.loadServicios();
+              }
+            }
+          });
+        }
+      });
+    } else {
+      this.selectedFiles.delete(fieldName);
+      this.form.patchValue({ [fieldName]: null });
+    }
+  }
+
+  viewDocument(fieldName: string) {
+    const val = this.form.get(fieldName)?.value;
+    if (this.editingId && val && !this.selectedFiles.has(fieldName)) {
+      window.open(`${this.apiUrl}/storage/${val}`, '_blank');
+    } else if (this.selectedFiles.has(fieldName)) {
+      const file = this.selectedFiles.get(fieldName);
+      const url = URL.createObjectURL(file!);
+      window.open(url, '_blank');
+    }
   }
 
   save(cerrar: boolean) {
@@ -230,6 +458,12 @@ export class ServicioCrudComponent implements OnInit {
     }
 
     const payload = this.form.value as any;
+    
+    if (payload.fo_Sucursal_otorgante_Id && payload.fo_Sucursal_Origen_Id && payload.fo_Sucursal_otorgante_Id === payload.fo_Sucursal_Origen_Id) {
+      this.alertsService.error('La Sucursal Otorgante y la Sucursal Origen no pueden ser la misma.');
+      return;
+    }
+
     // Remove display-only fields or unexpected fields
     delete payload.displayFechaCaptura;
     
@@ -241,7 +475,22 @@ export class ServicioCrudComponent implements OnInit {
     // ... handling this via form control type usually works, but safe to cast if needed.
 
     if (this.editingId == null) {
-      this.servicioService.create(finalPayload).subscribe({
+      const formData = new FormData();
+      Object.keys(payload).forEach(key => {
+        const val = payload[key];
+        if (val !== null && val !== undefined) {
+          formData.append(key, val);
+        }
+      });
+      
+      // Append files
+      this.selectedFiles.forEach((file, key) => {
+        if (key === 'fo_Documento_Cliente_url') {
+           formData.append('file', file);
+        }
+      });
+
+      this.servicioService.create(formData).subscribe({
         next: (ret) => {
           if (ret.success) {
             this.alertsService.success('Servicio creado');
@@ -256,7 +505,7 @@ export class ServicioCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e),
+        error: (e) => this.alertsService.error(e.error),
       });
     } else {
       this.servicioService.update(this.editingId, finalPayload).subscribe({
@@ -274,7 +523,7 @@ export class ServicioCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e),
+        error: (e) => this.alertsService.error(e.error),
       });
     }
   }
@@ -293,7 +542,7 @@ export class ServicioCrudComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e),
+          error: (e) => this.alertsService.error(e.error),
         });
       },
     });
@@ -311,7 +560,7 @@ export class ServicioCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e),
+        error: (e) => this.alertsService.error(e.error),
       });
     }
   }

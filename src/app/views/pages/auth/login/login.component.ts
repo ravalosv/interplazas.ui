@@ -80,7 +80,7 @@ export class LoginComponent implements OnInit {
         }
       },
       error: (e) => {
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
       complete: () => {},
     });

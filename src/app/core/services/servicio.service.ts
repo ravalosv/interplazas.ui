@@ -27,6 +27,13 @@ export class ServicioService {
       .pipe(map((ret) => ret));
   }
 
+  getByPeriodo(periodoId: number) {
+    const url = `${this.baseUrl}/servicio/periodo/${periodoId}`;
+    return this.http
+      .get<ApiReturn<ServicioPayload[]>>(url)
+      .pipe(map((ret) => ret));
+  }
+
   getById(id: number) {
     const url = `${this.baseUrl}/servicio/${id}`;
     return this.http
@@ -34,7 +41,7 @@ export class ServicioService {
       .pipe(map((ret) => ret));
   }
 
-  create(data: ServicioCreatePayload) {
+  create(data: ServicioCreatePayload | FormData) {
     const url = `${this.baseUrl}/servicio`;
     return this.http
       .post<ApiReturn<ServicioPayload>>(url, data)
@@ -45,6 +52,23 @@ export class ServicioService {
     const url = `${this.baseUrl}/servicio/${id}`;
     return this.http
       .put<ApiReturn<ServicioPayload>>(url, data)
+      .pipe(map((ret) => ret));
+  }
+
+  uploadDocument(id: number, fieldName: string, file: File) {
+    const url = `${this.baseUrl}/servicio/${id}/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fieldName', fieldName);
+    return this.http
+      .post<ApiReturn<ServicioPayload>>(url, formData)
+      .pipe(map((ret) => ret));
+  }
+
+  deleteDocument(id: number, fieldName: string) {
+    const url = `${this.baseUrl}/servicio/${id}/document/${fieldName}`;
+    return this.http
+      .delete<ApiReturn<any>>(url)
       .pipe(map((ret) => ret));
   }
 

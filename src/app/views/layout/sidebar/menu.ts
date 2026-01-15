@@ -25,9 +25,19 @@ export const MENU_ADMIN: MenuItem[] = [
   },
 
   {
+    label: 'Grupos',
+    icon: 'layers',
+    link: 'config/grupos-admin',
+  },
+  {
     label: 'Filiales',
     icon: 'settings',
     link: 'config/filiales-admin',
+  },
+  {
+    label: 'Sucursales',
+    icon: 'map-pin',
+    link: 'config/sucursales-admin',
   },
   {
     label: 'Tipos de documento',
@@ -40,14 +50,24 @@ export const MENU_ADMIN: MenuItem[] = [
     link: 'config/tipo-servicio-admin',
   },
   {
-    label: 'Tipos de ataúd',
+    label: 'Conceptos',
     icon: 'box',
-    link: 'config/tipo-ataud-admin',
+    link: 'config/concepto-crud',
   },
   {
     label: 'Motivos no otorgado',
     icon: 'slash',
     link: 'config/motivo-no-otorgado-admin',
+  },
+  {
+    label: 'Costos',
+    icon: 'dollar-sign',
+    link: 'config/costos-crud',
+  },
+  {
+    label: 'Canales de comunicación',
+    icon: 'message-square',
+    link: 'config/canales-comunicacion-admin',
   },
  {
     label: 'Usuarios',

@@ -6,23 +6,31 @@ import { UsuariosNewComponent } from './usuarios-new/usuarios-new.component';
 import { TipoDocumentoCrudComponent } from './tipo-documento-crud/tipo-documento-crud.component';
 import { StatusCrudComponent } from './status-crud/status-crud.component';
 import { TipoServicioCrudComponent } from './tipo-servicio-crud/tipo-servicio-crud.component';
-import { TipoAtaudCrudComponent } from './tipo-ataud-crud/tipo-ataud-crud.component';
+import { ConceptoCrudComponent } from './concepto-crud/concepto-crud.component';
 import { MotivoNoOtorgadoCrudComponent } from './motivo-no-otorgado-crud/motivo-no-otorgado-crud.component';
 import { EstadoCtaStatusCrudComponent } from './estado-cta-status-crud/estado-cta-status-crud.component';
 import { UsuariosComponent } from './usuarios/usuarios.component';
+import { CostosCrudComponent } from './costos-crud/costos-crud.component';
+import { GruposCrudComponent } from './grupos-crud/grupos-crud.component';
+import { SucursalesCrudComponent } from './sucursales-crud/sucursales-crud.component';
+import { CanalesComunicacionCrudComponent } from './canales-comunicacion-crud/canales-comunicacion-crud.component';
 
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'grupos',
+    redirectTo: 'grupos-admin',
     pathMatch: 'full',
   },
+  { path: 'grupos-admin', component: GruposCrudComponent },
   { path: 'filiales-admin', component: FilialesCrudComponent },
+  { path: 'sucursales-admin', component: SucursalesCrudComponent },
   { path: 'tipo-documento-admin', component: TipoDocumentoCrudComponent },
   { path: 'tipo-servicio-admin', component: TipoServicioCrudComponent },
-  { path: 'tipo-ataud-admin', component: TipoAtaudCrudComponent },
+  { path: 'concepto-crud', component: ConceptoCrudComponent },
   { path: 'motivo-no-otorgado-admin', component: MotivoNoOtorgadoCrudComponent },
   { path: 'estado-cta-status-admin', component: EstadoCtaStatusCrudComponent },
+  { path: 'costos-crud', component: CostosCrudComponent },
+  { path: 'canales-comunicacion-admin', component: CanalesComunicacionCrudComponent },
 
   { path: 'status-admin', component: StatusCrudComponent },
   { path: 'usuarios', component: UsuariosComponent },

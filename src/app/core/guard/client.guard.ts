@@ -26,7 +26,7 @@ export class ClientGuard implements CanActivate {
       if (this.authService.isRepresentante()) {
         return true;
       } else if (this.authService.isAdmin()) {
-        this.router.navigate(['/admin/events/list']);
+        this.router.navigate(['/admin/operacion/servicios']);
         return true;
       }
     }

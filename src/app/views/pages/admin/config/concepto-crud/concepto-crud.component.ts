@@ -1,18 +1,18 @@
 import { Component, OnInit, TemplateRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { MotivoNoOtorgadoService } from 'src/app/core/services/motivo-no-otorgado.service';
-import { MotivoNoOtorgadoAdminPayload } from 'src/app/core/interfaces/payloads/motivo_no_otorgado.payload';
 import { AlertsService } from 'src/app/core/services/alerts.service';
+import { ConceptoService } from 'src/app/core/services/concepto.service';
+import { ConceptoPayload } from 'src/app/core/interfaces/payloads/concepto.payload';
 
 @Component({
-  selector: 'app-motivo-no-otorgado-crud',
-  templateUrl: './motivo-no-otorgado-crud.component.html',
-  styleUrls: ['./motivo-no-otorgado-crud.component.scss'],
+  selector: 'app-concepto-crud',
+  templateUrl: './concepto-crud.component.html',
+  styleUrls: ['./concepto-crud.component.scss'],
 })
-export class MotivoNoOtorgadoCrudComponent implements OnInit {
+export class ConceptoCrudComponent implements OnInit {
   loading = false;
-  motivos: MotivoNoOtorgadoAdminPayload[] = [];
+  conceptos: ConceptoPayload[] = [];
 
   form!: FormGroup;
   editingId: number | null = null;
@@ -20,7 +20,7 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
   modalRef: NgbModalRef | null = null;
 
   constructor(
-    private motivoService: MotivoNoOtorgadoService,
+    private conceptoService: ConceptoService,
     private alertsService: AlertsService,
     private fb: FormBuilder,
     private modalService: NgbModal
@@ -28,22 +28,24 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadMotivos();
+    this.loadConceptos();
   }
 
   initForm() {
     this.form = this.fb.group({
       nombre: ['', [Validators.required]],
+      montoMXN: [0, [Validators.required]],
+      montoUSD: [0, [Validators.required]],
     });
   }
 
-  loadMotivos() {
+  loadConceptos() {
     this.loading = true;
-    this.motivoService.getAll().subscribe({
+    this.conceptoService.getAll().subscribe({
       next: (ret) => {
         this.loading = false;
         if (ret.success) {
-          this.motivos = ret.data;
+          this.conceptos = ret.data;
         } else {
           this.alertsService.error(ret.error);
         }
@@ -57,15 +59,15 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
 
   openCreate(modalTpl: TemplateRef<any>) {
     this.editingId = null;
-    this.form.reset({ nombre: '' });
-    this.modalTitle = 'Nuevo Motivo No Otorgado';
+    this.form.reset({ nombre: '', montoMXN: 0, montoUSD: 0 });
+    this.modalTitle = 'Nuevo Concepto';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
 
-  openEdit(modalTpl: TemplateRef<any>, item: MotivoNoOtorgadoAdminPayload) {
+  openEdit(modalTpl: TemplateRef<any>, item: ConceptoPayload) {
     this.editingId = item.id;
-    this.form.reset({ nombre: item.nombre });
-    this.modalTitle = 'Editar Motivo No Otorgado';
+    this.form.reset({ nombre: item.nombre, montoMXN: item.montoMXN, montoUSD: item.montoUSD });
+    this.modalTitle = 'Editar Concepto';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
 
@@ -75,14 +77,14 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
       return;
     }
 
-    const payload = this.form.value as { nombre: string };
+    const payload = this.form.value;
 
     if (this.editingId == null) {
-      this.motivoService.create(payload).subscribe({
+      this.conceptoService.create(payload).subscribe({
         next: (ret) => {
           if (ret.success) {
-            this.alertsService.success('Motivo creado');
-            this.loadMotivos();
+            this.alertsService.success('Concepto creado');
+            this.loadConceptos();
             if (cerrar) {
               this.modalRef?.close();
             } else {
@@ -96,17 +98,17 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
         error: (e) => this.alertsService.error(e.error),
       });
     } else {
-      this.motivoService.update(this.editingId, payload).subscribe({
+      this.conceptoService.update(this.editingId, payload).subscribe({
         next: (ret) => {
           if (ret.success) {
-            this.alertsService.success('Motivo actualizado');
-            this.loadMotivos();
+            this.alertsService.success('Concepto actualizado');
+            this.loadConceptos();
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '' });
+              this.form.reset({ nombre: '', montoMXN: 0, montoUSD: 0 });
               this.editingId = null;
-              this.modalTitle = 'Nuevo Motivo No Otorgado';
+              this.modalTitle = 'Nuevo Concepto';
             }
           } else {
             this.alertsService.error(ret.error);
@@ -117,16 +119,16 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
     }
   }
 
-  onDelete(item: MotivoNoOtorgadoAdminPayload) {
+  delete(id: number) {
     this.alertsService.confirm({
-      titulo: 'Eliminar Motivo',
-      message: '¿Está seguro de eliminar el motivo?',
+      titulo: 'Eliminar Concepto',
+      message: '¿Está seguro de eliminar el concepto?',
       okCallback: () => {
-        this.motivoService.delete(item.id).subscribe({
+        this.conceptoService.delete(id).subscribe({
           next: (ret) => {
             if (ret.success) {
-              this.alertsService.success('Motivo eliminado');
-              this.loadMotivos();
+              this.alertsService.success('Concepto eliminado');
+              this.loadConceptos();
             } else {
               this.alertsService.error(ret.error);
             }
@@ -137,4 +139,3 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
     });
   }
 }
-

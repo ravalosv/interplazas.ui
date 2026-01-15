@@ -1,18 +1,19 @@
 import { Component, OnInit, TemplateRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
-import { MotivoNoOtorgadoService } from 'src/app/core/services/motivo-no-otorgado.service';
-import { MotivoNoOtorgadoAdminPayload } from 'src/app/core/interfaces/payloads/motivo_no_otorgado.payload';
 import { AlertsService } from 'src/app/core/services/alerts.service';
+import { CostosService } from 'src/app/core/services/costos.service';
+import { CostosPayload } from 'src/app/core/interfaces/payloads/costos.payload';
+import Swal from 'sweetalert2';
 
 @Component({
-  selector: 'app-motivo-no-otorgado-crud',
-  templateUrl: './motivo-no-otorgado-crud.component.html',
-  styleUrls: ['./motivo-no-otorgado-crud.component.scss'],
+  selector: 'app-costos-crud',
+  templateUrl: './costos-crud.component.html',
+  styleUrls: ['./costos-crud.component.scss'],
 })
-export class MotivoNoOtorgadoCrudComponent implements OnInit {
+export class CostosCrudComponent implements OnInit {
   loading = false;
-  motivos: MotivoNoOtorgadoAdminPayload[] = [];
+  costos: CostosPayload[] = [];
 
   form!: FormGroup;
   editingId: number | null = null;
@@ -20,7 +21,7 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
   modalRef: NgbModalRef | null = null;
 
   constructor(
-    private motivoService: MotivoNoOtorgadoService,
+    private costosService: CostosService,
     private alertsService: AlertsService,
     private fb: FormBuilder,
     private modalService: NgbModal
@@ -28,22 +29,22 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
 
   ngOnInit(): void {
     this.initForm();
-    this.loadMotivos();
+    this.loadCostos();
   }
 
   initForm() {
     this.form = this.fb.group({
-      nombre: ['', [Validators.required]],
+      costo_servicio: [0, [Validators.required, Validators.min(0)]],
     });
   }
 
-  loadMotivos() {
+  loadCostos() {
     this.loading = true;
-    this.motivoService.getAll().subscribe({
+    this.costosService.getAll().subscribe({
       next: (ret) => {
         this.loading = false;
         if (ret.success) {
-          this.motivos = ret.data;
+          this.costos = ret.data;
         } else {
           this.alertsService.error(ret.error);
         }
@@ -57,15 +58,15 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
 
   openCreate(modalTpl: TemplateRef<any>) {
     this.editingId = null;
-    this.form.reset({ nombre: '' });
-    this.modalTitle = 'Nuevo Motivo No Otorgado';
+    this.form.reset({ costo_servicio: 0 });
+    this.modalTitle = 'Nuevo Costo';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
 
-  openEdit(modalTpl: TemplateRef<any>, item: MotivoNoOtorgadoAdminPayload) {
-    this.editingId = item.id;
-    this.form.reset({ nombre: item.nombre });
-    this.modalTitle = 'Editar Motivo No Otorgado';
+  openEdit(modalTpl: TemplateRef<any>, item: CostosPayload) {
+    this.editingId = item.id!;
+    this.form.reset({ costo_servicio: item.costo_servicio });
+    this.modalTitle = 'Editar Costo';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
 
@@ -75,18 +76,18 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
       return;
     }
 
-    const payload = this.form.value as { nombre: string };
+    const payload = this.form.value as { costo_servicio: number };
 
     if (this.editingId == null) {
-      this.motivoService.create(payload).subscribe({
+      this.costosService.create(payload).subscribe({
         next: (ret) => {
           if (ret.success) {
-            this.alertsService.success('Motivo creado');
-            this.loadMotivos();
+            this.alertsService.success('Costo creado');
+            this.loadCostos();
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '' });
+              this.form.reset({ costo_servicio: 0 });
               this.editingId = null;
             }
           } else {
@@ -96,17 +97,17 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
         error: (e) => this.alertsService.error(e.error),
       });
     } else {
-      this.motivoService.update(this.editingId, payload).subscribe({
+      this.costosService.update(this.editingId, payload).subscribe({
         next: (ret) => {
           if (ret.success) {
-            this.alertsService.success('Motivo actualizado');
-            this.loadMotivos();
+            this.alertsService.success('Costo actualizado');
+            this.loadCostos();
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '' });
+              this.form.reset({ costo_servicio: 0 });
               this.editingId = null;
-              this.modalTitle = 'Nuevo Motivo No Otorgado';
+              this.modalTitle = 'Nuevo Costo';
             }
           } else {
             this.alertsService.error(ret.error);
@@ -117,24 +118,28 @@ export class MotivoNoOtorgadoCrudComponent implements OnInit {
     }
   }
 
-  onDelete(item: MotivoNoOtorgadoAdminPayload) {
-    this.alertsService.confirm({
-      titulo: 'Eliminar Motivo',
-      message: '¿Está seguro de eliminar el motivo?',
-      okCallback: () => {
-        this.motivoService.delete(item.id).subscribe({
+  onDelete(item: CostosPayload) {
+    Swal.fire({
+      title: '¿Estás seguro?',
+      text: 'No podrás revertir esto',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.costosService.delete(item.id!).subscribe({
           next: (ret) => {
             if (ret.success) {
-              this.alertsService.success('Motivo eliminado');
-              this.loadMotivos();
+              this.alertsService.success('Costo eliminado');
+              this.loadCostos();
             } else {
               this.alertsService.error(ret.error);
             }
           },
           error: (e) => this.alertsService.error(e.error),
         });
-      },
+      }
     });
   }
 }
-

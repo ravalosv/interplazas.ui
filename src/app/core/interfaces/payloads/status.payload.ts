@@ -1,10 +1,10 @@
-export interface StatusAdminPayload {
+export interface StatusContratoAdminPayload {
   id: number;
   nombre: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface StatusDeletePayload {
+export interface StatusContratoDeletePayload {
   id: number;
 }

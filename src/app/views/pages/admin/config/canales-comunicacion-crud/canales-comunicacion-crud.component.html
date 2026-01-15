@@ -1,7 +1,7 @@
 <nav class="page-breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
-      <a routerLink="/admin/config/tipo-ataud-admin">Tipos de Ataúd</a>
+      <a routerLink="/admin/config/canales-comunicacion-admin">Canales de Comunicación</a>
     </li>
     <li class="breadcrumb-item active" aria-current="page">Listado</li>
   </ol>
@@ -9,7 +9,7 @@
     <div class="bd-highlight me-2">
       <button class="btn btn-primary" (click)="openCreate(modalEditor)">
         <i class="feather icon-file-plus pe-2"></i>
-        Nuevo Tipo
+        Nuevo Canal
       </button>
     </div>
   </div>
@@ -22,9 +22,24 @@
       <div class="modal-body">
         <div class="row ms-1 me-1 mb-2">
           <label class="form-label"><strong>Nombre</strong></label>
-          <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre del tipo de ataúd" />
+          <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre del canal de comunicación" />
           <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
             El nombre es requerido
+          </div>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>WhatsApp</strong></label>
+          <input
+            type="text"
+            class="form-control"
+            formControlName="whatsApp"
+            placeholder="WhatsApp del canal"
+          />
+          <div
+            class="alert alert-danger p-2"
+            *ngIf="form.get('whatsApp')?.touched && form.get('whatsApp')?.errors?.required"
+          >
+            El WhatsApp es requerido
           </div>
         </div>
       </div>
@@ -37,16 +52,18 @@
 </nav>
 
 <nz-card>
-  <nz-table [nzData]="tipos" [nzLoading]="loading">
+  <nz-table [nzData]="canales" [nzLoading]="loading">
     <thead>
       <tr>
         <th>Nombre</th>
+        <th>WhatsApp</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let item of tipos">
+      <tr *ngFor="let item of canales">
         <td>{{ item.nombre }}</td>
+        <td>{{ item.whatsApp }}</td>
         <td class="text-end">
           <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
             Editar
@@ -56,5 +73,4 @@
       </tr>
     </tbody>
   </nz-table>
-  </nz-card>
-
+</nz-card>

@@ -34,4 +34,11 @@ export class PeriodoService {
       .patch<ApiReturn<PeriodoPayload>>(url, {})
       .pipe(map((ret) => ret));
   }
+
+  generarCedulas(anio: number, mes: number) {
+    const url = `${this.baseUrl}/periodo/crear_cedulas`;
+    return this.http
+      .post<ApiReturn<any>>(url, { anio, mes })
+      .pipe(map((ret) => ret));
+  }
 }

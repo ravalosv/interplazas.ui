@@ -39,10 +39,13 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { TipoDocumentoCrudComponent } from './tipo-documento-crud/tipo-documento-crud.component';
 import { StatusCrudComponent } from './status-crud/status-crud.component';
 import { TipoServicioCrudComponent } from './tipo-servicio-crud/tipo-servicio-crud.component';
-import { TipoAtaudCrudComponent } from './tipo-ataud-crud/tipo-ataud-crud.component';
+import { ConceptoCrudComponent } from './concepto-crud/concepto-crud.component';
 import { MotivoNoOtorgadoCrudComponent } from './motivo-no-otorgado-crud/motivo-no-otorgado-crud.component';
 import { EstadoCtaStatusCrudComponent } from './estado-cta-status-crud/estado-cta-status-crud.component';
-
+import { CostosCrudComponent } from './costos-crud/costos-crud.component';
+import { GruposCrudComponent } from './grupos-crud/grupos-crud.component';
+import { SucursalesCrudComponent } from './sucursales-crud/sucursales-crud.component';
+import { CanalesComunicacionCrudComponent } from './canales-comunicacion-crud/canales-comunicacion-crud.component';
 
 const antdModule = [
   NzButtonModule,
@@ -77,14 +80,18 @@ const antdModule = [
   declarations: [
     ConfigComponent,
     FilialesCrudComponent,
+    SucursalesCrudComponent,
     TipoDocumentoCrudComponent,
     TipoServicioCrudComponent,
-    TipoAtaudCrudComponent,
+    ConceptoCrudComponent,
     MotivoNoOtorgadoCrudComponent,
     EstadoCtaStatusCrudComponent,
+    CostosCrudComponent,
+    GruposCrudComponent,
     StatusCrudComponent,
     UsuariosComponent,
     UsuariosNewComponent,
+    CanalesComunicacionCrudComponent,
   ],
   imports: [
     CommonModule,

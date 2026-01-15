@@ -36,7 +36,7 @@ export class PeriodosComponent implements OnInit {
       },
       error: (e) => {
         this.loading = false;
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
     });
   }
@@ -55,16 +55,22 @@ export class PeriodosComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e),
+          error: (e) => this.alertsService.error(e.error),
         });
       },
     });
   }
 
   abrirPeriodo(periodo: PeriodoPayload) {
+    let message = `¿Está seguro de abrir el periodo ${periodo.nombre}? Esto permitirá modificaciones en los servicios de este periodo.`;
+
+    if (periodo.cedulas && periodo.cedulas.length > 0) {
+      message = `¡ADVERTENCIA! El periodo ${periodo.nombre} ya tiene cédulas generadas. Si lo abre, TODAS LAS CÉDULAS SERÁN ELIMINADAS. ¿Está seguro de continuar?`;
+    }
+
     this.alertsService.confirm({
       titulo: 'Abrir Periodo',
-      message: `¿Está seguro de abrir el periodo ${periodo.nombre}? Esto permitirá modificaciones en los servicios de este periodo.`,
+      message: message,
       okCallback: () => {
         this.periodoService.abrir(periodo.id).subscribe({
           next: (ret) => {
@@ -75,21 +81,32 @@ export class PeriodosComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e),
+          error: (e) => this.alertsService.error(e.error),
         });
       },
     });
   }
 
   generarCedulas(periodo: PeriodoPayload) {
-    // TODO: Implementar llamada al servicio cuando esté disponible
     this.alertsService.confirm({
       titulo: 'Generar Cédulas',
       message: `¿Desea generar las cédulas para el periodo ${periodo.nombre}?`,
       okCallback: () => {
-        // Mock success for now as no endpoint is defined
-        console.log('Generando cédulas para:', periodo.id);
-        this.alertsService.success('Proceso de generación de cédulas iniciado (Simulado)');
+        this.loading = true;
+        this.periodoService.generarCedulas(periodo.anio, periodo.mes).subscribe({
+          next: (ret) => {
+            this.loading = false;
+            if (ret.success) {
+              this.alertsService.success('Cédulas generadas exitosamente');
+            } else {
+              this.alertsService.error(ret.error);
+            }
+          },
+          error: (e) => {
+            this.loading = false;
+            this.alertsService.error(e.error);
+          },
+        });
       },
     });
   }

@@ -67,7 +67,7 @@ export class UsuariosComponent implements OnInit {
         }
       },
       error: (e) => {
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
     });
   }

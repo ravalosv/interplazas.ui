@@ -11,7 +11,7 @@ import { environment } from 'src/environments/environment';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: '/admin/events/list',
+    redirectTo: '/admin/operacion/servicios',
     pathMatch: 'full',
   },
   {

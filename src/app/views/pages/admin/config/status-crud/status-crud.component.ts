@@ -3,7 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { StatusService } from 'src/app/core/services/status.service';
-import { StatusAdminPayload } from 'src/app/core/interfaces/payloads/status.payload';
+import { StatusContratoAdminPayload } from 'src/app/core/interfaces/payloads/status.payload';
+import { SwalPortalTargets } from '@sweetalert2/ngx-sweetalert2';
 
 @Component({
   selector: 'app-status-crud',
@@ -12,7 +13,7 @@ import { StatusAdminPayload } from 'src/app/core/interfaces/payloads/status.payl
 })
 export class StatusCrudComponent implements OnInit {
   loading = false;
-  statuses: StatusAdminPayload[] = [];
+  statuses: StatusContratoAdminPayload[] = [];
 
   form!: FormGroup;
   editingId: number | null = null;
@@ -50,7 +51,7 @@ export class StatusCrudComponent implements OnInit {
       },
       error: (e) => {
         this.loading = false;
-        this.alertsService.error(e);
+        this.alertsService.error(e.error);
       },
     });
   }
@@ -62,7 +63,7 @@ export class StatusCrudComponent implements OnInit {
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
 
-  openEdit(modalTpl: TemplateRef<any>, item: StatusAdminPayload) {
+  openEdit(modalTpl: TemplateRef<any>, item: StatusContratoAdminPayload) {
     this.editingId = item.id;
     this.form.reset({ nombre: item.nombre });
     this.modalTitle = 'Editar Estado';
@@ -93,7 +94,7 @@ export class StatusCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e),
+        error: (e) => this.alertsService.error(e.error),
       });
     } else {
       this.statusService.update(this.editingId, payload).subscribe({
@@ -112,12 +113,12 @@ export class StatusCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e),
+        error: (e) => this.alertsService.error(e.error),
       });
     }
   }
 
-  onDelete(item: StatusAdminPayload) {
+  onDelete(item: StatusContratoAdminPayload) {
     this.alertsService.confirm({
       titulo: 'Eliminar Estado',
       message: '¿Está seguro de eliminar el estado?',
@@ -131,7 +132,7 @@ export class StatusCrudComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e),
+          error: (e) => this.alertsService.error(e.error),
         });
       },
     });
