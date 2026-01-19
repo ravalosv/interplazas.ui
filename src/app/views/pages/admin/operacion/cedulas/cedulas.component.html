@@ -1,0 +1,70 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/admin/operacion">Operación</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">
+      Cédulas
+    </li>
+  </ol>
+</nav>
+
+<nz-card>
+  <div class="row mb-3">
+    <div class="col-md-6">
+      <label class="form-label">Periodo</label>
+      <nz-select
+        [(ngModel)]="selectedPeriodoId"
+        (ngModelChange)="onPeriodoChange($event)"
+        nzPlaceHolder="Seleccione un periodo"
+        [nzLoading]="loading"
+        nzAllowClear
+        class="w-100"
+      >
+        <nz-option
+          *ngFor="let p of periodos"
+          [nzValue]="p.id"
+          [nzLabel]="p.nombre"
+        ></nz-option>
+      </nz-select>
+    </div>
+  </div>
+
+  <nz-table
+    #table
+    [nzData]="displayCedulas"
+    [nzLoading]="loadingCedulas"
+  >
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Filial</th>
+        <th>Total Favor</th>
+        <th>Total Pagar</th>
+        <th>Total USA</th>
+        <th>Total Neto</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let c of table.data">
+        <td>{{ c.id }}</td>
+        <td>{{ c.filial?.nombre || c.filialId }}</td>
+        <td>{{ c.totalFavor | number: '1.2-2' }}</td>
+        <td>{{ c.totalPagar | number: '1.2-2' }}</td>
+        <td>{{ c.totalUsa | number: '1.2-2' }}</td>
+        <td>{{ c.totalNeto | number: '1.2-2' }}</td>
+        <td>
+          <button
+            nz-button
+            nzType="default"
+            (click)="verDetalle(c)"
+            [disabled]="!selectedPeriodoId"
+          >
+            Ver detalle
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-card>

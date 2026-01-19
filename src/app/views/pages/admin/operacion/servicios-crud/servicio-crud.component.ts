@@ -34,6 +34,7 @@ export class ServicioCrudComponent implements OnInit {
   isAdmin: boolean = false;
   apiUrl = environment.apiUrl;
   selectedFiles: Map<string, File> = new Map();
+  captureUserName: string = '';
   
   // Periodo Filter
   periodos: PeriodoPayload[] = [];
@@ -89,6 +90,8 @@ export class ServicioCrudComponent implements OnInit {
     const localDate = now.getFullYear() + '-' + ('0' + (now.getMonth() + 1)).slice(-2) + '-' + ('0' + now.getDate()).slice(-2);
     this.maxDate = localDate;
     this.selectedFiles.clear();
+    const currentUser = this.authService.currentUserValue;
+    this.captureUserName = currentUser && currentUser.user ? currentUser.user.name : '';
 
     this.form = this.fb.group({
       // fecha: [localDate, [Validators.required]], // Removed from payload
@@ -244,6 +247,7 @@ export class ServicioCrudComponent implements OnInit {
     this.editingId = item.id;
     this.activeTab = 2;
     this.isPenalizado = item.penalizado;
+    this.captureUserName = item.usuarioCaptura && item.usuarioCaptura.name ? item.usuarioCaptura.name : this.captureUserName;
     this.form.patchValue({
       // displayFechaCaptura: item.Fecha_Captura ? item.Fecha_Captura.split('T')[0] : '', // Display purpose
       displayFechaCaptura: item.Fecha_Captura, // Keep full date string for DatePipe
@@ -549,20 +553,32 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   togglePenalizado() {
-    if (this.editingId) {
-      this.servicioService.updatePenalizado(this.editingId, !this.isPenalizado).subscribe({
-        next: (ret) => {
-          if (ret.success) {
-            this.isPenalizado = !this.isPenalizado;
-            this.alertsService.success(`Servicio ${this.isPenalizado ? 'penalizado' : 'despenalizado'} exitosamente`);
-            this.loadServicios();
-          } else {
-            this.alertsService.error(ret.error);
-          }
-        },
-        error: (e) => this.alertsService.error(e.error),
-      });
+    if (!this.editingId) {
+      return;
     }
+
+    const nuevoEstado = !this.isPenalizado;
+    const titulo = nuevoEstado ? '¿Penalizar servicio?' : '¿Despenalizar servicio?';
+    const message = 'Esta acción actualizará el estado penalizado del servicio.';
+
+    this.alertsService.confirm({
+      titulo,
+      message,
+      okCallback: () => {
+        this.servicioService.updatePenalizado(this.editingId!, nuevoEstado).subscribe({
+          next: (ret) => {
+            if (ret.success) {
+              this.isPenalizado = nuevoEstado;
+              this.alertsService.success(`Servicio ${this.isPenalizado ? 'penalizado' : 'despenalizado'} exitosamente`);
+              this.loadServicios();
+            } else {
+              this.alertsService.error(ret.error);
+            }
+          },
+          error: (e) => this.alertsService.error(e.error),
+        });
+      },
+    });
   }
 
   sortContrato = (a: ServicioPayload, b: ServicioPayload) => (a.fo_Contrato || '').localeCompare(b.fo_Contrato || '');

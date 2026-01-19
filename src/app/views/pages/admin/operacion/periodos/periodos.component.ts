@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { PeriodoService } from 'src/app/core/services/periodo.service';
 import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
@@ -15,7 +16,8 @@ export class PeriodosComponent implements OnInit {
 
   constructor(
     private periodoService: PeriodoService,
-    private alertsService: AlertsService
+    private alertsService: AlertsService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -108,6 +110,12 @@ export class PeriodosComponent implements OnInit {
           },
         });
       },
+    });
+  }
+
+  verCedulas(periodo: PeriodoPayload) {
+    this.router.navigate(['/admin/operacion/cedulas'], {
+      queryParams: { periodoId: periodo.id },
     });
   }
 

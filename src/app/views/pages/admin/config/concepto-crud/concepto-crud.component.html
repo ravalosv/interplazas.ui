@@ -51,12 +51,16 @@
     <thead>
       <tr>
         <th>Nombre</th>
+        <th>Monto MXN</th>
+        <th>Monto USD</th>
         <th></th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let item of basicTable.data">
         <td>{{ item.nombre }}</td>
+        <td>{{ item.montoMXN | number: '1.2-2' }}</td>
+        <td>{{ item.montoUSD | number: '1.2-2' }}</td>
         <td class="text-end">
           <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
             Editar

@@ -13,6 +13,11 @@ export const MENU_ADMIN: MenuItem[] = [
     link: 'operacion/servicios',
   },
   {
+    label: 'Cédulas',
+    icon: 'file-text',
+    link: 'operacion/cedulas',
+  },
+  {
     label: 'Periodos',
     icon: 'activity',
     link: 'operacion/periodos',

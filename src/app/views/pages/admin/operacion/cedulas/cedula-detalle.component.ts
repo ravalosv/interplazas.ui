@@ -1,0 +1,95 @@
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CedulaService } from 'src/app/core/services/cedula.service';
+import { AlertsService } from 'src/app/core/services/alerts.service';
+import { CedulaPayload } from 'src/app/core/interfaces/payloads/cedula.payload';
+
+@Component({
+  selector: 'app-cedula-detalle',
+  templateUrl: './cedula-detalle.component.html',
+  styleUrls: ['./cedula-detalle.component.scss'],
+})
+export class CedulaDetalleComponent implements OnInit {
+  cedula: CedulaPayload | null = null;
+  loading = false;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private cedulaService: CedulaService,
+    private alertsService: AlertsService
+  ) {}
+
+  ngOnInit(): void {
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (idParam) {
+      const id = Number(idParam);
+      if (!isNaN(id)) {
+        this.loadCedula(id);
+      }
+    }
+  }
+
+  loadCedula(id: number) {
+    this.loading = true;
+    this.cedulaService.getById(id).subscribe({
+      next: (ret) => {
+        this.loading = false;
+        if (ret.success) {
+          this.cedula = ret.data;
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.loading = false;
+        this.alertsService.error(e.error);
+      },
+    });
+  }
+
+  get detallesFavor() {
+    return this.cedula?.detalles?.filter((d) => d.tipo === 'FAVOR') || [];
+  }
+
+  get totalFavorMonto() {
+    return this.detallesFavor.reduce((acc, curr) => acc + (curr.monto || 0), 0);
+  }
+
+  get totalFavorCobrado() {
+    return this.detallesFavor.reduce((acc, curr) => acc + (curr.saldoEfectivamenteCobrado || 0), 0);
+  }
+
+  get detallesPagar() {
+    return this.cedula?.detalles?.filter((d) => d.tipo === 'PAGAR') || [];
+  }
+
+  get totalPagarMonto() {
+    return this.detallesPagar.reduce((acc, curr) => acc + (curr.monto || 0), 0);
+  }
+
+  get totalPagarCobrado() {
+    return this.detallesPagar.reduce((acc, curr) => acc + (curr.saldoEfectivamenteCobrado || 0), 0);
+  }
+
+  get comisionPercentage() {
+    if (!this.cedula || !this.cedula.totalFavor || this.cedula.totalFavor === 0) {
+      return 0;
+    }
+    return (this.cedula.comisionPF || 0) / this.cedula.totalFavor * 100;
+  }
+
+  regresar() {
+    this.router.navigate(['/admin/operacion/cedulas'], {
+      queryParams: this.cedula
+        ? { periodoId: this.cedula.periodoId }
+        : undefined,
+    });
+  }
+
+  exportExcel() {
+    if (!this.cedula) return;
+    this.cedulaService.exportExcel(this.cedula.id);
+  }
+}
+

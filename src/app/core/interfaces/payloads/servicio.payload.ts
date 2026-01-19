@@ -39,8 +39,8 @@ export interface ServicioPayload {
   Fecha_Captura: string;
 
   // Relations (optional as they come from GET but not POST)
-  filialOtorgante?: any;
-  filialOrigen?: any;
+  sucursalOtorgante?: any;
+  sucursalOrigen?: any;
   tipoDocumento?: any;
   statusContrato?: any;
   tipoServicio?: any;
