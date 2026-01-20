@@ -4,7 +4,7 @@ import { map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiReturn } from '../interfaces/payloads/api_return';
 import { CedulaPayload } from '../interfaces/payloads/cedula.payload';
-import * as XlsxPopulate from 'xlsx-populate/browser/xlsx-populate';
+import * as ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import { DatePipe, DecimalPipe } from '@angular/common';
 
@@ -48,80 +48,113 @@ export class CedulaService {
   private generateExcelFromTemplate(cedula: CedulaPayload) {
     const templatePath = 'assets/docs/plantilla_cedula.xlsx';
     this.http.get(templatePath, { responseType: 'arraybuffer' }).subscribe({
-      next: (buffer) => {
-        XlsxPopulate.fromDataAsync(buffer).then((workbook: any) => {
-          // Find and replace globally in the workbook
-          // This handles Rich Text and shared strings automatically
-          try {
-            workbook.find('{nombreFilial}', (cedula.filialNombre || '').toUpperCase());
-            workbook.find('{nombrePeriodo}', (cedula.periodoNombre || '').toUpperCase());
-          } catch (e) {
-            console.warn('Workbook find method failed, falling back to cell iteration', e);
-            
-            const sheet = workbook.sheet(0);
-            const usedRange = sheet.usedRange();
-            if (usedRange) {
-              usedRange.cells().forEach((row: any[]) => {
-                row.forEach((cell: any) => {
-                  const value = cell.value();
-                  if (typeof value === 'string') {
-                    if (value.includes('{nombreFilial}')) {
-                      cell.value(value.replace('{nombreFilial}', (cedula.filialNombre || '').toUpperCase()));
-                    }
-                    if (value.includes('{nombrePeriodo}')) {
-                      cell.value(value.replace('{nombrePeriodo}', (cedula.periodoNombre || '').toUpperCase()));
-                    }
-                  } else if (value && typeof value === 'object' && value.text) {
-                     // Handle RichText if exposed as object with text method/prop
-                     // XlsxPopulate RichText usually behaves like an array of chunks
-                     // For now, assume simple string replacement is primary target. 
-                     // If find() fails, we might be in trouble with RichText, but find() is standard.
-                  }
-                });
-              });
+      next: async (buffer) => {
+        const workbook = new ExcelJS.Workbook();
+        await workbook.xlsx.load(buffer);
+        const sheet = workbook.getWorksheet(1);
+        
+        if (!sheet) {
+          console.error('Worksheet not found in template');
+          return;
+        }
+
+        // Replace placeholders
+        sheet.eachRow((row, rowNumber) => {
+          row.eachCell((cell, colNumber) => {
+            if (typeof cell.value === 'string') {
+              if (cell.value.includes('{nombreFilial}')) {
+                cell.value = cell.value.replace('{nombreFilial}', (cedula.filialNombre || '').toUpperCase());
+              }
+              if (cell.value.includes('{nombrePeriodo}')) {
+                cell.value = cell.value.replace('{nombrePeriodo}', (cedula.periodoNombre || '').toUpperCase());
+              }
+            } else if (cell.value && typeof cell.value === 'object' && 'richText' in cell.value) {
+               // Handle Rich Text
+               const richText = cell.value as any;
+               if (Array.isArray(richText.richText)) {
+                 richText.richText.forEach((part: any) => {
+                   if (part.text.includes('{nombreFilial}')) {
+                     part.text = part.text.replace('{nombreFilial}', (cedula.filialNombre || '').toUpperCase());
+                   }
+                   if (part.text.includes('{nombrePeriodo}')) {
+                     part.text = part.text.replace('{nombrePeriodo}', (cedula.periodoNombre || '').toUpperCase());
+                   }
+                 });
+               }
             }
-          }
-
-          try {
-            const sheet = workbook.sheet(0);
-            const startRow = 10;
-            const detalles = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR');
-
-            // Write details directly to rows starting at startRow
-            if (detalles.length > 0) {
-              detalles.forEach((d, i) => {
-                const currentRowNum = startRow + i;
-                const row = sheet.row(currentRowNum).insertRows(1);
-
-                row.cell(1).value(d.sucursalOrigenNombre || '');
-                row.cell(2).value(d.sucursalOtorganteNombre || '');
-                row.cell(3).value(d.titular || '');
-                row.cell(4).value(d.finado || '');
-                row.cell(5).value(d.contrato || '');
-                row.cell(6).value(d.fecha ? this.datePipe.transform(d.fecha, 'dd/MM/yyyy') : '');
-                row.cell(7).value(d.conceptoNombre || '');
-                row.cell(8).value(d.monto ? Number(d.monto) : 0);
-                row.cell(9).value(d.saldoPABS ? Number(d.saldoPABS) : 0);
-                row.cell(10).value(d.observacion || '');
-                row.cell(11).value(d.saldoEfectivamenteCobrado ? Number(d.saldoEfectivamenteCobrado) : 0);
-
-                row.cell(8).style('numberFormat', '#,##0.00');
-                row.cell(9).style('numberFormat', '#,##0.00');
-                row.cell(11).style('numberFormat', '#,##0.00');
-              });
-            }
-          } catch (e) {
-             console.error('Error populating details', e);
-          }
-
-          return workbook.outputAsync();
-        }).then((blob: any) => {
-          const filial = this.cleanFileName(cedula.filialNombre);
-          const periodo = this.cleanFileName(cedula.periodoNombre);
-          FileSaver.saveAs(blob, `cedula_${filial}_${periodo}.xlsx`);
-        }).catch((err: any) => {
-          console.error('Error generating Excel', err);
+          });
         });
+
+        // Insert details
+        try {
+          const startRow = 10;
+          const detalles = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR');
+
+          if (detalles.length > 0) {
+            // Get style from the start row (assuming it has the desired style)
+            // or just insert rows and they will inherit style from above/below depending on ExcelJS behavior?
+            // ExcelJS insertRow inherits from the row above usually.
+            // But if row 9 is a header, we might not want that.
+            // Let's assume row 10 is a placeholder row with correct styles.
+            // We can duplicate it.
+            
+            // Strategy: Insert rows at startRow.
+            // sheet.spliceRows(startRow, 0, ...detalles.map(d => [cols...]))
+            
+            const rowsData = detalles.map(d => {
+                return [
+                    d.sucursalOrigenNombre || '',
+                    d.sucursalOtorganteNombre || '',
+                    d.titular || '',
+                    d.finado || '',
+                    d.contrato || '',
+                    d.fecha ? this.datePipe.transform(d.fecha, 'dd/MM/yyyy') : '',
+                    d.conceptoNombre || '',
+                    d.monto ? Number(d.monto) : 0,
+                    d.saldoPABS ? Number(d.saldoPABS) : 0,
+                    d.observacion || '',
+                    d.saldoEfectivamenteCobrado ? Number(d.saldoEfectivamenteCobrado) : 0
+                ];
+            });
+            
+            // Insert rows. Note: this pushes existing rows down.
+            sheet.insertRows(startRow, rowsData);
+
+            // Apply styles to the inserted rows
+            // We need to iterate over the inserted rows and apply styles.
+            // Let's assume we want a basic style (borders, etc.) or try to copy from a reference.
+            // If the template is blank at row 10, we might need to define styles.
+            // But the user said "conserve el diseño". If the template has a table defined, inserting rows might expand it.
+            // For now, let's just ensure numbers are formatted.
+            
+            for (let i = 0; i < detalles.length; i++) {
+                const row = sheet.getRow(startRow + i);
+                
+                // Format numbers
+                row.getCell(8).numFmt = '#,##0.00';
+                row.getCell(9).numFmt = '#,##0.00';
+                row.getCell(11).numFmt = '#,##0.00';
+                
+                // Optional: Apply border to all cells in the row if needed
+                // row.eachCell(cell => {
+                //     cell.border = {
+                //         top: { style: 'thin' },
+                //         left: { style: 'thin' },
+                //         bottom: { style: 'thin' },
+                //         right: { style: 'thin' }
+                //     };
+                // });
+            }
+          }
+        } catch (e) {
+           console.error('Error populating details', e);
+        }
+
+        const bufferOut = await workbook.xlsx.writeBuffer();
+        const filial = this.cleanFileName(cedula.filialNombre);
+        const periodo = this.cleanFileName(cedula.periodoNombre);
+        const blob = new Blob([bufferOut], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        FileSaver.saveAs(blob, `cedula_${filial}_${periodo}.xlsx`);
       },
       error: (err) => {
         console.error('Error loading Excel template', err);

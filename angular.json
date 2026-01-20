@@ -33,7 +33,8 @@
               "quill",
               "dayjs",
               "metismenujs",
-              "feather-icons"
+              "feather-icons",
+              "exceljs"
             ],
             "index": "src/index.html",
             "main": "src/main.ts",
