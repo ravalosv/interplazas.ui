@@ -4,7 +4,7 @@ import { map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiReturn } from '../interfaces/payloads/api_return';
 import { CedulaPayload } from '../interfaces/payloads/cedula.payload';
-import * as XLSX from 'xlsx-js-style';
+import * as XlsxPopulate from 'xlsx-populate/browser/xlsx-populate';
 import * as FileSaver from 'file-saver';
 import { DatePipe, DecimalPipe } from '@angular/common';
 
@@ -36,7 +36,7 @@ export class CedulaService {
     this.getById(id).subscribe({
       next: (ret) => {
         if (ret.success && ret.data) {
-          this.generateExcel(ret.data);
+          this.generateExcelFromTemplate(ret.data);
         }
       },
       error: (err) => {
@@ -45,6 +45,96 @@ export class CedulaService {
     });
   }
 
+  private generateExcelFromTemplate(cedula: CedulaPayload) {
+    const templatePath = 'assets/docs/plantilla_cedula.xlsx';
+    this.http.get(templatePath, { responseType: 'arraybuffer' }).subscribe({
+      next: (buffer) => {
+        XlsxPopulate.fromDataAsync(buffer).then((workbook: any) => {
+          // Find and replace globally in the workbook
+          // This handles Rich Text and shared strings automatically
+          try {
+            workbook.find('{nombreFilial}', (cedula.filialNombre || '').toUpperCase());
+            workbook.find('{nombrePeriodo}', (cedula.periodoNombre || '').toUpperCase());
+          } catch (e) {
+            console.warn('Workbook find method failed, falling back to cell iteration', e);
+            
+            const sheet = workbook.sheet(0);
+            const usedRange = sheet.usedRange();
+            if (usedRange) {
+              usedRange.cells().forEach((row: any[]) => {
+                row.forEach((cell: any) => {
+                  const value = cell.value();
+                  if (typeof value === 'string') {
+                    if (value.includes('{nombreFilial}')) {
+                      cell.value(value.replace('{nombreFilial}', (cedula.filialNombre || '').toUpperCase()));
+                    }
+                    if (value.includes('{nombrePeriodo}')) {
+                      cell.value(value.replace('{nombrePeriodo}', (cedula.periodoNombre || '').toUpperCase()));
+                    }
+                  } else if (value && typeof value === 'object' && value.text) {
+                     // Handle RichText if exposed as object with text method/prop
+                     // XlsxPopulate RichText usually behaves like an array of chunks
+                     // For now, assume simple string replacement is primary target. 
+                     // If find() fails, we might be in trouble with RichText, but find() is standard.
+                  }
+                });
+              });
+            }
+          }
+
+          try {
+            const sheet = workbook.sheet(0);
+            const startRow = 10;
+            const detalles = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR');
+
+            // Write details directly to rows starting at startRow
+            if (detalles.length > 0) {
+              detalles.forEach((d, i) => {
+                const currentRowNum = startRow + i;
+                const row = sheet.row(currentRowNum).insertRows(1);
+
+                row.cell(1).value(d.sucursalOrigenNombre || '');
+                row.cell(2).value(d.sucursalOtorganteNombre || '');
+                row.cell(3).value(d.titular || '');
+                row.cell(4).value(d.finado || '');
+                row.cell(5).value(d.contrato || '');
+                row.cell(6).value(d.fecha ? this.datePipe.transform(d.fecha, 'dd/MM/yyyy') : '');
+                row.cell(7).value(d.conceptoNombre || '');
+                row.cell(8).value(d.monto ? Number(d.monto) : 0);
+                row.cell(9).value(d.saldoPABS ? Number(d.saldoPABS) : 0);
+                row.cell(10).value(d.observacion || '');
+                row.cell(11).value(d.saldoEfectivamenteCobrado ? Number(d.saldoEfectivamenteCobrado) : 0);
+
+                row.cell(8).style('numberFormat', '#,##0.00');
+                row.cell(9).style('numberFormat', '#,##0.00');
+                row.cell(11).style('numberFormat', '#,##0.00');
+              });
+            }
+          } catch (e) {
+             console.error('Error populating details', e);
+          }
+
+          return workbook.outputAsync();
+        }).then((blob: any) => {
+          const filial = this.cleanFileName(cedula.filialNombre);
+          const periodo = this.cleanFileName(cedula.periodoNombre);
+          FileSaver.saveAs(blob, `cedula_${filial}_${periodo}.xlsx`);
+        }).catch((err: any) => {
+          console.error('Error generating Excel', err);
+        });
+      },
+      error: (err) => {
+        console.error('Error loading Excel template', err);
+      }
+    });
+  }
+
+  /*
+  private replaceInSheet(ws: XLSX.WorkSheet, placeholder: string, value: string) { ... } // Removed
+  */
+
+  // private generateExcel(cedula: CedulaPayload) { ... } // Comented out or removed
+  /*
   private generateExcel(cedula: CedulaPayload) {
     const detallesFavor = cedula.detalles?.filter((d) => d.tipo === 'FAVOR') || [];
     const totalFavorMonto = detallesFavor.reduce((acc, curr) => acc + (curr.monto || 0), 0);
@@ -195,6 +285,7 @@ export class CedulaService {
     
     this.saveAsExcelFile(excelBuffer, `cedula_${filial}_${periodo}`);
   }
+  */
 
   private cleanFileName(name: string | undefined): string {
     if (!name) return '';
