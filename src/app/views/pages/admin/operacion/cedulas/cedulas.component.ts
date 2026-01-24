@@ -18,6 +18,7 @@ export class CedulasComponent implements OnInit {
   loading = false;
   loadingCedulas = false;
   selectedPeriodoId: number | null = null;
+  filterText = '';
 
   constructor(
     private cedulaService: CedulaService,
@@ -48,6 +49,16 @@ export class CedulasComponent implements OnInit {
         this.loading = false;
         if (ret.success) {
           this.periodos = ret.data;
+          if (!this.selectedPeriodoId && this.periodos.length > 0) {
+            // Preseleccionar el periodo más reciente
+            const mostRecent = this.periodos.reduce((prev, current) => {
+              if (current.anio > prev.anio) return current;
+              if (current.anio === prev.anio && current.mes > prev.mes) return current;
+              return prev;
+            });
+            this.selectedPeriodoId = mostRecent.id;
+            this.loadCedulas();
+          }
         } else {
           this.alertsService.error(ret.error);
         }
@@ -79,7 +90,7 @@ export class CedulasComponent implements OnInit {
         this.loadingCedulas = false;
         if (ret.success) {
           this.cedulas = ret.data;
-          this.displayCedulas = this.cedulas;
+          this.applyFilter();
         } else {
           this.alertsService.error(ret.error);
         }
@@ -88,6 +99,18 @@ export class CedulasComponent implements OnInit {
         this.loadingCedulas = false;
         this.alertsService.error(e.error);
       },
+    });
+  }
+
+  applyFilter() {
+    if (!this.filterText) {
+      this.displayCedulas = this.cedulas;
+      return;
+    }
+    const term = this.filterText.toLowerCase();
+    this.displayCedulas = this.cedulas.filter((c) => {
+      const filialName = c.filial?.nombre || '';
+      return filialName.toLowerCase().includes(term);
     });
   }
 

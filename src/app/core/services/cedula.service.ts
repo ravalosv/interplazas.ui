@@ -7,6 +7,8 @@ import { CedulaPayload } from '../interfaces/payloads/cedula.payload';
 import * as ExcelJS from 'exceljs';
 import * as FileSaver from 'file-saver';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { saveAs } from 'file-saver';
+
 
 @Injectable({
   providedIn: 'root',
@@ -45,8 +47,8 @@ export class CedulaService {
     });
   }
 
-  private generateExcelFromTemplate(cedula: CedulaPayload) {
-    const templatePath = 'assets/docs/plantilla_cedula.xlsx';
+  private async generateExcelFromTemplate(cedula: CedulaPayload) {
+      const templatePath = 'assets/docs/plantilla_cedula.xlsx';
     this.http.get(templatePath, { responseType: 'arraybuffer' }).subscribe({
       next: async (buffer) => {
         const workbook = new ExcelJS.Workbook();
@@ -85,22 +87,26 @@ export class CedulaService {
           });
         });
 
+        // Preserve column widths (workaround for ExcelJS losing widths on insert/save)
+        const savedCols: any[] = [];
+        const maxCol = 26; // Capture at least A-Z
+        for (let i = 1; i <= Math.max(sheet.columnCount, maxCol); i++) {
+          const col = sheet.getColumn(i);
+          savedCols.push({
+             key: col.key,
+             width: col.width,
+             style: col.style,
+             hidden: col.hidden,
+             outlineLevel: col.outlineLevel
+          });
+        }
+
         // Insert details
         try {
           const startRow = 10;
           const detalles = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR');
 
           if (detalles.length > 0) {
-            // Get style from the start row (assuming it has the desired style)
-            // or just insert rows and they will inherit style from above/below depending on ExcelJS behavior?
-            // ExcelJS insertRow inherits from the row above usually.
-            // But if row 9 is a header, we might not want that.
-            // Let's assume row 10 is a placeholder row with correct styles.
-            // We can duplicate it.
-            
-            // Strategy: Insert rows at startRow.
-            // sheet.spliceRows(startRow, 0, ...detalles.map(d => [cols...]))
-            
             const rowsData = detalles.map(d => {
                 return [
                     d.sucursalOrigenNombre || '',
@@ -117,16 +123,39 @@ export class CedulaService {
                 ];
             });
             
-            // Insert rows. Note: this pushes existing rows down.
+            // Insert rows
             sheet.insertRows(startRow, rowsData);
 
+            // Update Formulas
+            // Since ExcelJS does not automatically update formulas when rows are shifted, 
+            // we manually update formulas that reference rows equal to or below the insertion point.
+            // This assumes simple relative references.
+            const insertedCount = rowsData.length;
+            sheet.eachRow((row, rowNumber) => {
+              // Skip the inserted rows themselves (they contain raw data)
+              if (rowNumber >= startRow && rowNumber < startRow + insertedCount) return;
+
+              row.eachCell((cell) => {
+                if (cell.formula) {
+                   // Regex to match cell references like A10, $B$20, etc.
+                   // We look for row numbers >= startRow and increment them by insertedCount
+                   const formula = cell.formula;
+                   const newFormula = formula.replace(/(\$?[A-Z]+)(\$?)(\d+)/g, (match, col, absRow, rowStr) => {
+                      const rowNum = parseInt(rowStr, 10);
+                      if (rowNum >= startRow) {
+                        return `${col}${absRow}${rowNum + insertedCount}`;
+                      }
+                      return match;
+                   });
+                   
+                   if (newFormula !== formula) {
+                     cell.value = { formula: newFormula };
+                   }
+                }
+              });
+            });
+
             // Apply styles to the inserted rows
-            // We need to iterate over the inserted rows and apply styles.
-            // Let's assume we want a basic style (borders, etc.) or try to copy from a reference.
-            // If the template is blank at row 10, we might need to define styles.
-            // But the user said "conserve el diseño". If the template has a table defined, inserting rows might expand it.
-            // For now, let's just ensure numbers are formatted.
-            
             for (let i = 0; i < detalles.length; i++) {
                 const row = sheet.getRow(startRow + i);
                 
@@ -135,19 +164,42 @@ export class CedulaService {
                 row.getCell(9).numFmt = '#,##0.00';
                 row.getCell(11).numFmt = '#,##0.00';
                 
-                // Optional: Apply border to all cells in the row if needed
-                // row.eachCell(cell => {
-                //     cell.border = {
-                //         top: { style: 'thin' },
-                //         left: { style: 'thin' },
-                //         bottom: { style: 'thin' },
-                //         right: { style: 'thin' }
-                //     };
-                // });
+                // Optional: Copy style from the row above (row 9) or below?
+                // For now, keeping default style or inherited.
             }
           }
         } catch (e) {
            console.error('Error populating details', e);
+        }
+        
+        // Capture merges before resetting columns (which might clear them)
+        // Make a copy to avoid reference issues if the library clears the internal array
+        const currentMerges = sheet.model.merges ? [...sheet.model.merges] : [];
+
+        // Restore column widths via sheet.columns to force <cols> write
+        const newColumnDefs: any[] = [];
+        savedCols.forEach((saved, index) => {
+             newColumnDefs.push({
+                 key: saved.key || `col${index+1}`,
+                 width: saved.width,
+                 style: saved.style,
+                 hidden: saved.hidden,
+                 outlineLevel: saved.outlineLevel
+             });
+        });
+        sheet.columns = newColumnDefs;
+
+        // Restore merges
+        if (currentMerges && Array.isArray(currentMerges)) {
+             try {
+                 currentMerges.forEach(merge => {
+                    if (typeof merge === 'string') {
+                        sheet.mergeCells(merge);
+                    }
+                 });
+             } catch (e) {
+                 console.warn('Error restoring merges', e);
+             }
         }
 
         const bufferOut = await workbook.xlsx.writeBuffer();
@@ -162,163 +214,46 @@ export class CedulaService {
     });
   }
 
-  /*
-  private replaceInSheet(ws: XLSX.WorkSheet, placeholder: string, value: string) { ... } // Removed
-  */
 
-  // private generateExcel(cedula: CedulaPayload) { ... } // Comented out or removed
-  /*
-  private generateExcel(cedula: CedulaPayload) {
-    const detallesFavor = cedula.detalles?.filter((d) => d.tipo === 'FAVOR') || [];
-    const totalFavorMonto = detallesFavor.reduce((acc, curr) => acc + (curr.monto || 0), 0);
-    const totalFavorCobrado = detallesFavor.reduce((acc, curr) => acc + (curr.saldoEfectivamenteCobrado || 0), 0);
 
-    const detallesPagar = cedula.detalles?.filter((d) => d.tipo === 'PAGAR') || [];
-    const totalPagarMonto = detallesPagar.reduce((acc, curr) => acc + (curr.monto || 0), 0);
-    const totalPagarCobrado = detallesPagar.reduce((acc, curr) => acc + (curr.saldoEfectivamenteCobrado || 0), 0);
+/**
+ * Utilidad manual para convertir rangos de Excel (A1:B2) a números
+ * Esto reemplaza el uso de métodos inexistentes en el tipado de ExcelJS
+ */
+private decodeRange(rangeStr: string) {
+  const parts = rangeStr.split(':');
+  const start = this.addressToRowCol(parts[0]);
+  const end = parts[1] ? this.addressToRowCol(parts[1]) : start;
 
-    let comisionPercentage = 0;
-    if (cedula.totalFavor && cedula.totalFavor !== 0) {
-      comisionPercentage = (cedula.comisionPF || 0) / cedula.totalFavor * 100;
-    }
+  return {
+    top: start.row,
+    left: start.col,
+    bottom: end.row,
+    right: end.col
+  };
+}
 
-    const data: any[][] = [];
-
-    // Title Row
-    data.push(['PROMOTORA FUTURA']);
-    data.push([`FILIAL ${(cedula.filialNombre || '').toUpperCase()}`]);
-    // Row 3
-    data.push(['ESTADO DE CUENTA:', 'SERVICIOS CCI']);
-
-    // Row 4
-    data.push(['Periodo:', cedula.periodoNombre]);
-
-    data.push([]); // Spacer
-
-    // Totals
-    const comisionStr = this.decimalPipe.transform(cedula.saldosEfectivamenteCobradosTotal, '1.2-2');
-    const saldoStr = this.decimalPipe.transform(cedula.totalNeto, '1.2-2');
-    const comisionPFStr = this.decimalPipe.transform(cedula.comisionPF, '1.2-2');
-    const pct = this.decimalPipe.transform(comisionPercentage, '1.0-0');
-    const totalFinalStr = this.decimalPipe.transform(cedula.totalFinal, '1.2-2');
-
-    data.push(['TOTAL COMISIONES', 'TOTAL SALDOS', `Comision por Gestion PF (${pct}%)`]);
-    data.push([comisionStr, saldoStr, comisionPFStr]);
-    data.push([]);
-    data.push(['', '', 'Total Final:', totalFinalStr]);
-    data.push([]);
-
-    // FAVOR Table
-    data.push(['SERVICIOS OTORGADOS EN SUCURSAL | POR COBRAR A FAVOR DE LA FILIAL']);
-    const headers = [
-      'Filial Origen', 'Filial Otorgante', 'Titular', 'Finado', 'Contrato',
-      'Fecha', 'Concepto', 'Monto', 'Saldo PABS', 'Observaciones', 'Saldo Efec. Cobrado'
-    ];
-    data.push(headers);
-
-    detallesFavor.forEach(d => {
-      data.push([
-        d.sucursalOrigenNombre,
-        d.sucursalOtorganteNombre,
-        d.titular,
-        d.finado,
-        d.contrato,
-        this.datePipe.transform(d.fecha, 'dd/MM/yyyy'),
-        d.conceptoNombre,
-        this.decimalPipe.transform(d.monto, '1.2-2'),
-        this.decimalPipe.transform(d.saldoPABS, '1.2-2'),
-        d.observacion,
-        this.decimalPipe.transform(d.saldoEfectivamenteCobrado, '1.2-2')
-      ]);
-    });
-
-    // Subtotal Favor
-    data.push([
-      '', '', '', '', '', '', 'Subtotal:',
-      this.decimalPipe.transform(totalFavorMonto, '1.2-2'),
-      '', '',
-      this.decimalPipe.transform(totalFavorCobrado, '1.2-2')
-    ]);
-
-    data.push([]);
-
-    // PAGAR Table
-    data.push(['SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR PAGAR A OTRAS FILIALES']);
-    data.push(headers);
-
-    detallesPagar.forEach(d => {
-      data.push([
-        d.sucursalOrigenNombre,
-        d.sucursalOtorganteNombre,
-        d.titular,
-        d.finado,
-        d.contrato,
-        this.datePipe.transform(d.fecha, 'dd/MM/yyyy'),
-        d.conceptoNombre,
-        this.decimalPipe.transform(d.monto, '1.2-2'),
-        this.decimalPipe.transform(d.saldoPABS, '1.2-2'),
-        d.observacion,
-        this.decimalPipe.transform(d.saldoEfectivamenteCobrado, '1.2-2')
-      ]);
-    });
-
-    // Subtotal Pagar
-    data.push([
-      '', '', '', '', '', '', 'Subtotal:',
-      this.decimalPipe.transform(totalPagarMonto, '1.2-2'),
-      '', '',
-      this.decimalPipe.transform(totalPagarCobrado, '1.2-2')
-    ]);
-
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(data);
-
-    // Merge cells for "PROMOTORA FUTURA" (A1:K1) -> { s: {r:0, c:0}, e: {r:0, c:10} }
-    if (!ws['!merges']) ws['!merges'] = [];
-    ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } });
-
-    // Merge cells for "FILIAL ..." (A2:K2) -> { s: {r:1, c:0}, e: {r:1, c:10} }
-    ws['!merges'].push({ s: { r: 1, c: 0 }, e: { r: 1, c: 10 } });
-
-    // Center alignment for title (A1)
-    if (!ws['A1'].s) ws['A1'].s = {};
-    ws['A1'].s = {
-      alignment: { horizontal: 'center', vertical: 'center' },
-      font: { name: 'Calibri', sz: 36, color: { rgb: '1f4e78' }, bold: false }
-    };
-
-    // Style for Filial row (A2)
-    if (!ws['A2'].s) ws['A2'].s = {};
-    ws['A2'].s = {
-      alignment: { horizontal: 'center', vertical: 'center' },
-      font: { name: 'Calibri', sz: 14, color: { rgb: 'FFFFFF' }, bold: true },
-      fill: { fgColor: { rgb: '4472C4' } }
-    };
-
-    // Style for Rows 3 and 4 (A3..K3, A4..K4)
-    const headerStyle = {
-      font: { name: 'Calibri', sz: 11, color: { rgb: '1F4E78' }, bold: true },
-      fill: { fgColor: { rgb: 'DAE2F2' } }
-    };
-
-    const cols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
-    ['3', '4'].forEach(r => {
-      cols.forEach(c => {
-        const cell = c + r;
-        if (!ws[cell]) ws[cell] = { t: 's', v: '' };
-        if (!ws[cell].s) ws[cell].s = {};
-        ws[cell].s = { ...headerStyle };
-      });
-    });
-
-    const wb: XLSX.WorkBook = { Sheets: { 'Cedula': ws }, SheetNames: ['Cedula'] };
-    const excelBuffer: any = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-    
-    const filial = this.cleanFileName(cedula.filialNombre);
-    const periodo = this.cleanFileName(cedula.periodoNombre);
-    
-    this.saveAsExcelFile(excelBuffer, `cedula_${filial}_${periodo}`);
+private addressToRowCol(address: string) {
+  const colMatch = address.match(/[A-Z]+/);
+  const rowMatch = address.match(/[0-9]+/);
+  
+  const colStr = colMatch![0];
+  let col = 0;
+  for (let i = 0; i < colStr.length; i++) {
+    col = col * 26 + colStr.charCodeAt(i) - 64;
   }
-  */
+  
+  return {
+    row: parseInt(rowMatch![0], 10),
+    col: col
+  };
+}
+
+
+
+
+
+
 
   private cleanFileName(name: string | undefined): string {
     if (!name) return '';

@@ -12,6 +12,8 @@ import { CedulaPayload } from 'src/app/core/interfaces/payloads/cedula.payload';
 export class CedulaDetalleComponent implements OnInit {
   cedula: CedulaPayload | null = null;
   loading = false;
+  searchTermFavor = '';
+  searchTermPagar = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -49,7 +51,22 @@ export class CedulaDetalleComponent implements OnInit {
   }
 
   get detallesFavor() {
-    return this.cedula?.detalles?.filter((d) => d.tipo === 'FAVOR') || [];
+    let list = this.cedula?.detalles?.filter((d) => d.tipo === 'FAVOR') || [];
+    if (this.searchTermFavor) {
+      const term = this.searchTermFavor.toLowerCase();
+      list = list.filter((d) => {
+        return (
+          (d.sucursalOrigenNombre && d.sucursalOrigenNombre.toLowerCase().includes(term)) ||
+          (d.sucursalOtorganteNombre && d.sucursalOtorganteNombre.toLowerCase().includes(term)) ||
+          (d.titular && d.titular.toLowerCase().includes(term)) ||
+          (d.finado && d.finado.toLowerCase().includes(term)) ||
+          (d.contrato && d.contrato.toLowerCase().includes(term)) ||
+          (d.conceptoNombre && d.conceptoNombre.toLowerCase().includes(term)) ||
+          (d.observacion && d.observacion.toLowerCase().includes(term))
+        );
+      });
+    }
+    return list;
   }
 
   get totalFavorMonto() {
@@ -61,7 +78,22 @@ export class CedulaDetalleComponent implements OnInit {
   }
 
   get detallesPagar() {
-    return this.cedula?.detalles?.filter((d) => d.tipo === 'PAGAR') || [];
+    let list = this.cedula?.detalles?.filter((d) => d.tipo === 'PAGAR') || [];
+    if (this.searchTermPagar) {
+      const term = this.searchTermPagar.toLowerCase();
+      list = list.filter((d) => {
+        return (
+          (d.sucursalOrigenNombre && d.sucursalOrigenNombre.toLowerCase().includes(term)) ||
+          (d.sucursalOtorganteNombre && d.sucursalOtorganteNombre.toLowerCase().includes(term)) ||
+          (d.titular && d.titular.toLowerCase().includes(term)) ||
+          (d.finado && d.finado.toLowerCase().includes(term)) ||
+          (d.contrato && d.contrato.toLowerCase().includes(term)) ||
+          (d.conceptoNombre && d.conceptoNombre.toLowerCase().includes(term)) ||
+          (d.observacion && d.observacion.toLowerCase().includes(term))
+        );
+      });
+    }
+    return list;
   }
 
   get totalPagarMonto() {
@@ -73,10 +105,10 @@ export class CedulaDetalleComponent implements OnInit {
   }
 
   get comisionPercentage() {
-    if (!this.cedula || !this.cedula.totalFavor || this.cedula.totalFavor === 0) {
+    if (!this.cedula || !this.cedula.subTotalFavor || this.cedula.subTotalFavor === 0) {
       return 0;
     }
-    return (this.cedula.comisionPF || 0) / this.cedula.totalFavor * 100;
+    return (this.cedula.comisionPF || 0) / this.cedula.subTotalFavor * 100;
   }
 
   regresar() {

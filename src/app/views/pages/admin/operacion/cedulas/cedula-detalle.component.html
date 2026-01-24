@@ -32,10 +32,10 @@
 
   <div class="row mb-3">
     <div class="col-md-4">
-      <strong>TOTAL COMISIONES:</strong> {{ cedula.saldosEfectivamenteCobradosTotal | number: '1.2-2' }}
+      <strong>TOTAL COMISIONES:</strong> {{ cedula.totalComisiones | number: '1.2-2' }}
     </div>
     <div class="col-md-4">
-      <strong>TOTAL SALDOS:</strong> {{ cedula.totalNeto | number: '1.2-2' }}
+      <strong>TOTAL SALDOS:</strong> {{ cedula.saldosEfectivamenteCobradosTotal | number: '1.2-2' }}
     </div>
     <div class="col-md-4">
       <strong>Comision por Gestion PF ({{ comisionPercentage | number: '1.0-0' }}%):</strong> {{ cedula.comisionPF | number: '1.2-2' }}
@@ -50,11 +50,20 @@
     </div>
   </div>
 
-  <h5 class="mb-3">SERVICIOS OTORGADOS EN SUCURSAL | POR <span style="font-weight: 900; color: #1890ff;">COBRAR</span> A FAVOR DE LA FILIAL</h5>
+  <div class="row mb-3 align-items-center">
+    <div class="col-md-8">
+      <h5 class="mb-0">SERVICIOS OTORGADOS EN SUCURSAL | POR <span style="font-weight: 900; color: #1890ff;">COBRAR</span> A FAVOR DE LA FILIAL</h5>
+    </div>
+    <div class="col-md-4">
+      <input type="text" nz-input placeholder="Buscar..." [(ngModel)]="searchTermFavor" />
+    </div>
+  </div>
   <nz-table
     #tableFavor
     [nzData]="detallesFavor"
     [nzLoading]="loading"
+    [nzShowSizeChanger]="true"
+    [nzPageSizeOptions]="[5, 10, 20, 50, 100]"
   >
     <thead>
       <tr>
@@ -82,7 +91,16 @@
         <td>{{ d.conceptoNombre }}</td>
         <td>{{ d.monto | currency: 'USD' }}</td>
         <td>{{ d.saldoPABS | currency: 'USD' }}</td>
-        <td>{{ d.observacion }}</td>
+        <td>
+          {{ d.observacion }}
+          <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
+          <div *ngIf="d.esFilialesHermanas" class="chip chip-filiales-hermanas">Filiales hermanas</div>
+          <div *ngIf="d.aceptaConvenio" class="chip chip-convenio">Saldo PABS conveniado</div>
+          <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0">
+            <div *ngIf="(d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
+            <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
+          </div>
+        </td>
         <td>{{ d.saldoEfectivamenteCobrado | currency: 'USD' }}</td>
       </tr>
       <tr style="background-color: #fafafa; font-weight: bold;">
@@ -95,11 +113,20 @@
     </tbody>
   </nz-table>
 
-  <h5 class="mt-4 mb-3">SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR <span style="font-weight: 900; color: #1890ff;">PAGAR</span> A OTRAS FILIALES</h5>
+  <div class="row mt-4 mb-3 align-items-center">
+    <div class="col-md-8">
+      <h5 class="mb-0">SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR <span style="font-weight: 900; color: #1890ff;">PAGAR</span> A OTRAS FILIALES</h5>
+    </div>
+    <div class="col-md-4">
+      <input type="text" nz-input placeholder="Buscar..." [(ngModel)]="searchTermPagar" />
+    </div>
+  </div>
   <nz-table
     #tablePagar
     [nzData]="detallesPagar"
     [nzLoading]="loading"
+    [nzShowSizeChanger]="true"
+    [nzPageSizeOptions]="[5, 10, 20, 50, 100]"
   >
     <thead>
       <tr>
@@ -127,7 +154,16 @@
         <td>{{ d.conceptoNombre }}</td>
         <td>{{ d.monto | currency: 'USD' }}</td>
         <td>{{ d.saldoPABS | currency: 'USD' }}</td>
-        <td>{{ d.observacion }}</td>
+        <td>
+          {{ d.observacion }}
+          <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
+          <div *ngIf="d.esFilialesHermanas" class="chip chip-filiales-hermanas">Filiales hermanas</div>
+          <div *ngIf="d.aceptaConvenio" class="chip chip-convenio">Saldo PABS conveniado</div>
+          <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0">
+            <div *ngIf="(d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
+            <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
+          </div>
+        </td>
         <td>{{ d.saldoEfectivamenteCobrado | currency: 'USD' }}</td>
       </tr>
       <tr style="background-color: #fafafa; font-weight: bold;">

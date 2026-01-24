@@ -17,6 +17,10 @@ export interface CedulaDetallePayload {
   saldoPABS?: number;
   observacion?: string;
   saldoEfectivamenteCobrado?: number;
+  penalizado?: boolean;
+  esFilialesHermanas?: boolean;
+  montoDevuelto?: number;
+  aceptaConvenio?: boolean;
   createdAt: Date;
   updatedAt: Date;
   servicio?: any;
@@ -30,10 +34,10 @@ export interface CedulaPayload {
   periodoNombre?: string;
   filialId: number;
   filialNombre?: string;
-  totalFavor: number;
-  totalPagar: number;
+  subTotalFavor: number;
+  subTotalPagar: number;
   totalUsa: number;
-  totalNeto: number;
+  totalComisiones: number;
   comisionPF?: number;
   saldosEfectivamenteCobradosTotal?: number;
   totalFinal?: number;

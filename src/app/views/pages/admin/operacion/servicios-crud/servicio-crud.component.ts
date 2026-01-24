@@ -226,7 +226,10 @@ export class ServicioCrudComponent implements OnInit {
       return (
         (item.fo_Contrato && item.fo_Contrato.toLowerCase().includes(term)) ||
         (item.fo_Nombre_Titular && item.fo_Nombre_Titular.toLowerCase().includes(term)) ||
-        (item.fo_Nombre_Finado && item.fo_Nombre_Finado.toLowerCase().includes(term))
+        (item.fo_Nombre_Finado && item.fo_Nombre_Finado.toLowerCase().includes(term)) ||
+        (item.sucursalOrigen?.nombre && item.sucursalOrigen.nombre.toLowerCase().includes(term)) ||
+        (item.sucursalOtorgante?.nombre && item.sucursalOtorgante.nombre.toLowerCase().includes(term)) ||
+        (item.fo_Fecha_Servicio && item.fo_Fecha_Servicio.toLowerCase().includes(term))
       );
     });
   }
