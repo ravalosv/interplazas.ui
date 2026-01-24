@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CedulaService } from 'src/app/core/services/cedula.service';
 import { AlertsService } from 'src/app/core/services/alerts.service';
-import { CedulaPayload } from 'src/app/core/interfaces/payloads/cedula.payload';
+import { CedulaPayload, CedulaDetallePayload } from 'src/app/core/interfaces/payloads/cedula.payload';
 
 @Component({
   selector: 'app-cedula-detalle',
@@ -14,6 +14,7 @@ export class CedulaDetalleComponent implements OnInit {
   loading = false;
   searchTermFavor = '';
   searchTermPagar = '';
+  searchTermUSA = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -51,7 +52,16 @@ export class CedulaDetalleComponent implements OnInit {
   }
 
   get detallesFavor() {
-    let list = this.cedula?.detalles?.filter((d) => d.tipo === 'FAVOR') || [];
+    let list: CedulaDetallePayload[] = [];
+    
+    if (this.cedula?.filial?.extranjera) {
+      // Para filiales extranjeras, incluimos 'USA' en el listado de COBRAR (Favor)
+      list = this.cedula?.detalles?.filter((d) => d.tipo === 'FAVOR' || d.tipo === 'USA') || [];
+    } else {
+      // Para filiales normales, solo 'FAVOR'
+      list = this.cedula?.detalles?.filter((d) => d.tipo === 'FAVOR') || [];
+    }
+
     if (this.searchTermFavor) {
       const term = this.searchTermFavor.toLowerCase();
       list = list.filter((d) => {
@@ -102,6 +112,38 @@ export class CedulaDetalleComponent implements OnInit {
 
   get totalPagarCobrado() {
     return this.detallesPagar.reduce((acc, curr) => acc + (curr.saldoEfectivamenteCobrado || 0), 0);
+  }
+
+  get detallesUSA() {
+    // Si la filial es extranjera, no mostramos detalles USA
+    if (this.cedula?.filial?.extranjera) {
+      return [];
+    }
+
+    let list = this.cedula?.detalles?.filter((d) => d.tipo === 'USA') || [];
+    if (this.searchTermUSA) {
+      const term = this.searchTermUSA.toLowerCase();
+      list = list.filter((d) => {
+        return (
+          (d.sucursalOrigenNombre && d.sucursalOrigenNombre.toLowerCase().includes(term)) ||
+          (d.sucursalOtorganteNombre && d.sucursalOtorganteNombre.toLowerCase().includes(term)) ||
+          (d.titular && d.titular.toLowerCase().includes(term)) ||
+          (d.finado && d.finado.toLowerCase().includes(term)) ||
+          (d.contrato && d.contrato.toLowerCase().includes(term)) ||
+          (d.conceptoNombre && d.conceptoNombre.toLowerCase().includes(term)) ||
+          (d.observacion && d.observacion.toLowerCase().includes(term))
+        );
+      });
+    }
+    return list;
+  }
+
+  get totalUsaMonto() {
+    return this.detallesUSA.reduce((acc, curr) => acc + (curr.monto || 0), 0);
+  }
+
+  get totalUsaCobrado() {
+    return this.detallesUSA.reduce((acc, curr) => acc + (curr.saldoEfectivamenteCobrado || 0), 0);
   }
 
   get comisionPercentage() {
