@@ -50,7 +50,8 @@ export class CedulaExcelService {
 
     this.applyTitleAndHeaderStyles(worksheet, cedula);
     this.applyTableHeadersStyle(worksheet);
-    this.insertDetails(worksheet, cedula);
+    const lastFavorRow = this.insertFavorDetails(worksheet, cedula);
+    this.insertPagarDetails(worksheet, cedula, lastFavorRow);
     this.saveFile(workbook, cedula);
   }
 
@@ -126,15 +127,6 @@ export class CedulaExcelService {
     };
     this.setCellStyle(worksheet, 'A8', styleA8);
 
-    // Intento de Rich Text para colorear "COBRAR" en amarillo
-    // Nota: La compatibilidad de Rich Text depende de la librería xlsx-js-style. 
-    // Si no es compatible, se mostrará el estilo base (todo blanco).
-    /*
-    const parts = textA8.split('COBRAR');
-    // Estructura aproximada para Rich Text si fuera soportado en escritura por la librería
-    // Por seguridad mantenemos el texto plano con el estilo base que es legible.
-    */
-
     // K8: Estilo primario
     this.ensureCellExists(worksheet, 'K8');
     this.setCellStyle(worksheet, 'K8', {
@@ -165,26 +157,147 @@ export class CedulaExcelService {
     }
   }
 
-  private insertDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload) {
+  private insertFavorDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload): number {
     const detallesFavor = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR');
-    
-    if (detallesFavor.length === 0) return;
-
     const startRow = 9; // A10 es índice 9
-    const numRows = detallesFavor.length;
+    let lastModifiedRow = startRow; // Default si no hay detalles (asumiendo que al menos la fila 9 existe)
+
+    if (detallesFavor.length > 0) {
+        const numRows = detallesFavor.length;
+        
+        this.shiftRowsDown(worksheet, startRow, numRows);
+        
+        // Insertar datos
+        detallesFavor.forEach((d, i) => {
+          const currentRow = startRow + i;
+          this.setRowHeight(worksheet, currentRow, 12.75);
+          this.insertDetailRow(worksheet, currentRow, d);
+        });
+
+        // Extender color GREY_COLOR en columna I (índice 8) y SECONDARY_COLOR en columna K (índice 10) dos renglones más
+        const lastDetailRow = startRow + numRows;
+        for (let r = lastDetailRow; r < lastDetailRow + 2; r++) {
+            // Columna I (8)
+            const cellRefI = XLSX.utils.encode_cell({c: 8, r: r});
+            this.ensureCellExists(worksheet, cellRefI);
+            this.setCellStyle(worksheet, cellRefI, {
+                fill: { fgColor: { rgb: this.GREY_COLOR } }
+            });
+
+            // Columna K (10)
+            const cellRefK = XLSX.utils.encode_cell({c: 10, r: r});
+            this.ensureCellExists(worksheet, cellRefK);
+            this.setCellStyle(worksheet, cellRefK, {
+                fill: { fgColor: { rgb: this.SECONDARY_COLOR } }
+            });
+        }
+        
+        // Actualizar lastModifiedRow (los dos renglones extra están en indices lastDetailRow y lastDetailRow+1)
+        lastModifiedRow = lastDetailRow + 1;
+
+        this.updateSummaryFormulas(worksheet, startRow, numRows);
+    } else {
+        // Si no hay detalles, la plantilla tiene una fila vacía en startRow?
+        // Asumimos que la plantilla base tiene espacio. Si no se insertó nada, la "última modificada" 
+        // podría considerarse la fila de encabezados (8) o la fila vacía (9).
+        // Para seguridad, si no hay datos, asumimos que la fila 9 está vacía y lista.
+        // Pero si la tabla está vacía, quizás deberíamos devolver 9.
+        lastModifiedRow = startRow;
+    }
+
+    return lastModifiedRow;
+  }
+
+  private insertPagarDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastFavorRow: number) {
+    const detallesPagar = (cedula.detalles || []).filter(d => d.tipo === 'PAGAR');
+    if (detallesPagar.length === 0) return;
+
+    // Comienza un renglón abajo de la última línea modificada en COBRAR (Gap de 1 fila vacía)
+    // lastFavorRow es el índice de la última fila tocada (incluyendo los 2 extra)
+    const startSectionRow = lastFavorRow + 2;
+
+    // Estructura PAGAR:
+    // 1. Título (1 fila)
+    // 2. Encabezados (1 fila)
+    // 3. Datos (N filas)
+    // 4. Espacio extra/colores (2 filas)
+    const numDataRows = detallesPagar.length;
+    const rowsToInsert = 1 + 1 + numDataRows + 2; // Título + Header + Datos + 2 Extra
+
+    // Desplazar contenido hacia abajo para hacer espacio
+    this.shiftRowsDown(worksheet, startSectionRow, rowsToInsert);
+
+    // 1. Título "SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR PAGAR A OTRAS FILIALES"
+    // Usamos el mismo estilo que A8 pero con otro texto
+    // Asumimos que va en la columna A
+    const titleRow = startSectionRow;
+    const cellTitleRef = XLSX.utils.encode_cell({c: 0, r: titleRow});
     
-    this.shiftRowsDown(worksheet, startRow, numRows);
+    // Texto y estilo del título
+    const titleText = "SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR PAGAR A OTRAS FILIALES";
+    this.ensureCellExists(worksheet, cellTitleRef);
+    const cellTitle = worksheet[cellTitleRef];
+    cellTitle.v = titleText;
+    cellTitle.t = 's';
     
-    // Insertar datos
-    detallesFavor.forEach((d, i) => {
-      const currentRow = startRow + i;
-      this.setRowHeight(worksheet, currentRow, 12.75);
-      this.insertDetailRow(worksheet, currentRow, d);
+    this.setCellStyle(worksheet, cellTitleRef, {
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'left', vertical: 'center' }
     });
 
-    // Extender color GREY_COLOR en columna I (índice 8) y SECONDARY_COLOR en columna K (índice 10) dos renglones más
-    const lastDetailRow = startRow + numRows;
-    for (let r = lastDetailRow; r < lastDetailRow + 2; r++) {
+    // Merge A-I (Cols 0-8) para el título
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push({
+        s: { r: titleRow, c: 0 },
+        e: { r: titleRow, c: 8 }
+    });
+
+    // Columna K en fila de título PAGAR con mismo formato
+    const cellRefK = XLSX.utils.encode_cell({c: 10, r: titleRow});
+    this.ensureCellExists(worksheet, cellRefK);
+    this.setCellStyle(worksheet, cellRefK, {
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } }
+    });
+
+    // 2. Encabezados de tabla
+    const headerRow = startSectionRow + 1;
+    // Copiamos los encabezados de la fila 8 (A9:K9) o los definimos manualmente
+    // Definición manual para asegurar consistencia
+    const headers = [
+        "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
+        "FECHA", "CONCEPTO", "MONTO", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
+    ];
+
+    headers.forEach((header, index) => {
+        const cellRef = XLSX.utils.encode_cell({c: index, r: headerRow});
+        this.ensureCellExists(worksheet, cellRef);
+        worksheet[cellRef] = { t: 's', v: header };
+        
+        const style: any = {
+            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+            fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
+            alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
+        };
+
+        // Estilos específicos por columna (igual que applyTableHeadersStyle)
+        if (index === 8) style.fill = { fgColor: { rgb: this.GREY_COLOR } }; // Saldo PABS
+        if (index === 9) delete style.fill; // Observación
+        
+        this.setCellStyle(worksheet, cellRef, style);
+    });
+
+    // 3. Insertar datos
+    const dataStartRow = startSectionRow + 2;
+    detallesPagar.forEach((d, i) => {
+        const currentRow = dataStartRow + i;
+        this.setRowHeight(worksheet, currentRow, 12.75);
+        this.insertDetailRow(worksheet, currentRow, d);
+    });
+
+    // 4. Extender colores (2 filas extra)
+    const lastDataRow = dataStartRow + numDataRows;
+    for (let r = lastDataRow; r < lastDataRow + 2; r++) {
         // Columna I (8)
         const cellRefI = XLSX.utils.encode_cell({c: 8, r: r});
         this.ensureCellExists(worksheet, cellRefI);
@@ -200,7 +313,58 @@ export class CedulaExcelService {
         });
     }
 
-    this.updateSummaryFormulas(worksheet, startRow, numRows);
+    // Subtotales para PAGAR
+    const subtotalRow = lastDataRow + 1; // Un renglón abajo del detalle (coincide con la segunda fila extra)
+    // Nota: lastDataRow apunta a la siguiente fila LIBRE despues de datos, pero como indices son base 0...
+    // dataStartRow + numDataRows = índice de la primera fila "extra" (Gris/Secundario).
+    // Si queremos 2 renglones abajo del detalle:
+    // Detalle termina en (dataStartRow + numDataRows - 1).
+    // Fila +1 (Extra 1)
+    // Fila +2 (Extra 2)
+    // Fila +3 (Subtotales)
+    // El usuario dijo "dos renglones abajo de donde termina el detalle".
+    // Si detalle termina en fila 20.
+    // Fila 21 (vacía/color), Fila 22 (vacía/color).
+    // Fila 23 sería el subtotal? O en la 22?
+    // "dos renglones abajo": 
+    // Renglón 1 abajo: Fila 21.
+    // Renglón 2 abajo: Fila 22.
+    // Usaremos el índice lastDataRow + 2 (que visualmente es la 3ra fila después de datos, saltando las 2 de color).
+    
+    // Definimos estilo común
+    const subtotalStyle = {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+        fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    };
+
+    // G = 'SUBTOTAL'
+    const cellG = XLSX.utils.encode_cell({c: 6, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellG);
+    worksheet[cellG].v = 'SUBTOTAL';
+    this.setCellStyle(worksheet, cellG, subtotalStyle);
+
+    // H = SUM Columna H (Monto)
+    const cellH = XLSX.utils.encode_cell({c: 7, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellH);
+    const startH = XLSX.utils.encode_cell({c: 7, r: dataStartRow});
+    const endH = XLSX.utils.encode_cell({c: 7, r: dataStartRow + numDataRows - 1});
+    this.setFormula(worksheet, cellH, `SUM(${startH}:${endH})`, this.ACCOUNTING_FORMAT);
+    this.setCellStyle(worksheet, cellH, subtotalStyle);
+
+    // J = 'SUBTOTAL'
+    const cellJ = XLSX.utils.encode_cell({c: 9, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellJ);
+    worksheet[cellJ].v = 'SUBTOTAL';
+    this.setCellStyle(worksheet, cellJ, subtotalStyle);
+
+    // K = SUM Columna K (Monto Recuperado)
+    const cellK = XLSX.utils.encode_cell({c: 10, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellK);
+    const startK = XLSX.utils.encode_cell({c: 10, r: dataStartRow});
+    const endK = XLSX.utils.encode_cell({c: 10, r: dataStartRow + numDataRows - 1});
+    this.setFormula(worksheet, cellK, `SUM(${startK}:${endK})`, this.ACCOUNTING_FORMAT);
+    this.setCellStyle(worksheet, cellK, subtotalStyle);
   }
 
   private shiftRowsDown(worksheet: XLSX.WorkSheet, startRow: number, numRows: number) {
