@@ -74,7 +74,9 @@ export class CedulaExcelService {
 
     const lastSubtotalRow = this.insertSubtotales(worksheet, lastPagarRow, cedula, summaryRefs, settings);
     
-    this.insertTotalFinal(worksheet, lastSubtotalRow, summaryRefs);
+    const disclaimerRow = this.insertTotalFinal(worksheet, lastSubtotalRow, summaryRefs);
+
+    this.insertUSADetails(worksheet, cedula, disclaimerRow);
 
     this.saveFile(workbook, cedula);
   }
@@ -175,7 +177,7 @@ export class CedulaExcelService {
     // 2. Comision por Gestion PF
     // Prioridad: SettingsPayload.comisionPF -> cedula.comisionPF -> 0
     const comisionVal = settings?.comisionPF ?? cedula.comisionPF ?? 0;
-    const comisionStr = `Comision por Gestion PF ${comisionVal}%`;
+    const comisionStr = `Comision por Gestion PF ${comisionVal * 100}%`;
     this.insertSummaryLabel(worksheet, currentRow, comisionStr);
 
     // Formato H-K: backgroundcolor: secundario; Calibri, 10, bold, negro
@@ -201,7 +203,7 @@ export class CedulaExcelService {
     return currentRow;
   }
 
-  private insertTotalFinal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any) {
+  private insertTotalFinal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any): number {
     const currentRow = lastRow + 1;
     
     // A = "TOTAL FINAL"
@@ -269,6 +271,29 @@ export class CedulaExcelService {
         this.ensureCellExists(worksheet, ref);
         this.setCellStyle(worksheet, ref, totalStyle);
     }
+
+    // Disclaimer USA: 2 lineas abajo del total final
+    const disclaimerRow = currentRow + 2;
+    const disclaimerRef = XLSX.utils.encode_cell({c: 0, r: disclaimerRow});
+    this.ensureCellExists(worksheet, disclaimerRef);
+    const disclaimerCell = worksheet[disclaimerRef];
+    
+    disclaimerCell.v = "Estos servicios fueron otorgados en Estados Unidos, su pago procederá por separado y en dólares. La tarifa vigente y pactada por mesa directiva para un Servicio CCI con sucursal USA, es de $1,200dlls.";
+    disclaimerCell.t = 's';
+
+    // Merge A-K (0-10)
+    worksheet['!merges'].push({
+        s: { r: disclaimerRow, c: 0 },
+        e: { r: disclaimerRow, c: 10 }
+    });
+
+    // Style: Calibri, 9, bold, negro, left, sin fondo
+    this.setCellStyle(worksheet, disclaimerRef, {
+        font: { name: 'Calibri', sz: 9, bold: true, color: { rgb: "000000" } },
+        alignment: { horizontal: 'left', vertical: 'center' }
+    });
+
+    return disclaimerRow;
   }
 
   private insertSummaryLabel(worksheet: XLSX.WorkSheet, row: number, text: string) {
@@ -591,6 +616,136 @@ export class CedulaExcelService {
     this.setCellStyle(worksheet, cellK, subtotalStyle);
 
     return { lastRow: subtotalRow, refs: { subtotalPagar: cellH, subtotalSaldosPagar: cellK } };
+  }
+
+  private insertUSADetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastRow: number): number {
+    const detallesUSA = (cedula.detalles || []).filter(d => d.tipo === 'USA');
+    if (detallesUSA.length === 0) return lastRow;
+
+    // Start next line
+    const startSectionRow = lastRow + 1;
+
+    // Estructura USA:
+    // 1. Título (1 fila)
+    // 2. Encabezados (1 fila)
+    // 3. Datos (N filas)
+    // 4. Espacio extra/colores (2 filas)
+    const numDataRows = detallesUSA.length;
+    const rowsToInsert = 1 + 1 + numDataRows + 2;
+
+    this.shiftRowsDown(worksheet, startSectionRow, rowsToInsert);
+
+    // 1. Título "SERVICIOS USA | EUA"
+    const titleRow = startSectionRow;
+    const cellTitleRef = XLSX.utils.encode_cell({c: 0, r: titleRow});
+    
+    this.ensureCellExists(worksheet, cellTitleRef);
+    const cellTitle = worksheet[cellTitleRef];
+    cellTitle.v = "SERVICIOS USA | EUA";
+    cellTitle.t = 's';
+    
+    this.setCellStyle(worksheet, cellTitleRef, {
+        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'left', vertical: 'center' }
+    });
+
+    // Merge A-I
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push({
+        s: { r: titleRow, c: 0 },
+        e: { r: titleRow, c: 8 }
+    });
+
+    // Columna K format
+    const cellRefK = XLSX.utils.encode_cell({c: 10, r: titleRow});
+    this.ensureCellExists(worksheet, cellRefK);
+    this.setCellStyle(worksheet, cellRefK, {
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } }
+    });
+
+    // 2. Encabezados
+    const headerRow = startSectionRow + 1;
+    const headers = [
+        "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
+        "FECHA", "CONCEPTO", "MONTO DLLS", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
+    ];
+
+    headers.forEach((header, index) => {
+        const cellRef = XLSX.utils.encode_cell({c: index, r: headerRow});
+        this.ensureCellExists(worksheet, cellRef);
+        worksheet[cellRef] = { t: 's', v: header };
+        
+        const style: any = {
+            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+            fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
+            alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
+        };
+
+        if (index === 8) style.fill = { fgColor: { rgb: this.GREY_COLOR } };
+        if (index === 9) delete style.fill;
+        
+        this.setCellStyle(worksheet, cellRef, style);
+    });
+
+    // 3. Datos
+    const dataStartRow = startSectionRow + 2;
+    detallesUSA.forEach((d, i) => {
+        const currentRow = dataStartRow + i;
+        this.setRowHeight(worksheet, currentRow, 12.75);
+        this.insertDetailRow(worksheet, currentRow, d);
+    });
+
+    // 4. Extender colores
+    const lastDataRow = dataStartRow + numDataRows;
+    for (let r = lastDataRow; r < lastDataRow + 2; r++) {
+        const cellRefI = XLSX.utils.encode_cell({c: 8, r: r});
+        this.ensureCellExists(worksheet, cellRefI);
+        this.setCellStyle(worksheet, cellRefI, {
+            fill: { fgColor: { rgb: this.GREY_COLOR } }
+        });
+
+        const cellRefK = XLSX.utils.encode_cell({c: 10, r: r});
+        this.ensureCellExists(worksheet, cellRefK);
+        this.setCellStyle(worksheet, cellRefK, {
+            fill: { fgColor: { rgb: this.SECONDARY_COLOR } }
+        });
+    }
+
+    // Subtotales USA
+    const subtotalRow = lastDataRow + 1;
+    
+    const subtotalStyle = {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+        fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    };
+
+    const cellG = XLSX.utils.encode_cell({c: 6, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellG);
+    worksheet[cellG].v = 'SUBTOTAL';
+    this.setCellStyle(worksheet, cellG, subtotalStyle);
+
+    const cellH = XLSX.utils.encode_cell({c: 7, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellH);
+    const startH = XLSX.utils.encode_cell({c: 7, r: dataStartRow});
+    const endH = XLSX.utils.encode_cell({c: 7, r: dataStartRow + numDataRows - 1});
+    this.setFormula(worksheet, cellH, `SUM(${startH}:${endH})`, this.ACCOUNTING_FORMAT);
+    this.setCellStyle(worksheet, cellH, subtotalStyle);
+
+    const cellJ = XLSX.utils.encode_cell({c: 9, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellJ);
+    worksheet[cellJ].v = 'SUBTOTAL';
+    this.setCellStyle(worksheet, cellJ, subtotalStyle);
+
+    const cellK = XLSX.utils.encode_cell({c: 10, r: subtotalRow});
+    this.ensureCellExists(worksheet, cellK);
+    const startK = XLSX.utils.encode_cell({c: 10, r: dataStartRow});
+    const endK = XLSX.utils.encode_cell({c: 10, r: dataStartRow + numDataRows - 1});
+    this.setFormula(worksheet, cellK, `SUM(${startK}:${endK})`, this.ACCOUNTING_FORMAT);
+    this.setCellStyle(worksheet, cellK, subtotalStyle);
+
+    return subtotalRow;
   }
 
   private shiftRowsDown(worksheet: XLSX.WorkSheet, startRow: number, numRows: number) {
