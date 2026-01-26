@@ -72,12 +72,14 @@ export class CedulaExcelService {
     // Nota: insertPagarDetails retorna lastRow = lastFavorRow si no hay datos
     const lastPagarRow = pagarResult.lastRow;
 
-    this.insertSubtotales(worksheet, lastPagarRow, cedula, summaryRefs, settings);
+    const lastSubtotalRow = this.insertSubtotales(worksheet, lastPagarRow, cedula, summaryRefs, settings);
+    
+    this.insertTotalFinal(worksheet, lastSubtotalRow, summaryRefs);
 
     this.saveFile(workbook, cedula);
   }
 
-  private insertSubtotales(worksheet: XLSX.WorkSheet, lastRow: number, cedula: CedulaPayload, refs: any, settings: SettingsPayload | null) {
+  private insertSubtotales(worksheet: XLSX.WorkSheet, lastRow: number, cedula: CedulaPayload, refs: any, settings: SettingsPayload | null): number {
     let currentRow = lastRow + 2;
 
     // 1. TOTAL COMISIONES
@@ -164,6 +166,10 @@ export class CedulaExcelService {
         alignment: { horizontal: 'right', vertical: 'center' }
     });
 
+    // Guardar referencias para Total Final
+    refs.totalComisiones = totalComisiones;
+    refs.totalSaldos = totalSaldos;
+
     currentRow++;
 
     // 2. Comision por Gestion PF
@@ -192,6 +198,77 @@ export class CedulaExcelService {
     cellHComision.t = 'n';
 
     currentRow++;
+    return currentRow;
+  }
+
+  private insertTotalFinal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any) {
+    const currentRow = lastRow + 1;
+    
+    // A = "TOTAL FINAL"
+    const cellRef = XLSX.utils.encode_cell({c: 0, r: currentRow});
+    this.ensureCellExists(worksheet, cellRef);
+    const cell = worksheet[cellRef];
+    cell.v = "TOTAL FINAL";
+    cell.t = 's';
+
+    // Merge A-G (0-6)
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push({
+        s: { r: currentRow, c: 0 },
+        e: { r: currentRow, c: 6 }
+    });
+
+    // Style: background: principal, forecolor: FFFFFF, Calibri, 24, bold, right
+    this.setCellStyle(worksheet, cellRef, {
+        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    });
+
+    // H-K (7-10) Merge y Valor
+    // Merge
+    worksheet['!merges'].push({
+        s: { r: currentRow, c: 7 },
+        e: { r: currentRow, c: 10 }
+    });
+
+    const cellHRef = XLSX.utils.encode_cell({c: 7, r: currentRow});
+    this.ensureCellExists(worksheet, cellHRef);
+    const cellH = worksheet[cellHRef];
+
+    // Formula: totalComisiones + totalSaldos
+    const comm = refs.totalComisiones;
+    const saldos = refs.totalSaldos;
+    const RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
+
+    if (comm && saldos) {
+        this.setFormula(worksheet, cellHRef, `${comm}+${saldos}`, RED_ACCOUNTING_FORMAT);
+    } else if (comm) {
+        this.setFormula(worksheet, cellHRef, comm, RED_ACCOUNTING_FORMAT);
+    } else if (saldos) {
+        this.setFormula(worksheet, cellHRef, saldos, RED_ACCOUNTING_FORMAT);
+    } else {
+        cellH.v = 0;
+        cellH.t = 'n';
+        cellH.z = RED_ACCOUNTING_FORMAT;
+    }
+
+    // Guardar referencia
+    refs.totalFinal = cellHRef;
+
+    // Style: background: a9d08e, Calibri, 24, bold, forecolor: primario
+    const totalStyle = {
+        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+        fill: { fgColor: { rgb: "A9D08E" } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    };
+
+    // Aplicar estilo a las celdas mergeadas (H-K)
+    for (let c = 7; c <= 10; c++) {
+        const ref = XLSX.utils.encode_cell({c: c, r: currentRow});
+        this.ensureCellExists(worksheet, ref);
+        this.setCellStyle(worksheet, ref, totalStyle);
+    }
   }
 
   private insertSummaryLabel(worksheet: XLSX.WorkSheet, row: number, text: string) {
