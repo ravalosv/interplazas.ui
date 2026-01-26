@@ -4,6 +4,8 @@ import { DatePipe } from '@angular/common';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx-js-style';
 import { CedulaPayload } from '../interfaces/payloads/cedula.payload';
+import { SettingsPayload } from '../interfaces/payloads/settings.payload';
+import { SettingsService } from './settings.service';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable({
@@ -19,21 +21,27 @@ export class CedulaExcelService {
   private readonly ACCOUNTING_FORMAT = '_("$"* #,##0.00_);_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
   private readonly TEMPLATE_PATH = 'assets/docs/plantilla_cedula.xlsx';
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private settingsService: SettingsService
+  ) { }
 
   public async generateExcelFromTemplate2(cedula: CedulaPayload) {
     try {
-      const buffer = await firstValueFrom(
-        this.http.get(this.TEMPLATE_PATH, { responseType: 'arraybuffer' })
-      );
+      const [buffer, settingsRet] = await Promise.all([
+        firstValueFrom(this.http.get(this.TEMPLATE_PATH, { responseType: 'arraybuffer' })),
+        firstValueFrom(this.settingsService.getAll())
+      ]);
+
+      const settings = (settingsRet.success && settingsRet.data.length > 0) ? settingsRet.data[0] : null;
       
-      this.processWorkbook(buffer, cedula);
+      this.processWorkbook(buffer, cedula, settings);
     } catch (err) {
-      console.error('Error loading Excel template', err);
+      console.error('Error loading Excel template or settings', err);
     }
   }
 
-  private processWorkbook(buffer: ArrayBuffer, cedula: CedulaPayload) {
+  private processWorkbook(buffer: ArrayBuffer, cedula: CedulaPayload, settings: SettingsPayload | null) {
     const workbook = XLSX.read(buffer, { 
       type: 'array',
       cellStyles: true,
@@ -50,9 +58,163 @@ export class CedulaExcelService {
 
     this.applyTitleAndHeaderStyles(worksheet, cedula);
     this.applyTableHeadersStyle(worksheet);
-    const lastFavorRow = this.insertFavorDetails(worksheet, cedula);
-    this.insertPagarDetails(worksheet, cedula, lastFavorRow);
+    
+    const summaryRefs: any = {};
+    
+    const favorResult = this.insertFavorDetails(worksheet, cedula);
+    const lastFavorRow = favorResult.lastRow;
+    Object.assign(summaryRefs, favorResult.refs);
+
+    const pagarResult = this.insertPagarDetails(worksheet, cedula, lastFavorRow);
+    Object.assign(summaryRefs, pagarResult.refs);
+    
+    // Si lastRow viene de pagarResult, usarlo, sino (si no hubo pagar) usar lastFavorRow
+    // Nota: insertPagarDetails retorna lastRow = lastFavorRow si no hay datos
+    const lastPagarRow = pagarResult.lastRow;
+
+    this.insertSubtotales(worksheet, lastPagarRow, cedula, summaryRefs, settings);
+
     this.saveFile(workbook, cedula);
+  }
+
+  private insertSubtotales(worksheet: XLSX.WorkSheet, lastRow: number, cedula: CedulaPayload, refs: any, settings: SettingsPayload | null) {
+    let currentRow = lastRow + 2;
+
+    // 1. TOTAL COMISIONES
+    this.insertSummaryLabel(worksheet, currentRow, "TOTAL COMISIONES:");
+    
+    // Formula para H: subtotalCobrar - subtotalPagar
+    const totalComisiones = XLSX.utils.encode_cell({c: 7, r: currentRow});
+    this.ensureCellExists(worksheet, totalComisiones);
+    const cellH = worksheet[totalComisiones];
+    
+    // Formato con texto rojo para negativos
+    const RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
+
+    const cobrar = refs.subtotalCobrar;
+    const pagar = refs.subtotalPagar;
+    
+    if (cobrar && pagar) {
+        this.setFormula(worksheet, totalComisiones, `${cobrar}-${pagar}`, RED_ACCOUNTING_FORMAT);
+    } else if (cobrar) {
+        this.setFormula(worksheet, totalComisiones, cobrar, RED_ACCOUNTING_FORMAT);
+    } else if (pagar) {
+        // Si solo hay pagar, el resultado sería negativo (0 - pagar)
+        this.setFormula(worksheet, totalComisiones, `-${pagar}`, RED_ACCOUNTING_FORMAT);
+    } else {
+        cellH.v = 0;
+        cellH.t = 'n';
+        cellH.z = RED_ACCOUNTING_FORMAT;
+    }
+    
+    // Estilo para H (Mismo estilo que los subtotales: fondo secundario, texto bold primario)
+    this.setCellStyle(worksheet, totalComisiones, {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+        fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    });
+
+    // Formato I y J
+    // I: Fondo Primario, Forecolor FFFFFF
+    const cellIRef = XLSX.utils.encode_cell({c: 8, r: currentRow});
+    this.ensureCellExists(worksheet, cellIRef);
+    this.setCellStyle(worksheet, cellIRef, {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+    });
+
+    // J: "TOTAL SALDOS", Fondo Primario, Forecolor FFFFFF
+    const cellJRef = XLSX.utils.encode_cell({c: 9, r: currentRow});
+    this.ensureCellExists(worksheet, cellJRef);
+    const cellJ = worksheet[cellJRef];
+    cellJ.v = "TOTAL SALDOS";
+    cellJ.t = 's';
+    this.setCellStyle(worksheet, cellJRef, {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'center', vertical: 'center' }
+    });
+
+    // K: "TOTAL SALDOS", Formula: subtotalSaldosPagar - subtotalSaldosCobrar
+    const totalSaldos = XLSX.utils.encode_cell({c: 10, r: currentRow});
+    this.ensureCellExists(worksheet, totalSaldos);
+    const cellK = worksheet[totalSaldos];
+
+    const saldosCobrar = refs.subtotalSaldosCobrar;
+    const saldosPagar = refs.subtotalSaldosPagar;
+
+    if (saldosPagar && saldosCobrar) {
+        this.setFormula(worksheet, totalSaldos, `${saldosPagar}-${saldosCobrar}`, RED_ACCOUNTING_FORMAT);
+    } else if (saldosPagar) {
+        this.setFormula(worksheet, totalSaldos, saldosPagar, RED_ACCOUNTING_FORMAT);
+    } else if (saldosCobrar) {
+        // Si solo hay saldosCobrar, sería 0 - saldosCobrar
+        this.setFormula(worksheet, totalSaldos, `-${saldosCobrar}`, RED_ACCOUNTING_FORMAT);
+    } else {
+        cellK.v = 0;
+        cellK.t = 'n';
+        cellK.z = RED_ACCOUNTING_FORMAT;
+    }
+
+    // Formato K: Fondo secundario, Calibri 10, rojo si es negativo (ya aplicado con RED_ACCOUNTING_FORMAT)
+    this.setCellStyle(worksheet, totalSaldos, {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } }, // Asumimos texto primario sobre fondo secundario, o rojo por formato condicional
+        fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    });
+
+    currentRow++;
+
+    // 2. Comision por Gestion PF
+    // Prioridad: SettingsPayload.comisionPF -> cedula.comisionPF -> 0
+    const comisionVal = settings?.comisionPF ?? cedula.comisionPF ?? 0;
+    const comisionStr = `Comision por Gestion PF ${comisionVal}%`;
+    this.insertSummaryLabel(worksheet, currentRow, comisionStr);
+
+    // Formato H-K: backgroundcolor: secundario; Calibri, 10, bold, negro
+    const comisionStyle = {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "000000" } },
+        fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    };
+
+    [7, 8, 9, 10].forEach(colIndex => {
+        const cellRef = XLSX.utils.encode_cell({c: colIndex, r: currentRow});
+        this.ensureCellExists(worksheet, cellRef);
+        this.setCellStyle(worksheet, cellRef, comisionStyle);
+    });
+    
+    // H: CedulaPayload.comisionPF
+    const cellHComisionRef = XLSX.utils.encode_cell({c: 7, r: currentRow});
+    const cellHComision = worksheet[cellHComisionRef];
+    cellHComision.v = cedula.comisionPF ?? 0;
+    cellHComision.t = 'n';
+
+    currentRow++;
+  }
+
+  private insertSummaryLabel(worksheet: XLSX.WorkSheet, row: number, text: string) {
+    const cellRef = XLSX.utils.encode_cell({c: 0, r: row});
+    this.ensureCellExists(worksheet, cellRef);
+    
+    const cell = worksheet[cellRef];
+    cell.v = text;
+    cell.t = 's';
+    
+    // Merge A-G (0-6)
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push({
+        s: { r: row, c: 0 },
+        e: { r: row, c: 6 }
+    });
+    
+    // Style
+    this.setCellStyle(worksheet, cellRef, {
+        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    });
   }
 
   private applyTitleAndHeaderStyles(worksheet: XLSX.WorkSheet, cedula: CedulaPayload) {
@@ -157,7 +319,7 @@ export class CedulaExcelService {
     }
   }
 
-  private insertFavorDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload): number {
+  private insertFavorDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload): any {
     const detallesFavor = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR');
     const startRow = 9; // A10 es índice 9
     let lastModifiedRow = startRow; // Default si no hay detalles (asumiendo que al menos la fila 9 existe)
@@ -195,7 +357,8 @@ export class CedulaExcelService {
         // Actualizar lastModifiedRow (los dos renglones extra están en indices lastDetailRow y lastDetailRow+1)
         lastModifiedRow = lastDetailRow + 1;
 
-        this.updateSummaryFormulas(worksheet, startRow, numRows);
+        const summaryRefs = this.updateSummaryFormulas(worksheet, startRow, numRows);
+        return { lastRow: lastModifiedRow, refs: summaryRefs };
     } else {
         // Si no hay detalles, la plantilla tiene una fila vacía en startRow?
         // Asumimos que la plantilla base tiene espacio. Si no se insertó nada, la "última modificada" 
@@ -203,14 +366,13 @@ export class CedulaExcelService {
         // Para seguridad, si no hay datos, asumimos que la fila 9 está vacía y lista.
         // Pero si la tabla está vacía, quizás deberíamos devolver 9.
         lastModifiedRow = startRow;
+        return { lastRow: lastModifiedRow, refs: {} };
     }
-
-    return lastModifiedRow;
   }
 
-  private insertPagarDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastFavorRow: number) {
+  private insertPagarDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastFavorRow: number): any {
     const detallesPagar = (cedula.detalles || []).filter(d => d.tipo === 'PAGAR');
-    if (detallesPagar.length === 0) return;
+    if (detallesPagar.length === 0) return { lastRow: lastFavorRow, refs: {} };
 
     // Comienza un renglón abajo de la última línea modificada en COBRAR (Gap de 1 fila vacía)
     // lastFavorRow es el índice de la última fila tocada (incluyendo los 2 extra)
@@ -315,21 +477,6 @@ export class CedulaExcelService {
 
     // Subtotales para PAGAR
     const subtotalRow = lastDataRow + 1; // Un renglón abajo del detalle (coincide con la segunda fila extra)
-    // Nota: lastDataRow apunta a la siguiente fila LIBRE despues de datos, pero como indices son base 0...
-    // dataStartRow + numDataRows = índice de la primera fila "extra" (Gris/Secundario).
-    // Si queremos 2 renglones abajo del detalle:
-    // Detalle termina en (dataStartRow + numDataRows - 1).
-    // Fila +1 (Extra 1)
-    // Fila +2 (Extra 2)
-    // Fila +3 (Subtotales)
-    // El usuario dijo "dos renglones abajo de donde termina el detalle".
-    // Si detalle termina en fila 20.
-    // Fila 21 (vacía/color), Fila 22 (vacía/color).
-    // Fila 23 sería el subtotal? O en la 22?
-    // "dos renglones abajo": 
-    // Renglón 1 abajo: Fila 21.
-    // Renglón 2 abajo: Fila 22.
-    // Usaremos el índice lastDataRow + 2 (que visualmente es la 3ra fila después de datos, saltando las 2 de color).
     
     // Definimos estilo común
     const subtotalStyle = {
@@ -365,6 +512,8 @@ export class CedulaExcelService {
     const endK = XLSX.utils.encode_cell({c: 10, r: dataStartRow + numDataRows - 1});
     this.setFormula(worksheet, cellK, `SUM(${startK}:${endK})`, this.ACCOUNTING_FORMAT);
     this.setCellStyle(worksheet, cellK, subtotalStyle);
+
+    return { lastRow: subtotalRow, refs: { subtotalPagar: cellH, subtotalSaldosPagar: cellK } };
   }
 
   private shiftRowsDown(worksheet: XLSX.WorkSheet, startRow: number, numRows: number) {
@@ -469,6 +618,9 @@ export class CedulaExcelService {
     const firstDataRow = startRow + 1; // 1-based index
     const lastDataRow = startRow + numRows; // 1-based index
 
+    let subtotalCobrar = '';
+    let subtotalSaldosCobrar = '';
+
     for (let r = startRow + numRows; r <= rangeSearch.e.r; r++) {
        const cellRefH = XLSX.utils.encode_cell({c: 7, r: r});
        const cellRefK = XLSX.utils.encode_cell({c: 10, r: r});
@@ -478,12 +630,14 @@ export class CedulaExcelService {
            this.setFormula(worksheet, cellRefH, `SUM(H${firstDataRow}:H${lastDataRow})`, this.ACCOUNTING_FORMAT);
            foundH = true;
            isSubtotalRow = true;
+           subtotalCobrar = cellRefH;
        }
 
        if (!foundK && this.isPlaceholder(worksheet, cellRefK, '{saldosCobrados}')) {
            this.setFormula(worksheet, cellRefK, `SUM(K${firstDataRow}:K${lastDataRow})`, this.ACCOUNTING_FORMAT);
            foundK = true;
            isSubtotalRow = true;
+           subtotalSaldosCobrar = cellRefK;
        }
        
        if (isSubtotalRow) {
@@ -502,9 +656,11 @@ export class CedulaExcelService {
                });
            }
        }
-       
+
        if (foundH && foundK) break;
     }
+
+    return { subtotalCobrar, subtotalSaldosCobrar };
   }
 
   private saveFile(workbook: XLSX.WorkBook, cedula: CedulaPayload) {
