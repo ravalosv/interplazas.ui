@@ -543,7 +543,9 @@ export class CedulaExcelService {
     if (hasDetails) {
         detalles.forEach((d, i) => {
             const currentRow = dataStartRow + i;
-            this.setRowHeight(worksheet, currentRow, 12.75);
+            const obs = this.getFormattedObservation(d);
+            const height = this.calculateObservationRowHeight(obs);
+            this.setRowHeight(worksheet, currentRow, height);
             this.insertDetailRow(worksheet, currentRow, d);
         });
     } else {
@@ -693,6 +695,47 @@ export class CedulaExcelService {
     }
   }
 
+  private getFormattedObservation(d: any): string {
+    let obs = d.observacion || '';
+    const chips: string[] = [];
+    
+    if (d.penalizado) chips.push('Reportado fuera de tiempo');
+    if (d.esFilialesHermanas) chips.push('Filiales hermanas');
+    if (d.aceptaConvenio) chips.push('Saldo PABS conveniado');
+    
+    if ((d.saldoEfectivamenteCobrado || 0) > 0) {
+        if ((d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)) {
+            chips.push('Saldo PABS pendiente de depositar');
+        } else if ((d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)) {
+            chips.push('Saldo PABS devuelto');
+        }
+    }
+    
+    if (chips.length > 0) {
+        if (obs) obs += '\n';
+        obs += chips.map(c => `[${c}]`).join('\n');
+    }
+    return obs;
+  }
+
+  private calculateObservationRowHeight(obs: string): number {
+    if (!obs) return 12.75;
+    const lines = obs.split('\n');
+    let totalLines = 0;
+    // Ancho aproximado de la columna J (Observacion) en caracteres
+    const COL_WIDTH = 45; 
+    
+    lines.forEach(line => {
+        if (line.length === 0) {
+            totalLines += 1;
+        } else {
+            totalLines += Math.ceil(line.length / COL_WIDTH);
+        }
+    });
+    
+    return Math.max(12.75, totalLines * 12.75);
+  }
+
   private insertDetailRow(worksheet: XLSX.WorkSheet, row: number, d: any) {
     const setCell = (col: number, val: any, type: string = 's', fmt: string = '', styleOverrides?: any) => {
       const ref = XLSX.utils.encode_cell({c: col, r: row});
@@ -718,27 +761,7 @@ export class CedulaExcelService {
     setCell(7, d.monto ? Number(d.monto) : 0, 'n', this.ACCOUNTING_FORMAT);
     setCell(8, d.saldoPABS ? Number(d.saldoPABS) : 0, 'n', this.ACCOUNTING_FORMAT, { fill: { fgColor: { rgb: this.GREY_COLOR } } });
 
-    // Chips logic
-    let obs = d.observacion || '';
-    const chips: string[] = [];
-    
-    if (d.penalizado) chips.push('Reportado fuera de tiempo');
-    if (d.esFilialesHermanas) chips.push('Filiales hermanas');
-    if (d.aceptaConvenio) chips.push('Saldo PABS conveniado');
-    
-    if ((d.saldoEfectivamenteCobrado || 0) > 0) {
-        if ((d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)) {
-            chips.push('Saldo PABS pendiente de depositar');
-        } else if ((d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)) {
-            chips.push('Saldo PABS devuelto');
-        }
-    }
-    
-    if (chips.length > 0) {
-        if (obs) obs += '\n';
-        obs += chips.map(c => `[${c}]`).join('\n');
-    }
-
+    const obs = this.getFormattedObservation(d);
     setCell(9, obs, 's', '', { 
         alignment: { wrapText: true, vertical: 'center' }
     });

@@ -32,23 +32,23 @@
 
   <div class="row mb-3">
     <div class="col-md-3">
-      <strong>TOTAL COMISIONES:</strong> {{ cedula.totalComisiones | number: '1.2-2' }}
+      <strong>TOTAL COMISIONES:</strong> {{ cedula.totalComisiones | currency:'USD':'symbol':'1.2-2' }}
     </div>
     <div class="col-md-3">
-      <strong>TOTAL SALDOS:</strong> {{ cedula.saldosEfectivamenteCobradosTotal | number: '1.2-2' }}
+      <strong>TOTAL SALDOS:</strong> {{ cedula.saldosEfectivamenteCobradosTotal | currency:'USD':'symbol':'1.2-2' }}
     </div>
     <div class="col-md-3">
-      <strong>TOTAL USD:</strong> {{ cedula.totalUsa | currency: 'USD' }}
+      <strong>TOTAL USD:</strong> {{ cedula.totalUsa | currency:'USD':'symbol':'1.2-2' }}
     </div>
     <div class="col-md-3">
-      <strong>Comision por Gestion PF ({{ comisionPercentage | number: '1.0-0' }}%):</strong> {{ cedula.comisionPF | number: '1.2-2' }}
+      <strong>Comision por Gestion PF ({{ comisionPercentage | number: '1.0-0' }}%):</strong> {{ cedula.comisionPF | currency:'USD':'symbol':'1.2-2' }}
     </div>
   </div>
 
   <div class="row mb-4">
     <div class="col-md-12 text-end">
       <h2 style="color: #1890ff; font-weight: 900;">
-        Total Final: {{ cedula.totalFinal | number: '1.2-2' }}
+        Total Final: {{ cedula.totalFinal | currency:'USD':'symbol':'1.2-2' }}
       </h2>
     </div>
   </div>
@@ -77,11 +77,11 @@
         <th>Contrato</th>
         <th>Fecha</th>
         <th>Concepto</th>
-        <th *ngIf="!cedula.filial?.extranjera">Monto</th>
-        <th *ngIf="cedula.filial?.extranjera">Monto DLLS</th>
-        <th>Saldo PABS</th>
+        <th *ngIf="!cedula.filial?.extranjera" class="text-end">Monto</th>
+        <th *ngIf="cedula.filial?.extranjera" class="text-end">Monto DLLS</th>
+        <th class="text-end">Saldo PABS</th>
         <th>Observaciones</th>
-        <th>Saldo Efec. Cobrado</th>
+        <th class="text-end">Saldo Efec. Cobrado</th>
       </tr>
     </thead>
     <tbody>
@@ -93,8 +93,8 @@
         <td>{{ d.contrato }}</td>
         <td>{{ d.fecha | date: 'dd/MM/yyyy' }}</td>
         <td>{{ d.conceptoNombre }}</td>
-        <td>{{ d.monto | currency: 'USD' }}</td>
-        <td>{{ d.saldoPABS | currency: 'USD' }}</td>
+        <td class="text-end">{{ d.monto | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end">{{ d.saldoPABS | currency:'USD':'symbol':'1.2-2' }}</td>
         <td>
           {{ d.observacion }}
           <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
@@ -105,14 +105,14 @@
             <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
           </div>
         </td>
-        <td>{{ d.saldoEfectivamenteCobrado | currency: 'USD' }}</td>
+        <td class="text-end">{{ d.saldoEfectivamenteCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
       </tr>
       <tr style="background-color: #fafafa; font-weight: bold;">
         <td colspan="7" class="text-end">Subtotal:</td>
-        <td>{{ totalFavorMonto | currency: 'USD' }}</td>
+        <td class="text-end">{{ totalFavorMonto | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end"></td>
         <td></td>
-        <td></td>
-        <td>{{ totalFavorCobrado | currency: 'USD' }}</td>
+        <td class="text-end">{{ totalFavorCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
       </tr>
     </tbody>
   </nz-table>
@@ -141,11 +141,11 @@
         <th>Contrato</th>
         <th>Fecha</th>
         <th>Concepto</th>
-        <th *ngIf="!cedula.filial?.extranjera">Monto</th>
-        <th *ngIf="cedula.filial?.extranjera">Monto DLLS</th>
-        <th>Saldo PABS</th>
+        <th *ngIf="!cedula.filial?.extranjera" class="text-end">Monto</th>
+        <th *ngIf="cedula.filial?.extranjera" class="text-end">Monto DLLS</th>
+        <th class="text-end">Saldo PABS</th>
         <th>Observaciones</th>
-        <th>Saldo Efec. Cobrado</th>
+        <th class="text-end">Saldo Efec. Cobrado</th>
       </tr>
     </thead>
     <tbody>
@@ -157,8 +157,8 @@
         <td>{{ d.contrato }}</td>
         <td>{{ d.fecha | date: 'dd/MM/yyyy' }}</td>
         <td>{{ d.conceptoNombre }}</td>
-        <td>{{ d.monto | currency: 'USD' }}</td>
-        <td>{{ d.saldoPABS | currency: 'USD' }}</td>
+        <td class="text-end">{{ d.monto | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end">{{ d.saldoPABS | currency:'USD':'symbol':'1.2-2' }}</td>
         <td>
           {{ d.observacion }}
           <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
@@ -169,14 +169,14 @@
             <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
           </div>
         </td>
-        <td>{{ d.saldoEfectivamenteCobrado | currency: 'USD' }}</td>
+        <td class="text-end">{{ d.saldoEfectivamenteCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
       </tr>
       <tr style="background-color: #fafafa; font-weight: bold;">
         <td colspan="7" class="text-end">Subtotal:</td>
-        <td>{{ totalPagarMonto | currency: 'USD' }}</td>
+        <td class="text-end">{{ totalPagarMonto | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end"></td>
         <td></td>
-        <td></td>
-        <td>{{ totalPagarCobrado | currency: 'USD' }}</td>
+        <td class="text-end">{{ totalPagarCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
       </tr>
     </tbody>
   </nz-table>
@@ -206,10 +206,10 @@
         <th>Contrato</th>
         <th>Fecha</th>
         <th>Concepto</th>
-        <th>Monto DLLS</th>
-        <th>Saldo PABS</th>
+        <th class="text-end">Monto DLLS</th>
+        <th class="text-end">Saldo PABS</th>
         <th>Observaciones</th>
-        <th>Saldo Efec. Cobrado</th>
+        <th class="text-end">Saldo Efec. Cobrado</th>
       </tr>
     </thead>
     <tbody>
@@ -221,8 +221,8 @@
         <td>{{ d.contrato }}</td>
         <td>{{ d.fecha | date: 'dd/MM/yyyy' }}</td>
         <td>{{ d.conceptoNombre }}</td>
-        <td>{{ d.monto | currency: 'USD' }}</td>
-        <td>{{ d.saldoPABS | currency: 'USD' }}</td>
+        <td class="text-end">{{ d.monto | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end">{{ d.saldoPABS | currency:'USD':'symbol':'1.2-2' }}</td>
         <td>
           {{ d.observacion }}
           <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
@@ -233,14 +233,14 @@
             <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
           </div>
         </td>
-        <td>{{ d.saldoEfectivamenteCobrado | currency: 'USD' }}</td>
+        <td class="text-end">{{ d.saldoEfectivamenteCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
       </tr>
       <tr style="background-color: #fafafa; font-weight: bold;">
         <td colspan="7" class="text-end">Total USD:</td>
-        <td>{{ totalUsaMonto | currency: 'USD' }}</td>
+        <td class="text-end">{{ totalUsaMonto | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end"></td>
         <td></td>
-        <td></td>
-        <td>{{ totalUsaCobrado | currency: 'USD' }}</td>
+        <td class="text-end">{{ totalUsaCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
       </tr>
     </tbody>
   </nz-table>

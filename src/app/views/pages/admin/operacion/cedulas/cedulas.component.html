@@ -58,19 +58,19 @@
     <thead>
       <tr>
         <th>Filial</th>
-        <th>Total USA</th>
-        <th>Total Comisiones</th>
-        <th>Total Final</th>
-        <th>Acciones</th>
+        <th class="text-end">Total USA</th>
+        <th class="text-end">Total Comisiones</th>
+        <th class="text-end">Total Final</th>
+        <th class="text-center">Acciones</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let c of table.data">
         <td>{{ c.filial?.nombre || c.filialId }}</td>
-        <td>{{ c.totalUsa | number: '1.2-2' }}</td>
-        <td>{{ c.totalComisiones | number: '1.2-2' }}</td>
-        <td>{{ c.totalFinal | number: '1.2-2' }}</td>
-        <td>
+        <td class="text-end">{{ c.totalUsa | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end">{{ c.totalComisiones | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-end">{{ c.totalFinal | currency:'USD':'symbol':'1.2-2' }}</td>
+        <td class="text-center">
           <button
             nz-button
             nzType="default"
