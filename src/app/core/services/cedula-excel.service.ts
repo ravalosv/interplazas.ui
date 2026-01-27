@@ -76,7 +76,9 @@ export class CedulaExcelService {
     
     const disclaimerRow = this.insertTotalFinal(worksheet, lastSubtotalRow, summaryRefs);
 
-    this.insertUSADetails(worksheet, cedula, disclaimerRow);
+    const resultUSA = this.insertUSADetails(worksheet, cedula, disclaimerRow);
+
+    this.insertUSATotal(worksheet, resultUSA.lastRow, resultUSA.refs);
 
     this.saveFile(workbook, cedula);
   }
@@ -618,9 +620,9 @@ export class CedulaExcelService {
     return { lastRow: subtotalRow, refs: { subtotalPagar: cellH, subtotalSaldosPagar: cellK } };
   }
 
-  private insertUSADetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastRow: number): number {
+  private insertUSADetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastRow: number): any {
     const detallesUSA = (cedula.detalles || []).filter(d => d.tipo === 'USA');
-    if (detallesUSA.length === 0) return lastRow;
+    if (detallesUSA.length === 0) return { lastRow: lastRow, refs: {} };
 
     // Start next line
     const startSectionRow = lastRow + 1;
@@ -635,13 +637,13 @@ export class CedulaExcelService {
 
     this.shiftRowsDown(worksheet, startSectionRow, rowsToInsert);
 
-    // 1. Título "SERVICIOS USA | EUA"
+    // 1. Título "SERVICIOS OTORGADOS EN SUCURSAL E.U.A | POR PAGAR "
     const titleRow = startSectionRow;
     const cellTitleRef = XLSX.utils.encode_cell({c: 0, r: titleRow});
     
     this.ensureCellExists(worksheet, cellTitleRef);
     const cellTitle = worksheet[cellTitleRef];
-    cellTitle.v = "SERVICIOS USA | EUA";
+    cellTitle.v = "SERVICIOS OTORGADOS EN SUCURSAL E.U.A | POR PAGAR ";
     cellTitle.t = 's';
     
     this.setCellStyle(worksheet, cellTitleRef, {
@@ -745,7 +747,73 @@ export class CedulaExcelService {
     this.setFormula(worksheet, cellK, `SUM(${startK}:${endK})`, this.ACCOUNTING_FORMAT);
     this.setCellStyle(worksheet, cellK, subtotalStyle);
 
-    return subtotalRow;
+    return { lastRow: subtotalRow, refs: { subtotalMonto: cellH, subtotalSaldos: cellK } };
+  }
+
+  private insertUSATotal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any) {
+    const currentRow = lastRow + 1;
+    
+    // A = "TOTAL USD"
+    const cellRef = XLSX.utils.encode_cell({c: 0, r: currentRow});
+    this.ensureCellExists(worksheet, cellRef);
+    const cell = worksheet[cellRef];
+    cell.v = "TOTAL USD";
+    cell.t = 's';
+
+    // Merge A-G
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push({
+        s: { r: currentRow, c: 0 },
+        e: { r: currentRow, c: 6 }
+    });
+
+    // Style: background: principal, forecolor: FFFFFF, Calibri, 24, bold, right
+    this.setCellStyle(worksheet, cellRef, {
+        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    });
+
+    // H-K Merge
+    worksheet['!merges'].push({
+        s: { r: currentRow, c: 7 },
+        e: { r: currentRow, c: 10 }
+    });
+
+    const cellHRef = XLSX.utils.encode_cell({c: 7, r: currentRow});
+    this.ensureCellExists(worksheet, cellHRef);
+    const cellH = worksheet[cellHRef];
+
+    // Formula: subtotalMonto - subtotalSaldos
+    const monto = refs.subtotalMonto;
+    const saldos = refs.subtotalSaldos;
+    const RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
+
+    if (monto && saldos) {
+        this.setFormula(worksheet, cellHRef, `${monto}-${saldos}`, RED_ACCOUNTING_FORMAT);
+    } else if (monto) {
+        this.setFormula(worksheet, cellHRef, monto, RED_ACCOUNTING_FORMAT);
+    } else if (saldos) {
+        this.setFormula(worksheet, cellHRef, `-${saldos}`, RED_ACCOUNTING_FORMAT);
+    } else {
+        cellH.v = 0;
+        cellH.t = 'n';
+        cellH.z = RED_ACCOUNTING_FORMAT;
+    }
+
+    // Style: background: a9d08e, Calibri, 24, bold, forecolor: primario
+    const totalStyle = {
+        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+        fill: { fgColor: { rgb: "A9D08E" } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    };
+
+    // Aplicar estilo a las celdas mergeadas (H-K)
+    for (let c = 7; c <= 10; c++) {
+        const ref = XLSX.utils.encode_cell({c: c, r: currentRow});
+        this.ensureCellExists(worksheet, ref);
+        this.setCellStyle(worksheet, ref, totalStyle);
+    }
   }
 
   private shiftRowsDown(worksheet: XLSX.WorkSheet, startRow: number, numRows: number) {
@@ -840,7 +908,7 @@ export class CedulaExcelService {
         alignment: { wrapText: true, vertical: 'center' }
     });
     
-    setCell(10, d.montoRecuperado ? Number(d.montoRecuperado) : 0, 'n', this.ACCOUNTING_FORMAT, { fill: { fgColor: { rgb: this.SECONDARY_COLOR } } });
+    setCell(10, d.saldoEfectivamenteCobrado ? Number(d.saldoEfectivamenteCobrado) : 0, 'n', this.ACCOUNTING_FORMAT, { fill: { fgColor: { rgb: this.SECONDARY_COLOR } } });
   }
 
   private updateSummaryFormulas(worksheet: XLSX.WorkSheet, startRow: number, numRows: number) {
@@ -926,6 +994,21 @@ export class CedulaExcelService {
     } else if (worksheet[cellRef].t === 'z') {
        worksheet[cellRef].t = 's';
        worksheet[cellRef].v = '';
+    }
+
+    // Update range
+    const cell = XLSX.utils.decode_cell(cellRef);
+    const ref = worksheet['!ref'] || 'A1:A1';
+    const range = XLSX.utils.decode_range(ref);
+    
+    let changed = false;
+    if (cell.r > range.e.r) { range.e.r = cell.r; changed = true; }
+    if (cell.c > range.e.c) { range.e.c = cell.c; changed = true; }
+    if (cell.r < range.s.r) { range.s.r = cell.r; changed = true; }
+    if (cell.c < range.s.c) { range.s.c = cell.c; changed = true; }
+    
+    if (changed) {
+        worksheet['!ref'] = XLSX.utils.encode_range(range);
     }
   }
 
