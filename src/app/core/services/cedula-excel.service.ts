@@ -27,7 +27,7 @@ export class CedulaExcelService {
     private settingsService: SettingsService
   ) { }
 
-  public async generateExcelFromTemplate2(cedula: CedulaPayload) {
+  public async generateExcel(cedula: CedulaPayload) {
     try {
       const [buffer, settingsRet] = await Promise.all([
         firstValueFrom(this.http.get(this.TEMPLATE_PATH, { responseType: 'arraybuffer' })),
@@ -70,6 +70,11 @@ export class CedulaExcelService {
   }
 
   private createCedulaWorkbook(buffer: ArrayBuffer, cedula: CedulaPayload, settings: SettingsPayload | null): XLSX.WorkBook | null {
+    const isForeign = !!(cedula.filial && cedula.filial.extranjera);
+    return this.buildCedulaWorkbook(buffer, cedula, settings, isForeign);
+  }
+
+  private buildCedulaWorkbook(buffer: ArrayBuffer, cedula: CedulaPayload, settings: SettingsPayload | null, isForeign: boolean): XLSX.WorkBook | null {
     const workbook = XLSX.read(buffer, { 
       type: 'array',
       cellStyles: true,
@@ -88,24 +93,36 @@ export class CedulaExcelService {
     
     const summaryRefs: any = {};
     
-    const favorResult = this.insertFavorDetails(worksheet, cedula);
-    const lastFavorRow = favorResult.lastRow;
-    Object.assign(summaryRefs, favorResult.refs);
+    // 1. Section COBRAR
+    // Nacional -> Favor Details
+    // Extranjera -> USA Details (labeled as Cobrar)
+    let cobrarResult;
+    if (isForeign) {
+        cobrarResult = this.insertCobrarExtranjeraDetails(worksheet, cedula);
+    } else {
+        cobrarResult = this.insertFavorDetails(worksheet, cedula);
+    }
+    const lastCobrarRow = cobrarResult.lastRow;
+    Object.assign(summaryRefs, cobrarResult.refs);
 
-    const pagarResult = this.insertPagarDetails(worksheet, cedula, lastFavorRow);
+    // 2. Section PAGAR (Common)
+    const pagarResult = this.insertPagarDetails(worksheet, cedula, lastCobrarRow);
     Object.assign(summaryRefs, pagarResult.refs);
     
-    // Si lastRow viene de pagarResult, usarlo, sino (si no hubo pagar) usar lastFavorRow
-    // Nota: insertPagarDetails retorna lastRow = lastFavorRow si no hay datos
     const lastPagarRow = pagarResult.lastRow;
 
+    // 3. Subtotales (Common)
     const lastSubtotalRow = this.insertSubtotales(worksheet, lastPagarRow, cedula, summaryRefs, settings);
     
-    const disclaimerRow = this.insertTotalFinal(worksheet, lastSubtotalRow, summaryRefs);
+    // 4. Total Final (Common logic, conditional disclaimer)
+    const showDisclaimer = !isForeign;
+    const disclaimerRow = this.insertTotalFinal(worksheet, lastSubtotalRow, summaryRefs, showDisclaimer);
 
-    const resultUSA = this.insertUSADetails(worksheet, cedula, disclaimerRow);
-
-    this.insertUSATotal(worksheet, resultUSA.lastRow, resultUSA.refs);
+    // 5. USA Section (Only for Nacional)
+    if (!isForeign) {
+        const resultUSA = this.insertUSADetails(worksheet, cedula, disclaimerRow);
+        this.insertUSATotal(worksheet, resultUSA.lastRow, resultUSA.refs);
+    }
 
     return workbook;
   }
@@ -229,7 +246,7 @@ export class CedulaExcelService {
     return currentRow;
   }
 
-  private insertTotalFinal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any): number {
+  private insertTotalFinal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any, showDisclaimer: boolean = true): number {
     const currentRow = lastRow + 1;
     
     // Total Final: totalComisiones + totalSaldos
@@ -245,29 +262,33 @@ export class CedulaExcelService {
     // Guardar referencia
     refs.totalFinal = cellHRef;
 
-    // Disclaimer USA: 2 lineas abajo del total final
-    const disclaimerRow = currentRow + 2;
-    const disclaimerRef = XLSX.utils.encode_cell({c: 0, r: disclaimerRow});
-    this.ensureCellExists(worksheet, disclaimerRef);
-    const disclaimerCell = worksheet[disclaimerRef];
-    
-    disclaimerCell.v = "Estos servicios fueron otorgados en Estados Unidos, su pago procederá por separado y en dólares. La tarifa vigente y pactada por mesa directiva para un Servicio CCI con sucursal USA, es de $1,200dlls.";
-    disclaimerCell.t = 's';
+    if (showDisclaimer) {
+        // Disclaimer USA: 2 lineas abajo del total final
+        const disclaimerRow = currentRow + 2;
+        const disclaimerRef = XLSX.utils.encode_cell({c: 0, r: disclaimerRow});
+        this.ensureCellExists(worksheet, disclaimerRef);
+        const disclaimerCell = worksheet[disclaimerRef];
+        
+        disclaimerCell.v = "Estos servicios fueron otorgados en Estados Unidos, su pago procederá por separado y en dólares. La tarifa vigente y pactada por mesa directiva para un Servicio CCI con sucursal USA, es de $1,200dlls.";
+        disclaimerCell.t = 's';
 
-    // Merge A-K (0-10)
-    if (!worksheet['!merges']) worksheet['!merges'] = [];
-    worksheet['!merges'].push({
-        s: { r: disclaimerRow, c: 0 },
-        e: { r: disclaimerRow, c: 10 }
-    });
+        // Merge A-K (0-10)
+        if (!worksheet['!merges']) worksheet['!merges'] = [];
+        worksheet['!merges'].push({
+            s: { r: disclaimerRow, c: 0 },
+            e: { r: disclaimerRow, c: 10 }
+        });
 
-    // Style: Calibri, 9, bold, negro, left, sin fondo
-    this.setCellStyle(worksheet, disclaimerRef, {
-        font: { name: 'Calibri', sz: 9, bold: true, color: { rgb: "000000" } },
-        alignment: { horizontal: 'left', vertical: 'center' }
-    });
+        // Style: Calibri, 9, bold, negro, left, sin fondo
+        this.setCellStyle(worksheet, disclaimerRef, {
+            font: { name: 'Calibri', sz: 9, bold: true, color: { rgb: "000000" } },
+            alignment: { horizontal: 'left', vertical: 'center' }
+        });
 
-    return disclaimerRow;
+        return disclaimerRow;
+    }
+
+    return currentRow;
   }
 
   private insertGrandTotalRow(
@@ -406,6 +427,25 @@ export class CedulaExcelService {
     this.setCellStyle(worksheet, 'A6', {
       font: { name: 'Calibri', sz: 9, color: { rgb: "000000" } },
       alignment: { horizontal: 'center', vertical: 'center' }
+    });
+  }
+
+  private insertCobrarExtranjeraDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload): any {
+    const detallesUSA = (cedula.detalles || []).filter(d => d.tipo === 'USA');
+    
+    // Título en fila 8 (índice 7), Headers en fila 9 (índice 8), Datos inician en fila 10 (índice 9)
+    // Usamos el mismo layout que favor
+    const startRow = 7;
+    const shiftFromRow = 9;
+
+    return this.insertGenericSection(worksheet, detallesUSA, startRow, {
+        title: "SERVICIOS OTORGADOS EN SUCURSAL | POR COBRAR A FAVOR DE LA FILIAL",
+        headers: [
+            "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
+            "FECHA", "CONCEPTO", "MONTO DLLS", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
+        ],
+        refKeys: { monto: 'subtotalCobrar', saldos: 'subtotalSaldosCobrar' },
+        shiftFromRow: shiftFromRow
     });
   }
 

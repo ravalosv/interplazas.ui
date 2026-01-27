@@ -43,7 +43,7 @@ export class CedulaService {
     this.getById(id).subscribe({
       next: (ret) => {
         if (ret.success) {
-          this.cedulaExcelService.generateExcelFromTemplate2(ret.data);
+          this.cedulaExcelService.generateExcel(ret.data);
         }
       }
     });
