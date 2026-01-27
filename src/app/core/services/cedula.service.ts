@@ -25,6 +25,13 @@ export class CedulaService {
       .pipe(map((ret) => ret));
   }
 
+  getByPeriodoWithDetails(periodoId: number) {
+    const url = `${this.baseUrl}/periodo/${periodoId}/cedulas/detalles`;
+    return this.http
+      .get<ApiReturn<CedulaPayload[]>>(url)
+      .pipe(map((ret) => ret));
+  }
+
   getById(id: number) {
     const url = `${this.baseUrl}/periodo/cedulas/${id}`;
     return this.http

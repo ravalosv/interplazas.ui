@@ -20,7 +20,7 @@ export class CedulaExcelService {
   private readonly GREY_COLOR = "D0CECE";
   private readonly ACCOUNTING_FORMAT = '_("$"* #,##0.00_);_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
   private readonly RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
-  private readonly TEMPLATE_PATH = 'assets/docs/plantilla_cedula.xlsx';
+  public readonly TEMPLATE_PATH = 'assets/docs/plantilla_cedula.xlsx';
 
   constructor(
     private http: HttpClient,
@@ -36,13 +36,40 @@ export class CedulaExcelService {
 
       const settings = (settingsRet.success && settingsRet.data.length > 0) ? settingsRet.data[0] : null;
       
-      this.processWorkbook(buffer, cedula, settings);
+      const workbook = this.createCedulaWorkbook(buffer, cedula, settings);
+      if (workbook) {
+        this.saveFile(workbook, cedula);
+      }
     } catch (err) {
       console.error('Error loading Excel template or settings', err);
     }
   }
 
-  private processWorkbook(buffer: ArrayBuffer, cedula: CedulaPayload, settings: SettingsPayload | null) {
+  public async getExcelBlob(cedula: CedulaPayload): Promise<{ blob: Blob, fileName: string }> {
+    const [buffer, settingsRet] = await Promise.all([
+        firstValueFrom(this.http.get(this.TEMPLATE_PATH, { responseType: 'arraybuffer' })),
+        firstValueFrom(this.settingsService.getAll())
+    ]);
+
+    const settings = (settingsRet.success && settingsRet.data.length > 0) ? settingsRet.data[0] : null;
+    
+    return this.createExcelFromPreloaded(buffer, settings, cedula);
+  }
+
+  public createExcelFromPreloaded(
+    templateBuffer: ArrayBuffer,
+    settings: SettingsPayload | null,
+    cedula: CedulaPayload
+  ): { blob: Blob, fileName: string } {
+    const workbook = this.createCedulaWorkbook(templateBuffer, cedula, settings);
+    if (!workbook) {
+        throw new Error('Could not create workbook');
+    }
+
+    return this.generateBlob(workbook, cedula);
+  }
+
+  private createCedulaWorkbook(buffer: ArrayBuffer, cedula: CedulaPayload, settings: SettingsPayload | null): XLSX.WorkBook | null {
     const workbook = XLSX.read(buffer, { 
       type: 'array',
       cellStyles: true,
@@ -55,7 +82,7 @@ export class CedulaExcelService {
     const firstSheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[firstSheetName];
 
-    if (!worksheet) return;
+    if (!worksheet) return null;
 
     this.applyTitleAndHeaderStyles(worksheet, cedula);
     
@@ -80,7 +107,7 @@ export class CedulaExcelService {
 
     this.insertUSATotal(worksheet, resultUSA.lastRow, resultUSA.refs);
 
-    this.saveFile(workbook, cedula);
+    return workbook;
   }
 
   private insertSubtotales(worksheet: XLSX.WorkSheet, lastRow: number, cedula: CedulaPayload, refs: any, settings: SettingsPayload | null): number {
@@ -708,7 +735,7 @@ export class CedulaExcelService {
     setCell(10, { fill: { fgColor: { rgb: this.SECONDARY_COLOR } } });
   }
 
-  private saveFile(workbook: XLSX.WorkBook, cedula: CedulaPayload) {
+  private generateBlob(workbook: XLSX.WorkBook, cedula: CedulaPayload): { blob: Blob, fileName: string } {
     const excelBuffer = XLSX.write(workbook, { 
       bookType: 'xlsx', 
       type: 'array',
@@ -720,6 +747,11 @@ export class CedulaExcelService {
     const periodo = this.cleanFileName(cedula.periodoNombre);
     const fileName = filial && periodo ? `cedula_${filial}_${periodo}.xlsx` : 'cedula.xlsx';
     
+    return { blob, fileName };
+  }
+
+  private saveFile(workbook: XLSX.WorkBook, cedula: CedulaPayload) {
+    const { blob, fileName } = this.generateBlob(workbook, cedula);
     FileSaver.saveAs(blob, fileName);
   }
 

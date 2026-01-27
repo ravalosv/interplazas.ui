@@ -2,9 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { CedulaService } from 'src/app/core/services/cedula.service';
 import { PeriodoService } from 'src/app/core/services/periodo.service';
 import { AlertsService } from 'src/app/core/services/alerts.service';
+import { CedulaExcelService } from 'src/app/core/services/cedula-excel.service';
+import { SettingsService } from 'src/app/core/services/settings.service';
 import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
 import { CedulaPayload } from 'src/app/core/interfaces/payloads/cedula.payload';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import * as JSZip from 'jszip';
+import * as FileSaver from 'file-saver';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-cedulas',
@@ -17,15 +23,19 @@ export class CedulasComponent implements OnInit {
   displayCedulas: CedulaPayload[] = [];
   loading = false;
   loadingCedulas = false;
+  exporting = false;
   selectedPeriodoId: number | null = null;
   filterText = '';
 
   constructor(
     private cedulaService: CedulaService,
     private periodoService: PeriodoService,
+    private cedulaExcelService: CedulaExcelService,
+    private settingsService: SettingsService,
     private alertsService: AlertsService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -116,6 +126,64 @@ export class CedulasComponent implements OnInit {
 
   verDetalle(cedula: CedulaPayload) {
     this.router.navigate(['/admin/operacion/cedulas', cedula.id]);
+  }
+
+  async exportarTodo() {
+    if (!this.cedulas || this.cedulas.length === 0) return;
+    
+    this.exporting = true;
+    try {
+      const zip = new JSZip();
+
+      // 1. Obtener recursos estáticos y configuración una sola vez
+      const [buffer, settingsRet] = await Promise.all([
+        firstValueFrom(this.http.get(this.cedulaExcelService.TEMPLATE_PATH, { responseType: 'arraybuffer' })),
+        firstValueFrom(this.settingsService.getAll())
+      ]);
+      
+      const settings = (settingsRet.success && settingsRet.data.length > 0) ? settingsRet.data[0] : null;
+
+      // 2. Obtener TODAS las cédulas con detalle en una sola petición
+      const cedulasFullRet = await firstValueFrom(this.cedulaService.getByPeriodoWithDetails(this.selectedPeriodoId!));
+      
+      if (!cedulasFullRet.success || !cedulasFullRet.data) {
+         this.alertsService.error('Error al cargar los detalles de las cédulas.');
+         this.exporting = false;
+         return;
+      }
+      
+      const cedulasFull = cedulasFullRet.data;
+
+      // 3. Procesar generación de Excel en memoria
+      let count = 0;
+      cedulasFull.forEach((c) => {
+        try {
+          const res = this.cedulaExcelService.createExcelFromPreloaded(buffer, settings, c);
+          zip.file(res.fileName, res.blob);
+          count++;
+        } catch (err) {
+          console.error(`Error generando excel para cedula ${c.id}`, err);
+        }
+      });
+      
+      if (count === 0) {
+        this.alertsService.warning('No se pudieron generar los archivos de las cédulas.');
+        return;
+      }
+      
+      const content = await zip.generateAsync({ type: 'blob' });
+      const periodo = this.periodos.find(p => p.id === this.selectedPeriodoId);
+      const periodoNombre = periodo ? periodo.nombre.replace(/\s+/g, '_') : 'periodo';
+      
+      FileSaver.saveAs(content, `cedulas_${periodoNombre}.zip`);
+      
+      this.alertsService.success(`Se exportaron ${count} cédulas correctamente`);
+    } catch (error) {
+      console.error(error);
+      this.alertsService.error('Error al exportar las cédulas');
+    } finally {
+      this.exporting = false;
+    }
   }
 }
 

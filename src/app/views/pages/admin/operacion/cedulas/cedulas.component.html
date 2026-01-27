@@ -11,7 +11,7 @@
 
 <nz-card>
   <div class="row mb-3">
-    <div class="col-md-6">
+    <div class="col-md-4">
       <label class="form-label">Periodo</label>
       <nz-select
         [(ngModel)]="selectedPeriodoId"
@@ -28,7 +28,7 @@
         ></nz-option>
       </nz-select>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-4">
       <label class="form-label">Filtrar</label>
       <input
         nz-input
@@ -36,6 +36,17 @@
         [(ngModel)]="filterText"
         (ngModelChange)="applyFilter()"
       />
+    </div>
+    <div class="col-md-4 d-flex align-items-end justify-content-end">
+      <button 
+        nz-button 
+        nzType="primary" 
+        (click)="exportarTodo()" 
+        [nzLoading]="exporting" 
+        [disabled]="!selectedPeriodoId || cedulas.length === 0"
+      >
+        <i nz-icon nzType="download"></i> Exportar Cédulas
+      </button>
     </div>
   </div>
 
