@@ -19,6 +19,7 @@ export class CedulaExcelService {
   private readonly SECONDARY_COLOR = "D9E1F2";
   private readonly GREY_COLOR = "D0CECE";
   private readonly ACCOUNTING_FORMAT = '_("$"* #,##0.00_);_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
+  private readonly RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
   private readonly TEMPLATE_PATH = 'assets/docs/plantilla_cedula.xlsx';
 
   constructor(
@@ -57,7 +58,6 @@ export class CedulaExcelService {
     if (!worksheet) return;
 
     this.applyTitleAndHeaderStyles(worksheet, cedula);
-    this.applyTableHeadersStyle(worksheet);
     
     const summaryRefs: any = {};
     
@@ -94,23 +94,20 @@ export class CedulaExcelService {
     this.ensureCellExists(worksheet, totalComisiones);
     const cellH = worksheet[totalComisiones];
     
-    // Formato con texto rojo para negativos
-    const RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
-
     const cobrar = refs.subtotalCobrar;
     const pagar = refs.subtotalPagar;
     
     if (cobrar && pagar) {
-        this.setFormula(worksheet, totalComisiones, `${cobrar}-${pagar}`, RED_ACCOUNTING_FORMAT);
+        this.setFormula(worksheet, totalComisiones, `${cobrar}-${pagar}`, this.RED_ACCOUNTING_FORMAT);
     } else if (cobrar) {
-        this.setFormula(worksheet, totalComisiones, cobrar, RED_ACCOUNTING_FORMAT);
+        this.setFormula(worksheet, totalComisiones, cobrar, this.RED_ACCOUNTING_FORMAT);
     } else if (pagar) {
         // Si solo hay pagar, el resultado sería negativo (0 - pagar)
-        this.setFormula(worksheet, totalComisiones, `-${pagar}`, RED_ACCOUNTING_FORMAT);
+        this.setFormula(worksheet, totalComisiones, `-${pagar}`, this.RED_ACCOUNTING_FORMAT);
     } else {
         cellH.v = 0;
         cellH.t = 'n';
-        cellH.z = RED_ACCOUNTING_FORMAT;
+        cellH.z = this.RED_ACCOUNTING_FORMAT;
     }
     
     // Estilo para H (Mismo estilo que los subtotales: fondo secundario, texto bold primario)
@@ -151,16 +148,16 @@ export class CedulaExcelService {
     const saldosPagar = refs.subtotalSaldosPagar;
 
     if (saldosPagar && saldosCobrar) {
-        this.setFormula(worksheet, totalSaldos, `${saldosPagar}-${saldosCobrar}`, RED_ACCOUNTING_FORMAT);
+        this.setFormula(worksheet, totalSaldos, `${saldosPagar}-${saldosCobrar}`, this.RED_ACCOUNTING_FORMAT);
     } else if (saldosPagar) {
-        this.setFormula(worksheet, totalSaldos, saldosPagar, RED_ACCOUNTING_FORMAT);
+        this.setFormula(worksheet, totalSaldos, saldosPagar, this.RED_ACCOUNTING_FORMAT);
     } else if (saldosCobrar) {
         // Si solo hay saldosCobrar, sería 0 - saldosCobrar
-        this.setFormula(worksheet, totalSaldos, `-${saldosCobrar}`, RED_ACCOUNTING_FORMAT);
+        this.setFormula(worksheet, totalSaldos, `-${saldosCobrar}`, this.RED_ACCOUNTING_FORMAT);
     } else {
         cellK.v = 0;
         cellK.t = 'n';
-        cellK.z = RED_ACCOUNTING_FORMAT;
+        cellK.z = this.RED_ACCOUNTING_FORMAT;
     }
 
     // Formato K: Fondo secundario, Calibri 10, rojo si es negativo (ya aplicado con RED_ACCOUNTING_FORMAT)
@@ -208,71 +205,18 @@ export class CedulaExcelService {
   private insertTotalFinal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any): number {
     const currentRow = lastRow + 1;
     
-    // A = "TOTAL FINAL"
-    const cellRef = XLSX.utils.encode_cell({c: 0, r: currentRow});
-    this.ensureCellExists(worksheet, cellRef);
-    const cell = worksheet[cellRef];
-    cell.v = "TOTAL FINAL";
-    cell.t = 's';
-
-    // Merge A-G (0-6)
-    if (!worksheet['!merges']) worksheet['!merges'] = [];
-    worksheet['!merges'].push({
-        s: { r: currentRow, c: 0 },
-        e: { r: currentRow, c: 6 }
-    });
-
-    // Style: background: principal, forecolor: FFFFFF, Calibri, 24, bold, right
-    this.setCellStyle(worksheet, cellRef, {
-        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
-        alignment: { horizontal: 'right', vertical: 'center' }
-    });
-
-    // H-K (7-10) Merge y Valor
-    // Merge
-    worksheet['!merges'].push({
-        s: { r: currentRow, c: 7 },
-        e: { r: currentRow, c: 10 }
-    });
-
-    const cellHRef = XLSX.utils.encode_cell({c: 7, r: currentRow});
-    this.ensureCellExists(worksheet, cellHRef);
-    const cellH = worksheet[cellHRef];
-
-    // Formula: totalComisiones + totalSaldos
-    const comm = refs.totalComisiones;
-    const saldos = refs.totalSaldos;
-    const RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
-
-    if (comm && saldos) {
-        this.setFormula(worksheet, cellHRef, `${comm}+${saldos}`, RED_ACCOUNTING_FORMAT);
-    } else if (comm) {
-        this.setFormula(worksheet, cellHRef, comm, RED_ACCOUNTING_FORMAT);
-    } else if (saldos) {
-        this.setFormula(worksheet, cellHRef, saldos, RED_ACCOUNTING_FORMAT);
-    } else {
-        cellH.v = 0;
-        cellH.t = 'n';
-        cellH.z = RED_ACCOUNTING_FORMAT;
-    }
+    // Total Final: totalComisiones + totalSaldos
+    const cellHRef = this.insertGrandTotalRow(
+        worksheet, 
+        currentRow, 
+        "TOTAL FINAL", 
+        refs.totalComisiones, 
+        refs.totalSaldos, 
+        '+'
+    );
 
     // Guardar referencia
     refs.totalFinal = cellHRef;
-
-    // Style: background: a9d08e, Calibri, 24, bold, forecolor: primario
-    const totalStyle = {
-        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: this.PRIMARY_COLOR } },
-        fill: { fgColor: { rgb: "A9D08E" } },
-        alignment: { horizontal: 'right', vertical: 'center' }
-    };
-
-    // Aplicar estilo a las celdas mergeadas (H-K)
-    for (let c = 7; c <= 10; c++) {
-        const ref = XLSX.utils.encode_cell({c: c, r: currentRow});
-        this.ensureCellExists(worksheet, ref);
-        this.setCellStyle(worksheet, ref, totalStyle);
-    }
 
     // Disclaimer USA: 2 lineas abajo del total final
     const disclaimerRow = currentRow + 2;
@@ -284,6 +228,7 @@ export class CedulaExcelService {
     disclaimerCell.t = 's';
 
     // Merge A-K (0-10)
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
     worksheet['!merges'].push({
         s: { r: disclaimerRow, c: 0 },
         e: { r: disclaimerRow, c: 10 }
@@ -296,6 +241,66 @@ export class CedulaExcelService {
     });
 
     return disclaimerRow;
+  }
+
+  private insertGrandTotalRow(
+    worksheet: XLSX.WorkSheet,
+    row: number,
+    label: string,
+    val1: string | undefined,
+    val2: string | undefined,
+    operation: '+' | '-'
+  ): string {
+    // Label A-G
+    const cellRef = XLSX.utils.encode_cell({c: 0, r: row});
+    this.ensureCellExists(worksheet, cellRef);
+    const cell = worksheet[cellRef];
+    cell.v = label;
+    cell.t = 's';
+    
+    if (!worksheet['!merges']) worksheet['!merges'] = [];
+    worksheet['!merges'].push({ s: { r: row, c: 0 }, e: { r: row, c: 6 } });
+    
+    this.setCellStyle(worksheet, cellRef, {
+        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    });
+
+    // Value H-K
+    worksheet['!merges'].push({ s: { r: row, c: 7 }, e: { r: row, c: 10 } });
+    const cellHRef = XLSX.utils.encode_cell({c: 7, r: row});
+    this.ensureCellExists(worksheet, cellHRef);
+    const cellH = worksheet[cellHRef];
+
+    // Formula Logic
+    if (val1 && val2) {
+        this.setFormula(worksheet, cellHRef, `${val1}${operation}${val2}`, this.RED_ACCOUNTING_FORMAT);
+    } else if (val1) {
+        this.setFormula(worksheet, cellHRef, val1, this.RED_ACCOUNTING_FORMAT);
+    } else if (val2) {
+        const formula = operation === '-' ? `-${val2}` : val2;
+        this.setFormula(worksheet, cellHRef, formula, this.RED_ACCOUNTING_FORMAT);
+    } else {
+        cellH.v = 0;
+        cellH.t = 'n';
+        cellH.z = this.RED_ACCOUNTING_FORMAT;
+    }
+
+    // Style H-K
+    const totalStyle = {
+        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: this.PRIMARY_COLOR } },
+        fill: { fgColor: { rgb: "A9D08E" } },
+        alignment: { horizontal: 'right', vertical: 'center' }
+    };
+    
+    for (let c = 7; c <= 10; c++) {
+        const ref = XLSX.utils.encode_cell({c: c, r: row});
+        this.ensureCellExists(worksheet, ref);
+        this.setCellStyle(worksheet, ref, totalStyle);
+    }
+
+    return cellHRef;
   }
 
   private insertSummaryLabel(worksheet: XLSX.WorkSheet, row: number, text: string) {
@@ -375,135 +380,58 @@ export class CedulaExcelService {
       font: { name: 'Calibri', sz: 9, color: { rgb: "000000" } },
       alignment: { horizontal: 'center', vertical: 'center' }
     });
-
-    // A8: Estilo especial (Fondo primario, texto blanco, COBRAR amarillo)
-    this.ensureCellExists(worksheet, 'A8');
-    const cellA8 = worksheet['A8'];
-    const textA8 = "SERVICIOS OTORGADOS EN SUCURSAL | POR COBRAR A FAVOR DE LA FILIAL";
-    
-    // Asignar valores básicos
-    cellA8.v = textA8;
-    cellA8.t = 's';
-
-    // Estilo base de la celda (Fondo y fuente por defecto)
-    const styleA8: any = {
-      font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
-      alignment: { horizontal: 'left', vertical: 'center' }
-    };
-    this.setCellStyle(worksheet, 'A8', styleA8);
-
-    // K8: Estilo primario
-    this.ensureCellExists(worksheet, 'K8');
-    this.setCellStyle(worksheet, 'K8', {
-      fill: { fgColor: { rgb: this.PRIMARY_COLOR } }
-    });
-  }
-
-  private applyTableHeadersStyle(worksheet: XLSX.WorkSheet) {
-    const headerRange = XLSX.utils.decode_range("A9:K9");
-    for (let c = headerRange.s.c; c <= headerRange.e.c; ++c) {
-      const cellRef = XLSX.utils.encode_cell({ c: c, r: 8 }); // Fila 9 es índice 8
-      this.ensureCellExists(worksheet, cellRef);
-
-      const style: any = {
-        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
-        fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
-        alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
-      };
-
-      // Columna I (Saldo PABS) -> Gris
-      if (c === 8) style.fill = { fgColor: { rgb: this.GREY_COLOR } };
-      // Columna J (Observación) -> Sin fondo específico
-      if (c === 9) delete style.fill;
-      // Columna K (Monto Recuperado) -> Secundario (ya es el default, pero explícito si se cambia lógica)
-      // No necesitamos lógica extra porque el default ya es SECONDARY_COLOR
-
-      this.setCellStyle(worksheet, cellRef, style);
-    }
   }
 
   private insertFavorDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload): any {
     const detallesFavor = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR');
-    const startRow = 9; // A10 es índice 9
-    let lastModifiedRow = startRow; // Default si no hay detalles (asumiendo que al menos la fila 9 existe)
+    
+    // Título en fila 8 (índice 7), Headers en fila 9 (índice 8), Datos inician en fila 10 (índice 9)
+    // Pero shift debe ocurrir desde fila 10 (índice 9) para preservar lo que haya abajo (si hay)
+    const startRow = 7;
+    const shiftFromRow = 9;
 
-    if (detallesFavor.length > 0) {
-        const numRows = detallesFavor.length;
-        
-        this.shiftRowsDown(worksheet, startRow, numRows);
-        
-        // Insertar datos
-        detallesFavor.forEach((d, i) => {
-          const currentRow = startRow + i;
-          this.setRowHeight(worksheet, currentRow, 12.75);
-          this.insertDetailRow(worksheet, currentRow, d);
-        });
-
-        // Extender color GREY_COLOR en columna I (índice 8) y SECONDARY_COLOR en columna K (índice 10) dos renglones más
-        const lastDetailRow = startRow + numRows;
-        for (let r = lastDetailRow; r < lastDetailRow + 2; r++) {
-            // Columna I (8)
-            const cellRefI = XLSX.utils.encode_cell({c: 8, r: r});
-            this.ensureCellExists(worksheet, cellRefI);
-            this.setCellStyle(worksheet, cellRefI, {
-                fill: { fgColor: { rgb: this.GREY_COLOR } }
-            });
-
-            // Columna K (10)
-            const cellRefK = XLSX.utils.encode_cell({c: 10, r: r});
-            this.ensureCellExists(worksheet, cellRefK);
-            this.setCellStyle(worksheet, cellRefK, {
-                fill: { fgColor: { rgb: this.SECONDARY_COLOR } }
-            });
-        }
-        
-        // Actualizar lastModifiedRow (los dos renglones extra están en indices lastDetailRow y lastDetailRow+1)
-        lastModifiedRow = lastDetailRow + 1;
-
-        const summaryRefs = this.updateSummaryFormulas(worksheet, startRow, numRows);
-        return { lastRow: lastModifiedRow, refs: summaryRefs };
-    } else {
-        // Si no hay detalles, la plantilla tiene una fila vacía en startRow?
-        // Asumimos que la plantilla base tiene espacio. Si no se insertó nada, la "última modificada" 
-        // podría considerarse la fila de encabezados (8) o la fila vacía (9).
-        // Para seguridad, si no hay datos, asumimos que la fila 9 está vacía y lista.
-        // Pero si la tabla está vacía, quizás deberíamos devolver 9.
-        lastModifiedRow = startRow;
-        return { lastRow: lastModifiedRow, refs: {} };
-    }
+    return this.insertGenericSection(worksheet, detallesFavor, startRow, {
+        title: "SERVICIOS OTORGADOS EN SUCURSAL | POR COBRAR A FAVOR DE LA FILIAL",
+        headers: [
+            "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
+            "FECHA", "CONCEPTO", "MONTO", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
+        ],
+        refKeys: { monto: 'subtotalCobrar', saldos: 'subtotalSaldosCobrar' },
+        shiftFromRow: shiftFromRow
+    });
   }
 
-  private insertPagarDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastFavorRow: number): any {
-    const detallesPagar = (cedula.detalles || []).filter(d => d.tipo === 'PAGAR');
-    if (detallesPagar.length === 0) return { lastRow: lastFavorRow, refs: {} };
+  private insertGenericSection(
+    worksheet: XLSX.WorkSheet, 
+    detalles: any[], 
+    startRow: number, 
+    config: {
+        title: string,
+        headers: string[],
+        refKeys: { monto: string, saldos: string },
+        shiftFromRow?: number
+    }
+  ): any {
+    const hasDetails = detalles.length > 0;
+    const numDataRows = hasDetails ? detalles.length : 1;
+    // Filas necesarias: Título (1) + Header (1) + Datos (N) + Espacio/Colores (2)
+    const rowsNeeded = 1 + 1 + numDataRows + 2;
 
-    // Comienza un renglón abajo de la última línea modificada en COBRAR (Gap de 1 fila vacía)
-    // lastFavorRow es el índice de la última fila tocada (incluyendo los 2 extra)
-    const startSectionRow = lastFavorRow + 2;
+    // Calcular desplazamiento
+    // Si shiftFromRow está definido, desplazamos desde ahí.
+    // Cantidad a desplazar = Total necesario - (Lo que sobrescribimos antes del shift)
+    // Sobrescrito = shiftFromRow - startRow
+    const shiftStartRow = config.shiftFromRow ?? startRow;
+    const rowsToShift = config.shiftFromRow ? rowsNeeded - (config.shiftFromRow - startRow) : rowsNeeded;
 
-    // Estructura PAGAR:
-    // 1. Título (1 fila)
-    // 2. Encabezados (1 fila)
-    // 3. Datos (N filas)
-    // 4. Espacio extra/colores (2 filas)
-    const numDataRows = detallesPagar.length;
-    const rowsToInsert = 1 + 1 + numDataRows + 2; // Título + Header + Datos + 2 Extra
+    this.shiftRowsDown(worksheet, shiftStartRow, rowsToShift);
 
-    // Desplazar contenido hacia abajo para hacer espacio
-    this.shiftRowsDown(worksheet, startSectionRow, rowsToInsert);
-
-    // 1. Título "SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR PAGAR A OTRAS FILIALES"
-    // Usamos el mismo estilo que A8 pero con otro texto
-    // Asumimos que va en la columna A
-    const titleRow = startSectionRow;
+    // 1. Título
+    const titleRow = startRow;
     const cellTitleRef = XLSX.utils.encode_cell({c: 0, r: titleRow});
-    
-    // Texto y estilo del título
-    const titleText = "SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR PAGAR A OTRAS FILIALES";
     this.ensureCellExists(worksheet, cellTitleRef);
     const cellTitle = worksheet[cellTitleRef];
-    cellTitle.v = titleText;
+    cellTitle.v = config.title;
     cellTitle.t = 's';
     
     this.setCellStyle(worksheet, cellTitleRef, {
@@ -512,154 +440,12 @@ export class CedulaExcelService {
         alignment: { horizontal: 'left', vertical: 'center' }
     });
 
-    // Merge A-I (Cols 0-8) para el título
     if (!worksheet['!merges']) worksheet['!merges'] = [];
     worksheet['!merges'].push({
         s: { r: titleRow, c: 0 },
         e: { r: titleRow, c: 8 }
     });
 
-    // Columna K en fila de título PAGAR con mismo formato
-    const cellRefK = XLSX.utils.encode_cell({c: 10, r: titleRow});
-    this.ensureCellExists(worksheet, cellRefK);
-    this.setCellStyle(worksheet, cellRefK, {
-        fill: { fgColor: { rgb: this.PRIMARY_COLOR } }
-    });
-
-    // 2. Encabezados de tabla
-    const headerRow = startSectionRow + 1;
-    // Copiamos los encabezados de la fila 8 (A9:K9) o los definimos manualmente
-    // Definición manual para asegurar consistencia
-    const headers = [
-        "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
-        "FECHA", "CONCEPTO", "MONTO", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
-    ];
-
-    headers.forEach((header, index) => {
-        const cellRef = XLSX.utils.encode_cell({c: index, r: headerRow});
-        this.ensureCellExists(worksheet, cellRef);
-        worksheet[cellRef] = { t: 's', v: header };
-        
-        const style: any = {
-            font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
-            fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
-            alignment: { horizontal: 'center', vertical: 'center', wrapText: true }
-        };
-
-        // Estilos específicos por columna (igual que applyTableHeadersStyle)
-        if (index === 8) style.fill = { fgColor: { rgb: this.GREY_COLOR } }; // Saldo PABS
-        if (index === 9) delete style.fill; // Observación
-        
-        this.setCellStyle(worksheet, cellRef, style);
-    });
-
-    // 3. Insertar datos
-    const dataStartRow = startSectionRow + 2;
-    detallesPagar.forEach((d, i) => {
-        const currentRow = dataStartRow + i;
-        this.setRowHeight(worksheet, currentRow, 12.75);
-        this.insertDetailRow(worksheet, currentRow, d);
-    });
-
-    // 4. Extender colores (2 filas extra)
-    const lastDataRow = dataStartRow + numDataRows;
-    for (let r = lastDataRow; r < lastDataRow + 2; r++) {
-        // Columna I (8)
-        const cellRefI = XLSX.utils.encode_cell({c: 8, r: r});
-        this.ensureCellExists(worksheet, cellRefI);
-        this.setCellStyle(worksheet, cellRefI, {
-            fill: { fgColor: { rgb: this.GREY_COLOR } }
-        });
-
-        // Columna K (10)
-        const cellRefK = XLSX.utils.encode_cell({c: 10, r: r});
-        this.ensureCellExists(worksheet, cellRefK);
-        this.setCellStyle(worksheet, cellRefK, {
-            fill: { fgColor: { rgb: this.SECONDARY_COLOR } }
-        });
-    }
-
-    // Subtotales para PAGAR
-    const subtotalRow = lastDataRow + 1; // Un renglón abajo del detalle (coincide con la segunda fila extra)
-    
-    // Definimos estilo común
-    const subtotalStyle = {
-        font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
-        fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
-        alignment: { horizontal: 'right', vertical: 'center' }
-    };
-
-    // G = 'SUBTOTAL'
-    const cellG = XLSX.utils.encode_cell({c: 6, r: subtotalRow});
-    this.ensureCellExists(worksheet, cellG);
-    worksheet[cellG].v = 'SUBTOTAL';
-    this.setCellStyle(worksheet, cellG, subtotalStyle);
-
-    // H = SUM Columna H (Monto)
-    const cellH = XLSX.utils.encode_cell({c: 7, r: subtotalRow});
-    this.ensureCellExists(worksheet, cellH);
-    const startH = XLSX.utils.encode_cell({c: 7, r: dataStartRow});
-    const endH = XLSX.utils.encode_cell({c: 7, r: dataStartRow + numDataRows - 1});
-    this.setFormula(worksheet, cellH, `SUM(${startH}:${endH})`, this.ACCOUNTING_FORMAT);
-    this.setCellStyle(worksheet, cellH, subtotalStyle);
-
-    // J = 'SUBTOTAL'
-    const cellJ = XLSX.utils.encode_cell({c: 9, r: subtotalRow});
-    this.ensureCellExists(worksheet, cellJ);
-    worksheet[cellJ].v = 'SUBTOTAL';
-    this.setCellStyle(worksheet, cellJ, subtotalStyle);
-
-    // K = SUM Columna K (Monto Recuperado)
-    const cellK = XLSX.utils.encode_cell({c: 10, r: subtotalRow});
-    this.ensureCellExists(worksheet, cellK);
-    const startK = XLSX.utils.encode_cell({c: 10, r: dataStartRow});
-    const endK = XLSX.utils.encode_cell({c: 10, r: dataStartRow + numDataRows - 1});
-    this.setFormula(worksheet, cellK, `SUM(${startK}:${endK})`, this.ACCOUNTING_FORMAT);
-    this.setCellStyle(worksheet, cellK, subtotalStyle);
-
-    return { lastRow: subtotalRow, refs: { subtotalPagar: cellH, subtotalSaldosPagar: cellK } };
-  }
-
-  private insertUSADetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastRow: number): any {
-    const detallesUSA = (cedula.detalles || []).filter(d => d.tipo === 'USA');
-    if (detallesUSA.length === 0) return { lastRow: lastRow, refs: {} };
-
-    // Start next line
-    const startSectionRow = lastRow + 1;
-
-    // Estructura USA:
-    // 1. Título (1 fila)
-    // 2. Encabezados (1 fila)
-    // 3. Datos (N filas)
-    // 4. Espacio extra/colores (2 filas)
-    const numDataRows = detallesUSA.length;
-    const rowsToInsert = 1 + 1 + numDataRows + 2;
-
-    this.shiftRowsDown(worksheet, startSectionRow, rowsToInsert);
-
-    // 1. Título "SERVICIOS OTORGADOS EN SUCURSAL E.U.A | POR PAGAR "
-    const titleRow = startSectionRow;
-    const cellTitleRef = XLSX.utils.encode_cell({c: 0, r: titleRow});
-    
-    this.ensureCellExists(worksheet, cellTitleRef);
-    const cellTitle = worksheet[cellTitleRef];
-    cellTitle.v = "SERVICIOS OTORGADOS EN SUCURSAL E.U.A | POR PAGAR ";
-    cellTitle.t = 's';
-    
-    this.setCellStyle(worksheet, cellTitleRef, {
-        font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
-        alignment: { horizontal: 'left', vertical: 'center' }
-    });
-
-    // Merge A-I
-    if (!worksheet['!merges']) worksheet['!merges'] = [];
-    worksheet['!merges'].push({
-        s: { r: titleRow, c: 0 },
-        e: { r: titleRow, c: 8 }
-    });
-
-    // Columna K format
     const cellRefK = XLSX.utils.encode_cell({c: 10, r: titleRow});
     this.ensureCellExists(worksheet, cellRefK);
     this.setCellStyle(worksheet, cellRefK, {
@@ -667,13 +453,8 @@ export class CedulaExcelService {
     });
 
     // 2. Encabezados
-    const headerRow = startSectionRow + 1;
-    const headers = [
-        "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
-        "FECHA", "CONCEPTO", "MONTO DLLS", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
-    ];
-
-    headers.forEach((header, index) => {
+    const headerRow = startRow + 1;
+    config.headers.forEach((header, index) => {
         const cellRef = XLSX.utils.encode_cell({c: index, r: headerRow});
         this.ensureCellExists(worksheet, cellRef);
         worksheet[cellRef] = { t: 's', v: header };
@@ -691,12 +472,18 @@ export class CedulaExcelService {
     });
 
     // 3. Datos
-    const dataStartRow = startSectionRow + 2;
-    detallesUSA.forEach((d, i) => {
-        const currentRow = dataStartRow + i;
+    const dataStartRow = startRow + 2;
+    if (hasDetails) {
+        detalles.forEach((d, i) => {
+            const currentRow = dataStartRow + i;
+            this.setRowHeight(worksheet, currentRow, 12.75);
+            this.insertDetailRow(worksheet, currentRow, d);
+        });
+    } else {
+        const currentRow = dataStartRow;
         this.setRowHeight(worksheet, currentRow, 12.75);
-        this.insertDetailRow(worksheet, currentRow, d);
-    });
+        this.insertEmptyDetailRow(worksheet, currentRow);
+    }
 
     // 4. Extender colores
     const lastDataRow = dataStartRow + numDataRows;
@@ -714,9 +501,8 @@ export class CedulaExcelService {
         });
     }
 
-    // Subtotales USA
+    // Subtotales
     const subtotalRow = lastDataRow + 1;
-    
     const subtotalStyle = {
         font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
         fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
@@ -747,73 +533,55 @@ export class CedulaExcelService {
     this.setFormula(worksheet, cellK, `SUM(${startK}:${endK})`, this.ACCOUNTING_FORMAT);
     this.setCellStyle(worksheet, cellK, subtotalStyle);
 
-    return { lastRow: subtotalRow, refs: { subtotalMonto: cellH, subtotalSaldos: cellK } };
+    const refs: any = {};
+    refs[config.refKeys.monto] = cellH;
+    refs[config.refKeys.saldos] = cellK;
+
+    return { lastRow: subtotalRow, refs };
+  }
+
+  private insertPagarDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastFavorRow: number): any {
+    const detallesPagar = (cedula.detalles || []).filter(d => d.tipo === 'PAGAR');
+    
+    const startSectionRow = lastFavorRow + 2;
+
+    return this.insertGenericSection(worksheet, detallesPagar, startSectionRow, {
+        title: "SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR PAGAR A OTRAS FILIALES",
+        headers: [
+            "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
+            "FECHA", "CONCEPTO", "MONTO", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
+        ],
+        refKeys: { monto: 'subtotalPagar', saldos: 'subtotalSaldosPagar' }
+    });
+  }
+
+  private insertUSADetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastRow: number): any {
+    const detallesUSA = (cedula.detalles || []).filter(d => d.tipo === 'USA');
+    
+    const startSectionRow = lastRow + 1;
+
+    return this.insertGenericSection(worksheet, detallesUSA, startSectionRow, {
+        title: "SERVICIOS OTORGADOS EN SUCURSAL E.U.A | POR PAGAR ",
+        headers: [
+            "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
+            "FECHA", "CONCEPTO", "MONTO DLLS", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
+        ],
+        refKeys: { monto: 'subtotalMonto', saldos: 'subtotalSaldos' }
+    });
   }
 
   private insertUSATotal(worksheet: XLSX.WorkSheet, lastRow: number, refs: any) {
     const currentRow = lastRow + 1;
     
-    // A = "TOTAL USD"
-    const cellRef = XLSX.utils.encode_cell({c: 0, r: currentRow});
-    this.ensureCellExists(worksheet, cellRef);
-    const cell = worksheet[cellRef];
-    cell.v = "TOTAL USD";
-    cell.t = 's';
-
-    // Merge A-G
-    if (!worksheet['!merges']) worksheet['!merges'] = [];
-    worksheet['!merges'].push({
-        s: { r: currentRow, c: 0 },
-        e: { r: currentRow, c: 6 }
-    });
-
-    // Style: background: principal, forecolor: FFFFFF, Calibri, 24, bold, right
-    this.setCellStyle(worksheet, cellRef, {
-        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: "FFFFFF" } },
-        fill: { fgColor: { rgb: this.PRIMARY_COLOR } },
-        alignment: { horizontal: 'right', vertical: 'center' }
-    });
-
-    // H-K Merge
-    worksheet['!merges'].push({
-        s: { r: currentRow, c: 7 },
-        e: { r: currentRow, c: 10 }
-    });
-
-    const cellHRef = XLSX.utils.encode_cell({c: 7, r: currentRow});
-    this.ensureCellExists(worksheet, cellHRef);
-    const cellH = worksheet[cellHRef];
-
-    // Formula: subtotalMonto - subtotalSaldos
-    const monto = refs.subtotalMonto;
-    const saldos = refs.subtotalSaldos;
-    const RED_ACCOUNTING_FORMAT = '_("$"* #,##0.00_);[Red]_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)';
-
-    if (monto && saldos) {
-        this.setFormula(worksheet, cellHRef, `${monto}-${saldos}`, RED_ACCOUNTING_FORMAT);
-    } else if (monto) {
-        this.setFormula(worksheet, cellHRef, monto, RED_ACCOUNTING_FORMAT);
-    } else if (saldos) {
-        this.setFormula(worksheet, cellHRef, `-${saldos}`, RED_ACCOUNTING_FORMAT);
-    } else {
-        cellH.v = 0;
-        cellH.t = 'n';
-        cellH.z = RED_ACCOUNTING_FORMAT;
-    }
-
-    // Style: background: a9d08e, Calibri, 24, bold, forecolor: primario
-    const totalStyle = {
-        font: { name: 'Calibri', sz: 24, bold: true, color: { rgb: this.PRIMARY_COLOR } },
-        fill: { fgColor: { rgb: "A9D08E" } },
-        alignment: { horizontal: 'right', vertical: 'center' }
-    };
-
-    // Aplicar estilo a las celdas mergeadas (H-K)
-    for (let c = 7; c <= 10; c++) {
-        const ref = XLSX.utils.encode_cell({c: c, r: currentRow});
-        this.ensureCellExists(worksheet, ref);
-        this.setCellStyle(worksheet, ref, totalStyle);
-    }
+    // Total USA: subtotalMonto - subtotalSaldos
+    this.insertGrandTotalRow(
+        worksheet, 
+        currentRow, 
+        "TOTAL USD", 
+        refs.subtotalMonto, 
+        refs.subtotalSaldos, 
+        '-'
+    );
   }
 
   private shiftRowsDown(worksheet: XLSX.WorkSheet, startRow: number, numRows: number) {
@@ -911,56 +679,33 @@ export class CedulaExcelService {
     setCell(10, d.saldoEfectivamenteCobrado ? Number(d.saldoEfectivamenteCobrado) : 0, 'n', this.ACCOUNTING_FORMAT, { fill: { fgColor: { rgb: this.SECONDARY_COLOR } } });
   }
 
-  private updateSummaryFormulas(worksheet: XLSX.WorkSheet, startRow: number, numRows: number) {
-    const rangeSearch = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-    let foundH = false;
-    let foundK = false;
-    const firstDataRow = startRow + 1; // 1-based index
-    const lastDataRow = startRow + numRows; // 1-based index
+  private insertEmptyDetailRow(worksheet: XLSX.WorkSheet, row: number) {
+    const setCell = (col: number, styleOverrides?: any) => {
+      const ref = XLSX.utils.encode_cell({c: col, r: row});
+      worksheet[ref] = { t: 's', v: '' };
+      
+      let style: any = { font: { name: 'Calibri', sz: 10 } };
+      if (styleOverrides) {
+        style = { ...style, ...styleOverrides };
+      }
+      
+      this.setCellStyle(worksheet, ref, style);
+    };
 
-    let subtotalCobrar = '';
-    let subtotalSaldosCobrar = '';
-
-    for (let r = startRow + numRows; r <= rangeSearch.e.r; r++) {
-       const cellRefH = XLSX.utils.encode_cell({c: 7, r: r});
-       const cellRefK = XLSX.utils.encode_cell({c: 10, r: r});
-       let isSubtotalRow = false;
-       
-       if (!foundH && this.isPlaceholder(worksheet, cellRefH, '{subtotalFAVOR}')) {
-           this.setFormula(worksheet, cellRefH, `SUM(H${firstDataRow}:H${lastDataRow})`, this.ACCOUNTING_FORMAT);
-           foundH = true;
-           isSubtotalRow = true;
-           subtotalCobrar = cellRefH;
-       }
-
-       if (!foundK && this.isPlaceholder(worksheet, cellRefK, '{saldosCobrados}')) {
-           this.setFormula(worksheet, cellRefK, `SUM(K${firstDataRow}:K${lastDataRow})`, this.ACCOUNTING_FORMAT);
-           foundK = true;
-           isSubtotalRow = true;
-           subtotalSaldosCobrar = cellRefK;
-       }
-       
-       if (isSubtotalRow) {
-           // Formato solicitado: G-K (Cols 6-10), EXCEPTO I (Col 8)
-           // Background: Secundario, Font: Calibri 10 Bold Principal
-           for (let c = 6; c <= 10; c++) {
-               if (c === 8) continue; // Saltar columna I
-
-               const cellRef = XLSX.utils.encode_cell({c, r});
-               this.ensureCellExists(worksheet, cellRef);
-               
-               this.setCellStyle(worksheet, cellRef, {
-                   fill: { fgColor: { rgb: this.SECONDARY_COLOR } },
-                   font: { name: 'Calibri', sz: 10, bold: true, color: { rgb: this.PRIMARY_COLOR } },
-                   alignment: { horizontal: 'right', vertical: 'center' }
-               });
-           }
-       }
-
-       if (foundH && foundK) break;
-    }
-
-    return { subtotalCobrar, subtotalSaldosCobrar };
+    // 0-6: Standard
+    for (let c = 0; c <= 6; c++) setCell(c);
+    
+    // 7: Monto
+    setCell(7);
+    
+    // 8: Saldo PABS (Grey)
+    setCell(8, { fill: { fgColor: { rgb: this.GREY_COLOR } } });
+    
+    // 9: Observacion
+    setCell(9, { alignment: { wrapText: true, vertical: 'center' } });
+    
+    // 10: Saldo Efectivamente Cobrado (Secondary)
+    setCell(10, { fill: { fgColor: { rgb: this.SECONDARY_COLOR } } });
   }
 
   private saveFile(workbook: XLSX.WorkBook, cedula: CedulaPayload) {
