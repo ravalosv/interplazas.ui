@@ -42,6 +42,8 @@ export class FilialesCrudComponent implements OnInit {
       nombre: ['', [Validators.required]],
       extranjera: [false, []],
       grupoId: [null, [Validators.required]],
+      apiUrl: ['', []],
+      apiKey: ['', []],
     });
   }
 
@@ -90,7 +92,7 @@ export class FilialesCrudComponent implements OnInit {
 
   openCreate(modalTpl: TemplateRef<any>) {
     this.editingId = null;
-    this.form.reset({ nombre: '', extranjera: false, grupoId: null });
+    this.form.reset({ nombre: '', extranjera: false, grupoId: null, apiUrl: '', apiKey: '' });
     this.modalTitle = 'Nueva Filial';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
@@ -101,6 +103,8 @@ export class FilialesCrudComponent implements OnInit {
       nombre: item.nombre,
       extranjera: item.extranjera,
       grupoId: item.grupoId,
+      apiUrl: item.apiUrl,
+      apiKey: item.apiKey,
     });
     this.modalTitle = 'Editar Filial';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
@@ -112,7 +116,7 @@ export class FilialesCrudComponent implements OnInit {
       return;
     }
 
-    const payload = this.form.value as { nombre: string; extranjera: boolean; grupoId: number };
+    const payload = this.form.value as { nombre: string; extranjera: boolean; grupoId: number; apiUrl?: string; apiKey?: string };
 
     if (this.editingId == null) {
       this.filialService.create(payload).subscribe({
@@ -123,7 +127,7 @@ export class FilialesCrudComponent implements OnInit {
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '', extranjera: false, grupoId: null });
+              this.form.reset({ nombre: '', extranjera: false, grupoId: null, apiUrl: '', apiKey: '' });
               this.editingId = null;
             }
           } else {
@@ -141,7 +145,7 @@ export class FilialesCrudComponent implements OnInit {
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '', extranjera: false, grupoId: null });
+              this.form.reset({ nombre: '', extranjera: false, grupoId: null, apiUrl: '', apiKey: '' });
               this.editingId = null;
               this.modalTitle = 'Nueva Filial';
             }

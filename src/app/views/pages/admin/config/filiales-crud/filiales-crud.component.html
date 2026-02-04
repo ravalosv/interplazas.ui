@@ -50,6 +50,14 @@
             <label class="form-check-label" for="extranjeraSwitch">Extranjera</label>
           </div>
         </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>API URL</strong></label>
+          <input type="text" class="form-control" formControlName="apiUrl" placeholder="URL de la API" />
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>API KEY</strong></label>
+          <input type="text" class="form-control" formControlName="apiKey" placeholder="Key de la API" />
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" [disabled]="form.invalid" (click)="save(true)">Guardar y cerrar</button>

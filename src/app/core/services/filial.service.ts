@@ -26,7 +26,7 @@ export class FilialService {
     return this.http.get<ApiReturn<FilialAdminPayload>>(url).pipe(map((ret) => ret));
   }
 
-  create(data: { nombre: string; extranjera: boolean }) {
+  create(data: { nombre: string; extranjera: boolean; grupoId: number; apiUrl?: string; apiKey?: string }) {
     const url = `${this.baseUrl}/filial`;
 
     return this.http
@@ -34,7 +34,7 @@ export class FilialService {
       .pipe(map((ret) => ret));
   }
 
-  update(id: number, data: { nombre: string; extranjera: boolean }) {
+  update(id: number, data: { nombre: string; extranjera: boolean; grupoId: number; apiUrl?: string; apiKey?: string }) {
     const url = `${this.baseUrl}/filial/${id}`;
 
     return this.http
