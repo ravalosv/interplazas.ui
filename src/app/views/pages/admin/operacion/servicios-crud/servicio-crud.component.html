@@ -59,9 +59,18 @@
                 <div class="col-md-4">
                   <div class="mb-3">
                     <label class="form-label">Contrato <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" formControlName="fo_Contrato" 
-                           [ngClass]="{'is-invalid': form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)}" />
-                    <div class="invalid-feedback">Este campo es requerido</div>
+                    <div class="input-group">
+                      <input type="text" class="form-control" formControlName="fo_Contrato" 
+                             [ngClass]="{'is-invalid': form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)}" />
+                      <button class="btn btn-primary" type="button" 
+                              *ngIf="selectedSucursalOrigen?.filial?.apiUrl"
+                              (click)="consultarContrato()" 
+                              [disabled]="consultandoContrato">
+                          <span *ngIf="consultandoContrato" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          {{ consultandoContrato ? 'Consultando...' : 'Consultar' }}
+                      </button>
+                    </div>
+                    <div class="invalid-feedback d-block" *ngIf="form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)">Este campo es requerido</div>
                   </div>
                 </div>
               </div>

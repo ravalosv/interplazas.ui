@@ -1,3 +1,4 @@
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, TemplateRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
@@ -64,6 +65,9 @@ export class ServicioCrudComponent implements OnInit {
   newPeriodMonth: number | null = null;
   newPeriodYear: number | null = new Date().getFullYear();
   
+  selectedSucursalOrigen: any = null;
+  consultandoContrato = false;
+
   months = [
     { id: 1, name: 'ENERO' },
     { id: 2, name: 'FEBRERO' },
@@ -94,7 +98,8 @@ export class ServicioCrudComponent implements OnInit {
     private authService: AuthenticationService,
     private fb: FormBuilder,
     private modalService: NgbModal,
-    private servicioObservacionService: ServicioObservacionService
+    private servicioObservacionService: ServicioObservacionService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -114,7 +119,6 @@ export class ServicioCrudComponent implements OnInit {
     this.captureUserName = currentUser && currentUser.user ? currentUser.user.name : '';
 
     this.form = this.fb.group({
-      // fecha: [localDate, [Validators.required]], // Removed from payload
       displayFechaCaptura: [localDate, []], // For display only
       canalComunicacionId: [null, []],
       fo_Sucursal_otorgante_Id: [null, [Validators.required]],
@@ -151,6 +155,10 @@ export class ServicioCrudComponent implements OnInit {
       exp_Expediente_Completo: ['NO', []],
       exp_Observaciones_cierre: ['', []],
       // Usuario_CapturaId & Fecha_Captura handled by backend usually
+    });
+
+    this.form.get('fo_Sucursal_Origen_Id')?.valueChanges.subscribe(val => {
+      this.selectedSucursalOrigen = this.sucursales.find(s => s.id === val);
     });
     
     this.setupConditionalValidation();
@@ -333,6 +341,117 @@ export class ServicioCrudComponent implements OnInit {
         this.alertsService.error(e.error);
       },
     });
+  }
+
+  consultarContrato() {
+    if (!this.selectedSucursalOrigen?.filial?.apiUrl) return;
+
+    const contrato = this.form.get('fo_Contrato')?.value;
+    if (!contrato) {
+      this.alertsService.error('Ingrese un número de contrato');
+      return;
+    }
+
+    this.consultandoContrato = true;
+    const url = this.selectedSucursalOrigen.filial.apiUrl.replace('{contrato}', contrato);
+    
+    // Ensure API Key is retrieved correctly
+    const apiKey = this.selectedSucursalOrigen.filial.apiKey;
+    console.log('Enviando petición a:', url);
+    console.log('Con api-key:', apiKey ? '***' + apiKey.slice(-4) : '(vacio)');
+
+    let headers = new HttpHeaders();
+    if (apiKey) {
+      headers = headers.set('api-key', apiKey);
+    }
+
+    this.http.get(url, { headers }).subscribe(
+      (res: any) => {
+        this.consultandoContrato = false;
+
+        if (!res.success) {
+          this.alertsService.error(res.error || 'Error en la consulta');
+          return;
+        }
+
+        this.alertsService.success('Consulta exitosa');
+        
+        if (res.data) {
+          // Map Saldo
+          if (res.data.saldo !== undefined) {
+            this.form.patchValue({ fori_Saldo_Contrato: res.data.saldo });
+          }
+
+          // Map Status
+          if (res.data.status) {
+            // Find status ID by name (case insensitive)
+            const statusName = res.data.status.toString().toUpperCase();
+            const foundStatus = this.statuses.find(s => s.nombre && s.nombre.toUpperCase() === statusName);
+            
+            if (foundStatus) {
+              this.form.patchValue({ fori_Status_Contrato_Id: foundStatus.id });
+            } else {
+              console.warn('Status not found in catalog:', res.data.status);
+            }
+          }
+
+          // Map Titular if present (optional based on previous intent, though not in example)
+          if (res.data.nombre_titular || res.data.NombreTitular) {
+             this.form.patchValue({ fo_Nombre_Titular: res.data.nombre_titular || res.data.NombreTitular });
+          }
+        }
+      },
+      (err) => {
+        this.consultandoContrato = false;
+        console.error('Error completo (raw):', err);
+        console.error('Error stringified:', JSON.stringify(err));
+        
+        let errorMsg = '';
+        
+        // 1. Try to extract from JSON body { "success": false, "error": "MSG" }
+        if (err.error && err.error.error) {
+          errorMsg = err.error.error;
+        } 
+        // 2. Try to extract if body is just a string
+        else if (err.error && typeof err.error === 'string') {
+          errorMsg = err.error;
+        } 
+        // 3. Fallback to Status Code if body is empty (common in CORS issues)
+        else {
+           switch (err.status) {
+             case 400:
+               errorMsg = 'API_KEY_REQUIRED'; // Fallback assumption based on user requirements
+               break;
+             case 401:
+               errorMsg = 'UNAUTHORIZED';
+               break;
+             case 404:
+               errorMsg = 'Contrato no encontrado';
+               break;
+             default:
+               errorMsg = err.message || 'Error al consultar contrato';
+           }
+        }
+
+        // Map specific error codes to user-friendly messages
+        switch (errorMsg) {
+          case 'API_KEY_REQUIRED':
+            errorMsg = 'Error: Falta configurar la API Key en la filial o no se envió correctamente (API_KEY_REQUIRED)';
+            break;
+          case 'UNAUTHORIZED':
+            errorMsg = 'Error: La API Key configurada es incorrecta o no tiene permisos (UNAUTHORIZED)';
+            break;
+          case 'Contrato no encontrado':
+            errorMsg = 'El contrato especificado no existe en el sistema externo';
+            break;
+          case 'Compañía no encontrada':
+            errorMsg = 'La compañía asociada no fue encontrada en el sistema externo';
+            break;
+        }
+
+        this.alertsService.error(errorMsg);
+      }
+    );
   }
 
   addObservacion() {
