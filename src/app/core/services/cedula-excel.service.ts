@@ -701,7 +701,7 @@ export class CedulaExcelService {
     
     if (d.penalizado) chips.push('Reportado fuera de tiempo');
     if (d.esFilialesHermanas) chips.push('Filiales hermanas');
-    if (d.aceptaConvenio) chips.push('Saldo PABS conveniado');
+    if (d.aceptaConvenio) chips.push('Saldo PABS Conveniado');
     
     if ((d.saldoEfectivamenteCobrado || 0) > 0) {
         if ((d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)) {

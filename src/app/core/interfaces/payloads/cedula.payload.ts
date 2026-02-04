@@ -21,6 +21,7 @@ export interface CedulaDetallePayload {
   esFilialesHermanas?: boolean;
   montoDevuelto?: number;
   aceptaConvenio?: boolean;
+  montoEnContrato?: number;
   createdAt: Date;
   updatedAt: Date;
   servicio?: any;
@@ -41,6 +42,7 @@ export interface CedulaPayload {
   comisionPF?: number;
   saldosEfectivamenteCobradosTotal?: number;
   totalFinal?: number;
+  totalMontoContrato?: number;
   createdAt: Date;
   updatedAt: Date;
   filial?: any;
