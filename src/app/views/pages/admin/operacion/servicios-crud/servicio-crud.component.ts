@@ -38,6 +38,7 @@ export class ServicioCrudComponent implements OnInit {
   
   // Periodo Filter
   periodos: PeriodoPayload[] = [];
+  activePeriodosList: PeriodoPayload[] = [];
   selectedPeriodoId: number | null = null;
 
   // Catalogs
@@ -58,6 +59,25 @@ export class ServicioCrudComponent implements OnInit {
   editingId: number | null = null;
   modalTitle = '';
   modalRef: NgbModalRef | null = null;
+  changePeriodoId: number | null = null;
+  createPeriodMode = false;
+  newPeriodMonth: number | null = null;
+  newPeriodYear: number | null = new Date().getFullYear();
+  
+  months = [
+    { id: 1, name: 'ENERO' },
+    { id: 2, name: 'FEBRERO' },
+    { id: 3, name: 'MARZO' },
+    { id: 4, name: 'ABRIL' },
+    { id: 5, name: 'MAYO' },
+    { id: 6, name: 'JUNIO' },
+    { id: 7, name: 'JULIO' },
+    { id: 8, name: 'AGOSTO' },
+    { id: 9, name: 'SEPTIEMBRE' },
+    { id: 10, name: 'OCTUBRE' },
+    { id: 11, name: 'NOVIEMBRE' },
+    { id: 12, name: 'DICIEMBRE' },
+  ];
 
   constructor(
     private servicioService: ServicioService,
@@ -176,6 +196,7 @@ export class ServicioCrudComponent implements OnInit {
         this.loading = false;
         if (ret.success) {
           this.periodos = ret.data;
+          this.activePeriodosList = this.periodos.filter(p => p.activo);
           const activo = this.periodos.find(p => p.activo);
           this.selectedPeriodoId = activo ? activo.id : (this.periodos[0]?.id ?? null);
           if (this.selectedPeriodoId != null) {
@@ -455,6 +476,90 @@ export class ServicioCrudComponent implements OnInit {
       const url = URL.createObjectURL(file!);
       window.open(url, '_blank');
     }
+  }
+
+  openChangePeriod(modalTpl: TemplateRef<any>) {
+    if (!this.editingId) return;
+    this.changePeriodoId = null;
+    this.createPeriodMode = false;
+    this.newPeriodMonth = null;
+    this.newPeriodYear = new Date().getFullYear();
+    this.modalService.open(modalTpl, { centered: true, size: 'sm' });
+  }
+
+  toggleCreatePeriodMode() {
+    this.createPeriodMode = !this.createPeriodMode;
+    if (this.createPeriodMode) {
+      this.changePeriodoId = null;
+    }
+  }
+
+  saveChangePeriod(modal: any) {
+    if (!this.editingId) return;
+
+    if (this.createPeriodMode) {
+      if (!this.newPeriodMonth || !this.newPeriodYear) {
+        this.alertsService.error('Seleccione mes y año');
+        return;
+      }
+      
+      this.loading = true;
+      this.periodoService.create(this.newPeriodMonth, this.newPeriodYear).subscribe({
+        next: (ret) => {
+          if (ret.success) {
+            const newPeriodId = ret.data.id;
+            
+            if (this.selectedPeriodoId === newPeriodId) {
+              this.loading = false;
+              this.alertsService.error('El periodo destino no puede ser el mismo que el actual');
+              return;
+            }
+
+            this.executeChangePeriod(newPeriodId, modal);
+          } else {
+            this.loading = false;
+            this.alertsService.error(ret.error);
+          }
+        },
+        error: (e) => {
+          this.loading = false;
+          this.alertsService.error(e.error);
+        }
+      });
+    } else {
+      if (!this.changePeriodoId) {
+        this.alertsService.error('Seleccione un periodo');
+        return;
+      }
+
+      if (this.selectedPeriodoId === this.changePeriodoId) {
+        this.alertsService.error('El periodo destino no puede ser el mismo que el actual');
+        return;
+      }
+
+      this.executeChangePeriod(this.changePeriodoId, modal);
+    }
+  }
+
+  executeChangePeriod(periodoId: number, modal: any) {
+    this.servicioService.changePeriod(this.editingId!, periodoId).subscribe({
+      next: (ret) => {
+        this.loading = false;
+        if (ret.success) {
+          this.alertsService.success('Periodo actualizado exitosamente');
+          this.loadServicios(); // This will refresh the list, possibly with the new period if selected
+          this.loadPeriodos(); // Refresh period list in background
+          modal.close();
+          this.modalRef?.close(); // Close edit modal
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.loading = false;
+        this.alertsService.error(e.error);
+      },
+    });
   }
 
   save(cerrar: boolean) {

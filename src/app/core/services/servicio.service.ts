@@ -79,6 +79,13 @@ export class ServicioService {
       .pipe(map((ret) => ret));
   }
 
+  changePeriod(id: number, periodoId: number) {
+    const url = `${this.baseUrl}/servicio/${id}/change-period`;
+    return this.http
+      .patch<ApiReturn<ServicioPayload>>(url, { periodoId })
+      .pipe(map((ret) => ret));
+  }
+
   delete(id: number) {
     const url = `${this.baseUrl}/servicio/${id}`;
     return this.http

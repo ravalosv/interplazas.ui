@@ -55,6 +55,7 @@
 .ng-dropdown-panel {
   border-color: #d9d9d9;
   background-color: #fff;
+  z-index: 9999 !important;
 }
 
 .ant-card-bordered {

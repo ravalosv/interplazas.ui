@@ -542,6 +542,9 @@
             <i class="feather icon-alert-triangle me-2"></i>Servicio capturado fuera de periodo
           </div>
         </div>
+        <button type="button" class="btn btn-info" *ngIf="isAdmin && editingId" (click)="openChangePeriod(changePeriodModal)">
+          Cambiar de periodo
+        </button>
         <button type="button" class="btn btn-warning" *ngIf="isAdmin && editingId" (click)="togglePenalizado()">
           {{ isPenalizado ? 'Despenalizar' : 'Penalizar' }}
         </button>
@@ -549,6 +552,60 @@
         <button type="button" class="btn btn-success" [disabled]="form.invalid" (click)="save(false)">Guardar y nuevo</button>
       </div>
     </form>
+  </ng-template>
+
+  <ng-template #changePeriodModal let-modal>
+    <div class="modal-header">
+      <h5 class="modal-title">Cambiar de Periodo</h5>
+      <button type="button" class="btn-close" (click)="modal.close()" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+      <div class="d-flex justify-content-end mb-3">
+        <button type="button" class="btn btn-sm btn-outline-primary" (click)="toggleCreatePeriodMode()">
+          {{ createPeriodMode ? 'Seleccionar existente' : 'Crear nuevo periodo' }}
+        </button>
+      </div>
+
+      <div class="mb-3" *ngIf="!createPeriodMode">
+        <label class="form-label">Seleccione el nuevo periodo</label>
+        <ng-select
+          [items]="activePeriodosList"
+          bindLabel="nombre"
+          bindValue="id"
+          [(ngModel)]="changePeriodoId"
+          placeholder="Seleccione un periodo"
+          [clearable]="false"
+          appendTo="body">
+        </ng-select>
+      </div>
+
+      <div class="row" *ngIf="createPeriodMode">
+        <div class="col-md-8">
+          <div class="mb-3">
+            <label class="form-label">Mes</label>
+            <ng-select
+              [items]="months"
+              bindLabel="name"
+              bindValue="id"
+              [(ngModel)]="newPeriodMonth"
+              placeholder="Mes"
+              [clearable]="false"
+              appendTo="body">
+            </ng-select>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="mb-3">
+            <label class="form-label">Año</label>
+            <input type="number" class="form-control" [(ngModel)]="newPeriodYear" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.close()">Cancelar</button>
+      <button type="button" class="btn btn-primary" (click)="saveChangePeriod(modal)">Guardar</button>
+    </div>
   </ng-template>
 </nav>
 
