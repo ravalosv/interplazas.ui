@@ -12,7 +12,7 @@ const routes: Routes = [
   { path: 'periodos', component: PeriodosComponent },
   { path: 'cedulas', component: CedulasComponent },
   { path: 'cedulas/:id', component: CedulaDetalleComponent },
-  { path: 'estado-cuenta', component: EstadoCuentaComponent },
+  { path: 'estado-cuenta-concentrado', component: EstadoCuentaComponent },
 ];
 
 @NgModule({

@@ -22,10 +22,17 @@ export const MENU_ADMIN: MenuItem[] = [
     icon: 'activity',
     link: 'operacion/periodos',
   },
+
+    // Configuración
   {
-    label: 'Estado de Cuenta',
+    label: 'Estado de cuenta',
+    isTitle: true,
+  },
+
+  {
+    label: 'Concentrado',
     icon: 'bar-chart-2',
-    link: 'operacion/estado-cuenta',
+    link: 'operacion/estado-cuenta-concentrado',
   },
 
   // Configuración
