@@ -29,11 +29,17 @@ export const MENU_ADMIN: MenuItem[] = [
     isTitle: true,
   },
 
+    {
+    label: 'Movimientos',
+    icon: 'list',
+    link: 'estado-cuenta/movimientos',
+  },
   {
     label: 'Concentrado',
     icon: 'bar-chart-2',
-    link: 'operacion/estado-cuenta-concentrado',
+    link: 'estado-cuenta/concentrado',
   },
+
 
   // Configuración
   {

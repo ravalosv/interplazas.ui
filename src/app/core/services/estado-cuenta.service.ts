@@ -25,4 +25,25 @@ export class EstadoCuentaService {
       .get<ApiReturn<any>>(url)
       .pipe(map((ret) => ret.data));
   }
+
+  getTiposMovimiento() {
+    const url = `${this.baseUrl}/estado-cuenta/tipos-movimiento`;
+    return this.http
+      .get<ApiReturn<any>>(url)
+      .pipe(map((ret) => ret.data));
+  }
+
+  createMovimiento(payload: any) {
+    const url = `${this.baseUrl}/estado-cuenta/movimiento`;
+    return this.http
+      .post<ApiReturn<any>>(url, payload)
+      .pipe(map((ret) => ret));
+  }
+
+  updateMovimiento(id: number, payload: any) {
+    const url = `${this.baseUrl}/estado-cuenta/movimiento/${id}`;
+    return this.http
+      .put<ApiReturn<any>>(url, payload)
+      .pipe(map((ret) => ret));
+  }
 }

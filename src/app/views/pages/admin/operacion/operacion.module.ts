@@ -6,6 +6,7 @@ import { PeriodosComponent } from './periodos/periodos.component';
 import { CedulasComponent } from './cedulas/cedulas.component';
 import { CedulaDetalleComponent } from './cedulas/cedula-detalle.component';
 import { EstadoCuentaComponent } from './estado-cuenta/estado-cuenta.component';
+import { MovimientosComponent } from './movimientos/movimientos.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
@@ -20,6 +21,7 @@ import { WebdatarocksPivotModule } from '@webdatarocks/ngx-webdatarocks';
     CedulasComponent,
     CedulaDetalleComponent,
     EstadoCuentaComponent,
+    MovimientosComponent,
   ],
   imports: [
     CommonModule,

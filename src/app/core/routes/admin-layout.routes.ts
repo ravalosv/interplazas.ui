@@ -18,6 +18,21 @@ export const AdminLayout_ROUTES: Routes = [
     ],
   },
   {
+    path: 'estado-cuenta',
+    data: {
+      title: 'Estado de Cuenta',
+    },
+    children: [
+      {
+        path: '',
+        loadChildren: () =>
+          import('../../views/pages/admin/operacion/operacion.module').then(
+            (m) => m.OperacionModule
+          ),
+      },
+    ],
+  },
+  {
     path: 'config',
     data: {
       title: 'Dashboard',

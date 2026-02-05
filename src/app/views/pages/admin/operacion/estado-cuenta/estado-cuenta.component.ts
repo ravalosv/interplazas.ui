@@ -47,7 +47,6 @@ export class EstadoCuentaComponent implements OnInit {
           ],
           measures: [
             { uniqueName: "Monto MXN", aggregation: "sum", format: "currency", caption: "Monto MXN" },
-            { uniqueName: "Monto USD", aggregation: "sum", format: "currency", caption: "Monto USD" }
           ]
         },
         formats: [{
