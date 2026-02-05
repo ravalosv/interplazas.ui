@@ -112,6 +112,10 @@ export class CedulasComponent implements OnInit {
     });
   }
 
+  getSelectedPeriodo() {
+    return this.periodos.find(p => p.id === this.selectedPeriodoId);
+  }
+
   applyFilter() {
     if (!this.filterText) {
       this.displayCedulas = this.cedulas;

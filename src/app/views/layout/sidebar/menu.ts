@@ -22,6 +22,11 @@ export const MENU_ADMIN: MenuItem[] = [
     icon: 'activity',
     link: 'operacion/periodos',
   },
+  {
+    label: 'Estado de Cuenta',
+    icon: 'bar-chart-2',
+    link: 'operacion/estado-cuenta',
+  },
 
   // Configuración
   {

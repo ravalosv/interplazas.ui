@@ -24,8 +24,14 @@
         <td>{{ p.mes }}</td>
         <td>{{ p.anio }}</td>
         <td>
-          <span class="badge" [ngClass]="p.activo ? 'bg-success' : 'bg-danger'">
+          <span class="badge me-1" [ngClass]="p.activo ? 'bg-success' : 'bg-danger'">
             {{ p.activo ? 'Abierto' : 'Cerrado' }}
+          </span>
+          <span *ngIf="p.cedulas && p.cedulas.length > 0" class="badge bg-primary me-1">
+            Cédulas
+          </span>
+          <span *ngIf="p.estadoCuentaGenerado" class="badge bg-info">
+            Estado de Cuenta
           </span>
         </td>
         <td>
@@ -35,11 +41,22 @@
           <button *ngIf="!p.activo" nz-button nzType="primary" (click)="abrirPeriodo(p)" title="Abrir Periodo">
             <i class="feather icon-unlock me-2"></i> Abrir
           </button>
-          <button nz-button nzType="default" class="ms-2" (click)="generarCedulas(p)" title="Generar Cédulas">
-            <i class="feather icon-file-text me-2"></i> Generar cédulas
+          
+          <button nz-button nzType="default" class="ms-2" (click)="generarCedulas(p)" [disabled]="p.cedulas && p.cedulas.length > 0" title="Generar Cédulas">
+            <i class="feather icon-file-text me-2"></i> {{ (p.cedulas && p.cedulas.length > 0) ? 'Cédulas generadas' : 'Generar cédulas' }}
           </button>
-          <button nz-button nzType="default" class="ms-2" (click)="verCedulas(p)" title="Ver Cédulas del periodo">
-            <i class="feather icon-list me-2"></i> Ver cédulas
+
+          <button 
+            *ngIf="!p.activo" 
+            nz-button 
+            nzType="default" 
+            class="ms-2" 
+            (click)="generarEstadoCuenta(p)" 
+            title="Generar Estado de Cuenta"
+            [disabled]="p.estadoCuentaGenerado || !p.cedulas || p.cedulas.length === 0"
+            [nzLoading]="generatingEC"
+          >
+            <i class="feather icon-audit me-2"></i> {{ p.estadoCuentaGenerado ? 'EC Generado' : 'Generar EC' }}
           </button>
         </td>
       </tr>

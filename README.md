@@ -11,6 +11,8 @@ requires node 16.10.0 :
 nvm install 16.10.0
 nvm use 16.10.0
 
+npm run migrate
+
 ## Development server
 
 Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.

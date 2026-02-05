@@ -4,6 +4,7 @@ import { ServicioCrudComponent } from './servicios-crud/servicio-crud.component'
 import { PeriodosComponent } from './periodos/periodos.component';
 import { CedulasComponent } from './cedulas/cedulas.component';
 import { CedulaDetalleComponent } from './cedulas/cedula-detalle.component';
+import { EstadoCuentaComponent } from './estado-cuenta/estado-cuenta.component';
 
 const routes: Routes = [
   { path: '', component: ServicioCrudComponent },
@@ -11,6 +12,7 @@ const routes: Routes = [
   { path: 'periodos', component: PeriodosComponent },
   { path: 'cedulas', component: CedulasComponent },
   { path: 'cedulas/:id', component: CedulaDetalleComponent },
+  { path: 'estado-cuenta', component: EstadoCuentaComponent },
 ];
 
 @NgModule({

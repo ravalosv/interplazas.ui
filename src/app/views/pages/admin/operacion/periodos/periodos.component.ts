@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { PeriodoService } from 'src/app/core/services/periodo.service';
+import { EstadoCuentaService } from 'src/app/core/services/estado-cuenta.service';
 import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
 
 @Component({
@@ -13,9 +14,11 @@ export class PeriodosComponent implements OnInit {
   periodos: PeriodoPayload[] = [];
   displayPeriodos: PeriodoPayload[] = [];
   loading = false;
+  generatingEC = false;
 
   constructor(
     private periodoService: PeriodoService,
+    private estadoCuentaService: EstadoCuentaService,
     private alertsService: AlertsService,
     private router: Router
   ) {}
@@ -66,7 +69,9 @@ export class PeriodosComponent implements OnInit {
   abrirPeriodo(periodo: PeriodoPayload) {
     let message = `¿Está seguro de abrir el periodo ${periodo.nombre}? Esto permitirá modificaciones en los servicios de este periodo.`;
 
-    if (periodo.cedulas && periodo.cedulas.length > 0) {
+    if (periodo.estadoCuentaGenerado) {
+      message = `¡ADVERTENCIA! El periodo ${periodo.nombre} ya tiene ESTADO DE CUENTA y CÉDULAS generados. Si lo abre, AMBOS SERÁN ELIMINADOS y tendrá que generarlos nuevamente. ¿Está seguro de continuar?`;
+    } else if (periodo.cedulas && periodo.cedulas.length > 0) {
       message = `¡ADVERTENCIA! El periodo ${periodo.nombre} ya tiene cédulas generadas. Si lo abre, TODAS LAS CÉDULAS SERÁN ELIMINADAS. ¿Está seguro de continuar?`;
     }
 
@@ -100,6 +105,7 @@ export class PeriodosComponent implements OnInit {
             this.loading = false;
             if (ret.success) {
               this.alertsService.success('Cédulas generadas exitosamente');
+              this.loadPeriodos();
             } else {
               this.alertsService.error(ret.error);
             }
@@ -113,9 +119,43 @@ export class PeriodosComponent implements OnInit {
     });
   }
 
-  verCedulas(periodo: PeriodoPayload) {
-    this.router.navigate(['/admin/operacion/cedulas'], {
-      queryParams: { periodoId: periodo.id },
+  generarEstadoCuenta(periodo: PeriodoPayload) {
+    if (periodo.activo) {
+      this.alertsService.warning('El periodo debe estar cerrado para generar el estado de cuenta.');
+      return;
+    }
+
+    if (periodo.estadoCuentaGenerado) {
+      this.alertsService.warning('El estado de cuenta ya ha sido generado para este periodo.');
+      return;
+    }
+
+    if (!periodo.cedulas || periodo.cedulas.length === 0) {
+      this.alertsService.warning('No hay cédulas generadas para este periodo.');
+      return;
+    }
+
+    this.alertsService.confirm({
+      titulo: 'Generar Estado de Cuenta',
+      message: `¿Está seguro de generar el estado de cuenta para el periodo ${periodo.nombre}? Esta acción no se puede deshacer.`,
+      okCallback: () => {
+        this.generatingEC = true;
+        this.estadoCuentaService.generar(periodo.id).subscribe({
+          next: (ret) => {
+            this.generatingEC = false;
+            if (ret.success) {
+              this.alertsService.success(ret.data.message);
+              this.loadPeriodos(); // Recargar para actualizar estado
+            } else {
+              this.alertsService.error(ret.error);
+            }
+          },
+          error: (e) => {
+            this.generatingEC = false;
+            this.alertsService.error(e.error);
+          },
+        });
+      },
     });
   }
 
