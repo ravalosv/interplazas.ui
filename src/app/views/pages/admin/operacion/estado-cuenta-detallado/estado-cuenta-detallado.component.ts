@@ -4,11 +4,11 @@ import * as WebDataRocks from 'webdatarocks';
 import { EstadoCuentaService } from 'src/app/core/services/estado-cuenta.service';
 
 @Component({
-  selector: 'app-estado-cuenta',
-  templateUrl: './estado-cuenta.component.html',
-  styleUrls: ['./estado-cuenta.component.scss']
+  selector: 'app-estado-cuenta-detallado',
+  templateUrl: './estado-cuenta-detallado.component.html',
+  styleUrls: ['./estado-cuenta-detallado.component.scss']
 })
-export class EstadoCuentaComponent implements OnInit {
+export class EstadoCuentaDetalladoComponent implements OnInit {
   @ViewChild('pivot1') pivot1!: WebdatarocksComponent;
 
   constructor(private estadoCuentaService: EstadoCuentaService) {}
@@ -25,7 +25,7 @@ export class EstadoCuentaComponent implements OnInit {
         "Monto USD": item.montoUSD,
         "montoMXNAbs": item.montoMXNAbs,
         "montoUSDAbs": item.montoUSDAbs,
-        "Periodo": item.periodo ? `${item.periodo.mes}/${item.periodo.anio}` : '',
+        "Periodo": item.periodo ? `${item.periodo.nombre}` : '',
         "Grupo": item.grupo?.nombre || '',
         "Filial": item.filial?.nombre || '',
         "Comentarios": item.observacion,
@@ -40,6 +40,9 @@ export class EstadoCuentaComponent implements OnInit {
         slice: {
           rows: [
             { uniqueName: "Grupo" },
+            { uniqueName: "Filial" },
+            { uniqueName: "Periodo" },
+            { uniqueName: "Comentarios" }
           ],
           columns: [
             { uniqueName: "Fecha.Year", caption: "Año" },

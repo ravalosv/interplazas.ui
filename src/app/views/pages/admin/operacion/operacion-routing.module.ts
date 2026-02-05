@@ -5,6 +5,7 @@ import { PeriodosComponent } from './periodos/periodos.component';
 import { CedulasComponent } from './cedulas/cedulas.component';
 import { CedulaDetalleComponent } from './cedulas/cedula-detalle.component';
 import { EstadoCuentaComponent } from './estado-cuenta/estado-cuenta.component';
+import { EstadoCuentaDetalladoComponent } from './estado-cuenta-detallado/estado-cuenta-detallado.component';
 import { MovimientosComponent } from './movimientos/movimientos.component';
 
 const routes: Routes = [
@@ -14,6 +15,7 @@ const routes: Routes = [
   { path: 'cedulas', component: CedulasComponent },
   { path: 'cedulas/:id', component: CedulaDetalleComponent },
   { path: 'concentrado', component: EstadoCuentaComponent },
+  { path: 'detallado', component: EstadoCuentaDetalladoComponent },
   { path: 'movimientos', component: MovimientosComponent },
 ];
 

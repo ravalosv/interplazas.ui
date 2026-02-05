@@ -13,6 +13,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgZorroModule } from 'src/app/ng-zorro.module';
 import { OperacionRoutingModule } from './operacion-routing.module';
 import { WebdatarocksPivotModule } from '@webdatarocks/ngx-webdatarocks';
+import { EstadoCuentaDetalladoComponent } from './estado-cuenta-detallado/estado-cuenta-detallado.component';
 
 @NgModule({
   declarations: [
@@ -21,6 +22,7 @@ import { WebdatarocksPivotModule } from '@webdatarocks/ngx-webdatarocks';
     CedulasComponent,
     CedulaDetalleComponent,
     EstadoCuentaComponent,
+    EstadoCuentaDetalladoComponent,
     MovimientosComponent,
   ],
   imports: [

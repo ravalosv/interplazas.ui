@@ -39,6 +39,11 @@ export const MENU_ADMIN: MenuItem[] = [
     icon: 'bar-chart-2',
     link: 'estado-cuenta/concentrado',
   },
+  {
+    label: 'Detallado',
+    icon: 'bar-chart-2',
+    link: 'estado-cuenta/detallado',
+  },
 
 
   // Configuración
