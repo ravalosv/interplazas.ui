@@ -21,8 +21,10 @@ export class EstadoCuentaComponent implements OnInit {
     this.estadoCuentaService.getAllMovimientos().subscribe((data: any[]) => {
       const formattedData = data.map(item => ({
         "Fecha": item.fecha,
-        "Monto MXN": item.montoMXNConSigno,
-        "Monto USD": item.montoUSDConSigno,
+        "Monto MXN": item.montoMXN,
+        "Monto USD": item.montoUSD,
+        "montoMXNAbs": item.montoMXNAbs,
+        "montoUSDAbs": item.montoUSDAbs,
         "Periodo": item.periodo ? `${item.periodo.mes}/${item.periodo.anio}` : '',
         "Grupo": item.grupo?.nombre || '',
         "Filial": item.filial?.nombre || '',
@@ -53,7 +55,6 @@ export class EstadoCuentaComponent implements OnInit {
             currencySymbol: "$",
             decimalPlaces: 2
         }],
-          //localization: "https://cdn.webdatarocks.com/loc/es.json"
           localization: "assets/lang/pivot-es.json"
       } as any);
     });
