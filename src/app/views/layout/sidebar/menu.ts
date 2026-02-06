@@ -105,14 +105,9 @@ export const MENU_ADMIN: MenuItem[] = [
 ];
 
 export const MENU_CLIENTE: MenuItem[] = [
-  // OFFERS
-/*   {
-    label: 'Eventos',
-    isTitle: true,
-  },
   {
-    label: 'Mis eventos',
-    icon: 'book-open',
-    link: 'events/list',
-  }, */
+    label: 'Consultar Contratos',
+    icon: 'file-text',
+    link: 'client/contratos',
+  }
 ];

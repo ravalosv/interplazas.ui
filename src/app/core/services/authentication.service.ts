@@ -98,14 +98,17 @@ export class AuthenticationService {
     const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
     return userRoles == 1;
   }
-  isRepresentante() {
-    const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
-    return userRoles == 'repre';
-  }
+
 
   isReportsUser() {
     const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
     return userRoles == 'reports';
+  }
+
+  isFilial() {
+    const userRoles = this.decodedToken.tipoUsuarioId;
+    // Check for both ID 3 and string 'filial' to be safe
+    return userRoles == 2 || userRoles == 'filial';
   }
 
   updateUserPassword(model: any) {

@@ -71,9 +71,9 @@ export class LoginComponent implements OnInit {
           } else {
             if (this.authService.isAdmin()) {
               this.router.navigate(['admin/operacion/servicios']);
-            } else {
-              this.router.navigate(['client/servicios']);
-            }
+            } else if (this.authService.isFilial()) {
+              this.router.navigate(['client/contratos']);
+            } 
           }
         } else {
           this.alertsService.error(ret.error);

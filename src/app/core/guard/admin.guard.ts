@@ -25,8 +25,8 @@ export class AdminGuard implements CanActivate {
     if (this.authService.loggedIn()) {
       if (this.authService.isAdmin()) {
         return true;
-      } else if (this.authService.isRepresentante()) {
-        this.router.navigate(['/client/events/list']);
+      } else if (this.authService.isFilial()) {
+        this.router.navigate(['/client/contratos']);
         return true;
       }
     }

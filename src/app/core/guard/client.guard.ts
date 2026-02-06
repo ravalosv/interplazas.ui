@@ -23,7 +23,7 @@ export class ClientGuard implements CanActivate {
     console.groupEnd(); */
 
     if (this.authService.loggedIn()) {
-      if (this.authService.isRepresentante()) {
+      if (this.authService.isFilial()) {
         return true;
       } else if (this.authService.isAdmin()) {
         this.router.navigate(['/admin/operacion/servicios']);
