@@ -4,6 +4,7 @@ export interface FilialAdminPayload {
   id: number;
   nombre: string;
   extranjera: boolean;
+  utilizaApi: boolean;
   grupoId: number;
   apiUrl?: string;
   apiKey?: string;

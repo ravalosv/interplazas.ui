@@ -41,10 +41,33 @@ export class FilialesCrudComponent implements OnInit {
     this.form = this.fb.group({
       nombre: ['', [Validators.required]],
       extranjera: [false, []],
+      utilizaApi: [false, []],
       grupoId: [null, [Validators.required]],
-      apiUrl: ['', []],
-      apiKey: ['', []],
+      apiUrl: [{ value: '', disabled: true }, []],
+      apiKey: [{ value: '', disabled: true }, []],
     });
+
+    this.form.get('utilizaApi')?.valueChanges.subscribe((val) => {
+      this.toggleApiFields(val);
+    });
+  }
+
+  toggleApiFields(enable: boolean) {
+    const apiUrl = this.form.get('apiUrl');
+    const apiKey = this.form.get('apiKey');
+    if (enable) {
+      apiUrl?.enable();
+      apiKey?.enable();
+      apiUrl?.addValidators(Validators.required);
+      apiKey?.addValidators(Validators.required);
+    } else {
+      apiUrl?.disable();
+      apiKey?.disable();
+      apiUrl?.removeValidators(Validators.required);
+      apiKey?.removeValidators(Validators.required);
+    }
+    apiUrl?.updateValueAndValidity();
+    apiKey?.updateValueAndValidity();
   }
 
   loadGrupos() {
@@ -92,7 +115,8 @@ export class FilialesCrudComponent implements OnInit {
 
   openCreate(modalTpl: TemplateRef<any>) {
     this.editingId = null;
-    this.form.reset({ nombre: '', extranjera: false, grupoId: null, apiUrl: '', apiKey: '' });
+    this.form.reset({ nombre: '', extranjera: false, utilizaApi: false, grupoId: null, apiUrl: '', apiKey: '' });
+    this.toggleApiFields(false);
     this.modalTitle = 'Nueva Filial';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
@@ -102,10 +126,12 @@ export class FilialesCrudComponent implements OnInit {
     this.form.reset({
       nombre: item.nombre,
       extranjera: item.extranjera,
+      utilizaApi: item.utilizaApi,
       grupoId: item.grupoId,
       apiUrl: item.apiUrl,
       apiKey: item.apiKey,
     });
+    this.toggleApiFields(item.utilizaApi);
     this.modalTitle = 'Editar Filial';
     this.modalRef = this.modalService.open(modalTpl, { centered: true });
   }
@@ -116,7 +142,15 @@ export class FilialesCrudComponent implements OnInit {
       return;
     }
 
-    const payload = this.form.value as { nombre: string; extranjera: boolean; grupoId: number; apiUrl?: string; apiKey?: string };
+    // Forzar la inclusión de valores deshabilitados
+    const payload = this.form.getRawValue() as {
+      nombre: string;
+      extranjera: boolean;
+      utilizaApi: boolean;
+      grupoId: number;
+      apiUrl?: string;
+      apiKey?: string;
+    };
 
     if (this.editingId == null) {
       this.filialService.create(payload).subscribe({
@@ -127,7 +161,8 @@ export class FilialesCrudComponent implements OnInit {
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '', extranjera: false, grupoId: null, apiUrl: '', apiKey: '' });
+              this.form.reset({ nombre: '', extranjera: false, utilizaApi: false, grupoId: null, apiUrl: '', apiKey: '' });
+              this.toggleApiFields(false);
               this.editingId = null;
             }
           } else {
@@ -145,7 +180,8 @@ export class FilialesCrudComponent implements OnInit {
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '', extranjera: false, grupoId: null, apiUrl: '', apiKey: '' });
+              this.form.reset({ nombre: '', extranjera: false, utilizaApi: false, grupoId: null, apiUrl: '', apiKey: '' });
+              this.toggleApiFields(false);
               this.editingId = null;
               this.modalTitle = 'Nueva Filial';
             }

@@ -51,6 +51,13 @@
           </div>
         </div>
         <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Utiliza API</strong></label>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="utilizaApiSwitch" formControlName="utilizaApi" />
+            <label class="form-check-label" for="utilizaApiSwitch">Utiliza API</label>
+          </div>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
           <label class="form-label"><strong>API URL</strong></label>
           <input type="text" class="form-control" formControlName="apiUrl" placeholder="URL de la API" />
         </div>
@@ -74,6 +81,7 @@
         <th>Nombre</th>
         <th>Grupo</th>
         <th>Extranjera</th>
+        <th>Utiliza API</th>
         <th></th>
       </tr>
     </thead>
@@ -82,6 +90,7 @@
         <td>{{ item.nombre }}</td>
         <td>{{ item.grupo?.nombre }}</td>
         <td>{{ item.extranjera ? 'Sí' : 'No' }}</td>
+        <td>{{ item.utilizaApi ? 'Sí' : 'No' }}</td>
         <td class="text-end">
           <button nz-button nzType="default" class="me-2" (click)="openEdit(modalFilialEditor, item)">
             Editar
