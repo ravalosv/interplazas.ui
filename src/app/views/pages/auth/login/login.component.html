@@ -29,6 +29,10 @@
                   value="admin@demo.com"
                   formControlName="email"
                 />
+                <div *ngIf="loginForm.get('email')?.invalid && (loginForm.get('email')?.dirty || loginForm.get('email')?.touched)" class="text-danger mt-1">
+                  <div *ngIf="loginForm.get('email')?.errors?.['required']">El email es requerido</div>
+                  <div *ngIf="loginForm.get('email')?.errors?.['email']">El formato del email no es válido</div>
+                </div>
               </div>
               <div class="mb-3">
                 <label for="exampleInputPassword1" class="form-label"
@@ -43,6 +47,9 @@
                   value="12345678"
                   formControlName="password"
                 />
+                <div *ngIf="loginForm.get('password')?.invalid && (loginForm.get('password')?.dirty || loginForm.get('password')?.touched)" class="text-danger mt-1">
+                  <div *ngIf="loginForm.get('password')?.errors?.['required']">El password es requerido</div>
+                </div>
               </div>
               <!--               <div class="form-check mb-3">
                 <input

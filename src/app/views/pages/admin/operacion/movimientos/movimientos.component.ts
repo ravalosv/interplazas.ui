@@ -8,6 +8,7 @@ import { SucursalService } from 'src/app/core/services/sucursal.service';
 import * as FileSaver from 'file-saver';
 import * as XLSX from 'xlsx-js-style';
 import { DatePipe } from '@angular/common';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-movimientos',
@@ -19,6 +20,7 @@ export class MovimientosComponent implements OnInit {
   loading = false;
   filtro = '';
   private datePipe = new DatePipe('en-US');
+  apiUrl = environment.apiUrl;
 
   // Modal props
   isVisible = false;
@@ -28,6 +30,7 @@ export class MovimientosComponent implements OnInit {
   editingMovimientoId: number | null = null;
   editDisabled = false;
   minMonto: number = 0;
+  selectedFile: File | null = null;
 
   // Lists
   tiposMovimiento: any[] = [];
@@ -129,6 +132,7 @@ export class MovimientosComponent implements OnInit {
 
   handleCancel(): void {
     this.isVisible = false;
+    this.selectedFile = null;
     this.validateForm.reset({
         fecha: new Date(),
         montoMXN: 0,
@@ -141,7 +145,7 @@ export class MovimientosComponent implements OnInit {
       this.isOkLoading = true;
       const request$ = this.editingMovimientoId
         ? this.estadoCuentaService.updateMovimiento(this.editingMovimientoId, this.validateForm.value)
-        : this.estadoCuentaService.createMovimiento(this.validateForm.value);
+        : this.estadoCuentaService.createMovimiento(this.validateForm.value, this.selectedFile || undefined);
       request$.subscribe({
         next: (res) => {
           this.isVisible = false;
@@ -292,4 +296,75 @@ export class MovimientosComponent implements OnInit {
   sortMontoUSD = (a: any, b: any) => (a.montoUSD || 0) - (b.montoUSD || 0);
   sortTipo = (a: any, b: any) => (a.tipoMovimiento?.nombre || '').localeCompare(b.tipoMovimiento?.nombre || '');
   sortObservacion = (a: any, b: any) => (a.observacion || '').localeCompare(b.observacion || '');
+
+  hasComprobante(movimientoId: number | null): boolean {
+    if (movimientoId) {
+        const m = this.movimientos.find(x => x.id === movimientoId);
+        return !!m?.comprobanteUrl;
+    }
+    return !!this.selectedFile;
+  }
+
+  onComprobanteUpload(file: File, movimientoId: number | null) {
+    if (movimientoId) {
+        // Modo edición: subida inmediata
+        this.estadoCuentaService.uploadComprobante(movimientoId, file).subscribe({
+        next: (res) => {
+            if (res.success) {
+            this.message.success('Comprobante subido correctamente');
+            // Update local data
+            const m = this.movimientos.find(x => x.id === movimientoId);
+            if (m) {
+                m.comprobanteUrl = res.data.comprobanteUrl;
+            }
+            } else {
+            this.message.error(res.error || 'Error al subir comprobante');
+            }
+        },
+        error: (err) => {
+            console.error(err);
+            this.message.error('Error al subir comprobante');
+        }
+        });
+    } else {
+        // Modo creación: guardar localmente
+        this.selectedFile = file;
+    }
+  }
+
+  viewComprobante(movimientoId: number | null) {
+    if (movimientoId) {
+        const m = this.movimientos.find(x => x.id === movimientoId);
+        if (m?.comprobanteUrl) {
+            window.open(`${this.apiUrl}/storage/${m.comprobanteUrl}`, '_blank');
+        }
+    } else if (this.selectedFile) {
+        const url = URL.createObjectURL(this.selectedFile);
+        window.open(url, '_blank');
+    }
+  }
+
+  deleteComprobante(movimientoId: number | null) {
+    if (movimientoId) {
+        this.estadoCuentaService.deleteComprobante(movimientoId).subscribe({
+        next: (res) => {
+            if (res.success) {
+            this.message.success('Comprobante eliminado correctamente');
+            const m = this.movimientos.find(x => x.id === movimientoId);
+            if (m) {
+                m.comprobanteUrl = null;
+            }
+            } else {
+            this.message.error(res.error || 'Error al eliminar comprobante');
+            }
+        },
+        error: (err) => {
+            console.error(err);
+            this.message.error('Error al eliminar comprobante');
+        }
+        });
+    } else {
+        this.selectedFile = null;
+    }
+  }
 }

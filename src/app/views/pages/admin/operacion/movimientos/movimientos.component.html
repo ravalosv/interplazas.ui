@@ -181,6 +181,22 @@
         </div>
       </div>
 
+      <div class="row">
+        <div class="col-md-12">
+            <nz-form-item>
+                <nz-form-label [nzSm]="4" [nzXs]="24">Comprobante</nz-form-label>
+                <nz-form-control [nzSm]="20" [nzXs]="24">
+                    <app-document-upload
+                        [hasFile]="hasComprobante(editingMovimientoId)"
+                        (fileSelected)="onComprobanteUpload($event, editingMovimientoId)"
+                        (view)="viewComprobante(editingMovimientoId)"
+                        (delete)="deleteComprobante(editingMovimientoId)">
+                    </app-document-upload>
+                </nz-form-control>
+            </nz-form-item>
+        </div>
+      </div>
+
     </form>
   </ng-container>
 </nz-modal>
