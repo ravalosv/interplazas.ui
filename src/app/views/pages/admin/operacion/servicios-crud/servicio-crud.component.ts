@@ -545,17 +545,15 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   hasDocument(fieldName: string): boolean {
+    // @ts-ignore
     return !!this.form.get(fieldName)?.value || this.selectedFiles.has(fieldName);
   }
 
-  triggerFileUpload(fileInput: HTMLInputElement) {
-    fileInput.click();
+  onDocumentUpload(file: File, fieldName: string) {
+    this.handleFileSelection(file, fieldName);
   }
 
-  onFileSelected(event: any, fieldName: string) {
-    const file = event.target.files[0];
-    if (!file) return;
-
+  handleFileSelection(file: File, fieldName: string) {
     const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
       this.alertsService.error('Solo se permiten archivos PDF o Imágenes (JPG, PNG)');

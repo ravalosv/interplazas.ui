@@ -14,6 +14,7 @@ import { NgZorroModule } from 'src/app/ng-zorro.module';
 import { OperacionRoutingModule } from './operacion-routing.module';
 import { WebdatarocksPivotModule } from '@webdatarocks/ngx-webdatarocks';
 import { EstadoCuentaDetalladoComponent } from './estado-cuenta-detallado/estado-cuenta-detallado.component';
+import { DocumentUploadComponent } from './servicios-crud/components/document-upload/document-upload.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { EstadoCuentaDetalladoComponent } from './estado-cuenta-detallado/estado
     EstadoCuentaComponent,
     EstadoCuentaDetalladoComponent,
     MovimientosComponent,
+    DocumentUploadComponent
   ],
   imports: [
     CommonModule,

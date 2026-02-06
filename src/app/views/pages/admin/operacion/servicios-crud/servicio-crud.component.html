@@ -126,24 +126,12 @@
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label d-block">&nbsp;</label>
-                    <div class="d-flex align-items-center gap-2">
-                      <input type="file" #fileInput style="display:none" (change)="onFileSelected($event, 'fo_Documento_Cliente_url')" accept=".pdf,image/*" />
-                      
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileInput)">
-                        <i class="feather icon-upload"></i> {{ hasDocument('fo_Documento_Cliente_url') ? 'Cambiar' : 'Cargar documento' }}
-                      </button>
-
-                      <button type="button" class="btn btn-info btn-sm" (click)="viewDocument('fo_Documento_Cliente_url')" *ngIf="hasDocument('fo_Documento_Cliente_url')">
-                        <i class="feather icon-eye"></i> Ver documento
-                      </button>
-
-                      <button type="button" class="btn btn-danger btn-sm" (click)="deleteDocument('fo_Documento_Cliente_url')" *ngIf="hasDocument('fo_Documento_Cliente_url')">
-                        <i class="feather icon-trash-2"></i>
-                      </button>
-                    </div>
-                  </div>
+                  <app-document-upload
+                    [hasFile]="hasDocument('fo_Documento_Cliente_url')"
+                    (fileSelected)="onDocumentUpload($event, 'fo_Documento_Cliente_url')"
+                    (view)="viewDocument('fo_Documento_Cliente_url')"
+                    (delete)="deleteDocument('fo_Documento_Cliente_url')">
+                  </app-document-upload>
                 </div>
               </div>
             </ng-template>
@@ -195,24 +183,12 @@
                   </div>
                 </div>
                 <div class="col-md-8">
-                  <div class="mb-3">
-                    <label class="form-label d-block">&nbsp;</label>
-                    <div class="d-flex align-items-center gap-2">
-                      <input type="file" #fileMontoDevueltoInput style="display:none" (change)="onFileSelected($event, 'fo_Monto_devuelto_documento_url')" accept=".pdf,image/*" />
-                      
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileMontoDevueltoInput)">
-                        <i class="feather icon-upload"></i> {{ hasDocument('fo_Monto_devuelto_documento_url') ? 'Cambiar' : 'Cargar documento' }}
-                      </button>
-
-                      <button type="button" class="btn btn-info btn-sm" (click)="viewDocument('fo_Monto_devuelto_documento_url')" *ngIf="hasDocument('fo_Monto_devuelto_documento_url')">
-                        <i class="feather icon-eye"></i> Ver documento
-                      </button>
-
-                      <button type="button" class="btn btn-danger btn-sm" (click)="deleteDocument('fo_Monto_devuelto_documento_url')" *ngIf="hasDocument('fo_Monto_devuelto_documento_url')">
-                        <i class="feather icon-trash-2"></i>
-                      </button>
-                    </div>
-                  </div>
+                  <app-document-upload
+                    [hasFile]="hasDocument('fo_Monto_devuelto_documento_url')"
+                    (fileSelected)="onDocumentUpload($event, 'fo_Monto_devuelto_documento_url')"
+                    (view)="viewDocument('fo_Monto_devuelto_documento_url')"
+                    (delete)="deleteDocument('fo_Monto_devuelto_documento_url')">
+                  </app-document-upload>
                 </div>
               </div>
               <div class="row">
@@ -304,39 +280,12 @@
                   </div>
                 </div>
                 <div class="col-md-6">
-      <div class="mb-3">
-        <label class="form-label d-block">&nbsp;</label>
-        <div class="d-flex align-items-center gap-2">
-          <input
-            type="file"
-            #fileSolicitudServicioInput
-            style="display:none"
-            (change)="onFileSelected($event, 'exp_Solicitud_Servicio_url')"
-            accept=".pdf,image/*"
-          />
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileSolicitudServicioInput)">
-                        <i class="feather icon-upload"></i>
-                        {{ hasDocument('exp_Solicitud_Servicio_url') ? 'Cambiar' : 'Cargar documento' }}
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-info btn-sm"
-                        (click)="viewDocument('exp_Solicitud_Servicio_url')"
-                        *ngIf="hasDocument('exp_Solicitud_Servicio_url')"
-                      >
-                        <i class="feather icon-eye"></i> Ver documento
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm"
-                        (click)="deleteDocument('exp_Solicitud_Servicio_url')"
-                        *ngIf="hasDocument('exp_Solicitud_Servicio_url')"
-                      >
-                        <i class="feather icon-trash-2"></i>
-                      </button>
-                    </div>
-
-                  </div>
+      <app-document-upload
+        [hasFile]="hasDocument('exp_Solicitud_Servicio_url')"
+        (fileSelected)="onDocumentUpload($event, 'exp_Solicitud_Servicio_url')"
+        (view)="viewDocument('exp_Solicitud_Servicio_url')"
+        (delete)="deleteDocument('exp_Solicitud_Servicio_url')">
+      </app-document-upload>
                 </div>
               </div>
               <div class="row">
@@ -352,39 +301,12 @@
                   </div>
                 </div>
                 <div class="col-md-6">
-      <div class="mb-3">
-        <label class="form-label d-block">&nbsp;</label>
-        <div class="d-flex align-items-center gap-2">
-          <input
-            type="file"
-            #fileComprobantePagoInput
-            style="display:none"
-            (change)="onFileSelected($event, 'exp_Comprobante_Pago_url')"
-            accept=".pdf,image/*"
-          />
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileComprobantePagoInput)">
-                        <i class="feather icon-upload"></i>
-                        {{ hasDocument('exp_Comprobante_Pago_url') ? 'Cambiar' : 'Cargar documento' }}
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-info btn-sm"
-                        (click)="viewDocument('exp_Comprobante_Pago_url')"
-                        *ngIf="hasDocument('exp_Comprobante_Pago_url')"
-                      >
-                        <i class="feather icon-eye"></i> Ver documento
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm"
-                        (click)="deleteDocument('exp_Comprobante_Pago_url')"
-                        *ngIf="hasDocument('exp_Comprobante_Pago_url')"
-                      >
-                        <i class="feather icon-trash-2"></i>
-                      </button>
-                    </div>
-
-                  </div>
+      <app-document-upload
+        [hasFile]="hasDocument('exp_Comprobante_Pago_url')"
+        (fileSelected)="onDocumentUpload($event, 'exp_Comprobante_Pago_url')"
+        (view)="viewDocument('exp_Comprobante_Pago_url')"
+        (delete)="deleteDocument('exp_Comprobante_Pago_url')">
+      </app-document-upload>
                 </div>
               </div>
               <div class="row">
@@ -400,38 +322,12 @@
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <div class="mb-3">
-                    <label class="form-label d-block">&nbsp;</label>
-                    <div class="d-flex align-items-center gap-2">
-                      <input
-                        type="file"
-                        #fileConvenioInput
-                        style="display:none"
-                        (change)="onFileSelected($event, 'exp_Convenio_url')"
-                        accept=".pdf,image/*"
-                      />
-                      <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerFileUpload(fileConvenioInput)">
-                        <i class="feather icon-upload"></i>
-                        {{ hasDocument('exp_Convenio_url') ? 'Cambiar' : 'Cargar documento' }}
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-info btn-sm"
-                        (click)="viewDocument('exp_Convenio_url')"
-                        *ngIf="hasDocument('exp_Convenio_url')"
-                      >
-                        <i class="feather icon-eye"></i> Ver documento
-                      </button>
-                      <button
-                        type="button"
-                        class="btn btn-danger btn-sm"
-                        (click)="deleteDocument('exp_Convenio_url')"
-                        *ngIf="hasDocument('exp_Convenio_url')"
-                      >
-                        <i class="feather icon-trash-2"></i>
-                      </button>
-                    </div>
-                  </div>
+                  <app-document-upload
+                    [hasFile]="hasDocument('exp_Convenio_url')"
+                    (fileSelected)="onDocumentUpload($event, 'exp_Convenio_url')"
+                    (view)="viewDocument('exp_Convenio_url')"
+                    (delete)="deleteDocument('exp_Convenio_url')">
+                  </app-document-upload>
                 </div>
               </div>
             </ng-template>
