@@ -67,6 +67,10 @@ export class ServicioCrudComponent implements OnInit {
   
   selectedSucursalOrigen: any = null;
   consultandoContrato = false;
+  
+  // Modal Contrato API
+  modalContratoRef: NgbModalRef | null = null;
+  tempContratoSearch = '';
 
   months = [
     { id: 1, name: 'ENERO' },
@@ -159,6 +163,11 @@ export class ServicioCrudComponent implements OnInit {
 
     this.form.get('fo_Sucursal_Origen_Id')?.valueChanges.subscribe(val => {
       this.selectedSucursalOrigen = this.sucursales.find(s => s.id === val);
+      
+      // Si la filial utiliza API, el campo Contrato se mantiene habilitado para permitir click (popup),
+      // pero se mostrará como readonly en el HTML.
+      const contratoControl = this.form.get('fo_Contrato');
+      contratoControl?.enable();
     });
     
     this.setupConditionalValidation();
@@ -343,30 +352,49 @@ export class ServicioCrudComponent implements OnInit {
     });
   }
 
-  consultarContrato() {
-    if (!this.selectedSucursalOrigen?.filial?.apiUrl) return;
+  consultarContrato(contratoManual?: string) {
+    if (!this.selectedSucursalOrigen?.filial?.apiUrl) {
+      this.alertsService.error('La filial origen no tiene configurada la API URL');
+      return;
+    }
 
-    const contrato = this.form.get('fo_Contrato')?.value;
+    let contrato = contratoManual || this.form.get('fo_Contrato')?.value;
     if (!contrato) {
       this.alertsService.error('Ingrese un número de contrato');
       return;
     }
+    contrato = contrato.trim();
 
     this.consultandoContrato = true;
-    const url = this.selectedSucursalOrigen.filial.apiUrl.replace('{contrato}', contrato);
     
-    // Ensure API Key is retrieved correctly
-    const apiKey = this.selectedSucursalOrigen.filial.apiKey;
-    console.log('Enviando petición a:', url);
-    console.log('Con api-key:', apiKey ? '***' + apiKey.slice(-4) : '(vacio)');
+    // Preparar URL y Headers
+    // Aseguramos que no haya espacios en la URL (causa común de errores)
+    const urlTemplate = this.selectedSucursalOrigen.filial.apiUrl.trim();
+    
+    // Si la URL tiene el placeholder {contrato}, lo reemplazamos.
+    // Si no, asumimos que es la base y concatenamos (fallback seguro)
+    let url = '';
+    if (urlTemplate.includes('{contrato}')) {
+        url = urlTemplate.replace('{contrato}', contrato);
+    } else {
+        // Fallback: Si no hay placeholder, construimos la URL estándar /contratos/info/1/CONTRATO
+        // Eliminamos trailing slash si existe para evitar doble //
+        const baseUrl = urlTemplate.replace(/\/$/, '');
+        url = `${baseUrl}/contratos/info/1/${contrato}`;
+    }
+
+    const apiKey = this.selectedSucursalOrigen.filial.apiKey ? this.selectedSucursalOrigen.filial.apiKey.trim() : '';
+
+    console.log(`[ConsultarContrato] URL: ${url}`);
+    console.log(`[ConsultarContrato] API Key presente: ${!!apiKey}`);
 
     let headers = new HttpHeaders();
     if (apiKey) {
       headers = headers.set('api-key', apiKey);
     }
 
-    this.http.get(url, { headers }).subscribe(
-      (res: any) => {
+    this.http.get(url, { headers }).subscribe({
+      next: (res: any) => {
         this.consultandoContrato = false;
 
         if (!res.success) {
@@ -376,82 +404,73 @@ export class ServicioCrudComponent implements OnInit {
 
         this.alertsService.success('Consulta exitosa');
         
+        if (contratoManual) {
+          this.form.patchValue({ fo_Contrato: contratoManual });
+          if (this.modalContratoRef) {
+            this.modalContratoRef.close();
+            this.modalContratoRef = null;
+          }
+        }
+        
         if (res.data) {
-          // Map Saldo
           if (res.data.saldo !== undefined) {
             this.form.patchValue({ fori_Saldo_Contrato: res.data.saldo });
           }
 
-          // Map Status
           if (res.data.status) {
-            // Find status ID by name (case insensitive)
             const statusName = res.data.status.toString().toUpperCase();
             const foundStatus = this.statuses.find(s => s.nombre && s.nombre.toUpperCase() === statusName);
-            
             if (foundStatus) {
               this.form.patchValue({ fori_Status_Contrato_Id: foundStatus.id });
-            } else {
-              console.warn('Status not found in catalog:', res.data.status);
             }
           }
 
-          // Map Titular if present (optional based on previous intent, though not in example)
           if (res.data.nombre_titular || res.data.NombreTitular) {
              this.form.patchValue({ fo_Nombre_Titular: res.data.nombre_titular || res.data.NombreTitular });
           }
         }
       },
-      (err) => {
+      error: (err) => {
         this.consultandoContrato = false;
-        console.error('Error completo (raw):', err);
-        console.error('Error stringified:', JSON.stringify(err));
+        console.error('Error completo:', err);
         
-        let errorMsg = '';
+        let errorMsg = 'Error al consultar el contrato.';
         
-        // 1. Try to extract from JSON body { "success": false, "error": "MSG" }
-        if (err.error && err.error.error) {
-          errorMsg = err.error.error;
-        } 
-        // 2. Try to extract if body is just a string
-        else if (err.error && typeof err.error === 'string') {
-          errorMsg = err.error;
-        } 
-        // 3. Fallback to Status Code if body is empty (common in CORS issues)
-        else {
-           switch (err.status) {
-             case 400:
-               errorMsg = 'API_KEY_REQUIRED'; // Fallback assumption based on user requirements
-               break;
-             case 401:
-               errorMsg = 'UNAUTHORIZED';
-               break;
-             case 404:
-               errorMsg = 'Contrato no encontrado';
-               break;
-             default:
-               errorMsg = err.message || 'Error al consultar contrato';
-           }
-        }
-
-        // Map specific error codes to user-friendly messages
-        switch (errorMsg) {
-          case 'API_KEY_REQUIRED':
-            errorMsg = 'Error: Falta configurar la API Key en la filial o no se envió correctamente (API_KEY_REQUIRED)';
-            break;
-          case 'UNAUTHORIZED':
-            errorMsg = 'Error: La API Key configurada es incorrecta o no tiene permisos (UNAUTHORIZED)';
-            break;
-          case 'Contrato no encontrado':
-            errorMsg = 'El contrato especificado no existe en el sistema externo';
-            break;
-          case 'Compañía no encontrada':
-            errorMsg = 'La compañía asociada no fue encontrada en el sistema externo';
-            break;
+        // Manejo específico de Status 0 (CORS/Red)
+        if (err.status === 0) {
+            errorMsg = 'Error de conexión (Status 0). Posibles causas: \n1. Bloqueo CORS (el servidor Odoo no permite peticiones desde este dominio).\n2. URL mal formada.\n3. Servidor no disponible.\nVerifique la consola para más detalles.';
+        } else if (err.error && err.error.error) {
+            errorMsg = err.error.error;
+        } else if (err.error && typeof err.error === 'string') {
+            errorMsg = err.error;
+        } else {
+            switch (err.status) {
+             case 400: errorMsg = 'Error de solicitud (400). Verifique los datos enviados.'; break;
+             case 401: errorMsg = 'No autorizado (401). Verifique la API Key.'; break;
+             case 403: errorMsg = 'Prohibido (403). No tiene permisos.'; break;
+             case 404: errorMsg = 'Contrato no encontrado (404).'; break;
+             default: errorMsg = err.message || 'Error desconocido.';
+            }
         }
 
         this.alertsService.error(errorMsg);
       }
-    );
+    });
+  }
+
+  openContratoSearch(modalTpl: TemplateRef<any>) {
+    if (!this.selectedSucursalOrigen?.filial?.utilizaApi) return;
+    
+    this.tempContratoSearch = '';
+    this.modalContratoRef = this.modalService.open(modalTpl, { centered: true, size: 'sm' });
+  }
+
+  onAcceptContratoSearch() {
+    if (!this.tempContratoSearch) {
+      this.alertsService.error('Ingrese el número de contrato');
+      return;
+    }
+    this.consultarContrato(this.tempContratoSearch);
   }
 
   addObservacion() {

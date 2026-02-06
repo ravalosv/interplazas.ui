@@ -61,19 +61,37 @@
                     <label class="form-label">Contrato <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <input type="text" class="form-control" formControlName="fo_Contrato" 
+                             [readonly]="selectedSucursalOrigen?.filial?.utilizaApi"
+                             [style.background-color]="selectedSucursalOrigen?.filial?.utilizaApi ? '#e9ecef' : ''"
+                             [style.cursor]="selectedSucursalOrigen?.filial?.utilizaApi ? 'pointer' : 'text'"
+                             (click)="openContratoSearch(modalContratoSearch)"
                              [ngClass]="{'is-invalid': form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)}" />
-                      <button class="btn btn-primary" type="button" 
-                              *ngIf="selectedSucursalOrigen?.filial?.apiUrl"
-                              (click)="consultarContrato()" 
-                              [disabled]="consultandoContrato">
-                          <span *ngIf="consultandoContrato" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                          {{ consultandoContrato ? 'Consultando...' : 'Consultar' }}
-                      </button>
                     </div>
                     <div class="invalid-feedback d-block" *ngIf="form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)">Este campo es requerido</div>
                   </div>
                 </div>
               </div>
+              
+              <ng-template #modalContratoSearch let-modal>
+                <div class="modal-header">
+                  <h5 class="modal-title">Buscar Contrato</h5>
+                  <button type="button" class="btn-close" (click)="modal.close()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <label class="form-label">Ingrese el número de contrato</label>
+                    <input type="text" class="form-control" [(ngModel)]="tempContratoSearch" [ngModelOptions]="{standalone: true}" (keyup.enter)="onAcceptContratoSearch()">
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" (click)="modal.close()">Cerrar</button>
+                  <button type="button" class="btn btn-primary" (click)="onAcceptContratoSearch()" [disabled]="consultandoContrato">
+                    <span *ngIf="consultandoContrato" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    Aceptar
+                  </button>
+                </div>
+              </ng-template>
+
               <div class="row">
                 <div class="col-md-5">
                   <div class="mb-3">
