@@ -4,8 +4,8 @@ export const environment = {
 
   enable_routing_debug: false,
 
-  apiUrl: 'https://eventos.promotorafutura.com/api',
-  fotosUrl: 'https://eventos.promotorafutura.com/api/storage',
+  apiUrl: '/api',
+  fotosUrl: '/api/storage',
 
   user: '',
   pass: '',
