@@ -4,6 +4,7 @@ import { AuthenticationService } from 'src/app/core/services/authentication.serv
 import { FilialService } from 'src/app/core/services/filial.service';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { FilialAdminPayload } from 'src/app/core/interfaces/payloads/filial.payload';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-contratos',
@@ -18,6 +19,9 @@ export class ContratosComponent implements OnInit {
   filiales: FilialAdminPayload[] = [];
   selectedFilialId: number | null = null;
   errorMessage: string | null = null;
+  
+  // Cambiar a false si se desea intentar la conexión directa desde el navegador
+  useProxy: boolean = true; 
 
   constructor(
     private http: HttpClient,
@@ -76,6 +80,35 @@ export class ContratosComponent implements OnInit {
     const contrato = this.contratoInput.trim();
     this.consultando = true;
 
+    if (this.useProxy) {
+      const url = `${environment.apiUrl}/proxy/contrato`;
+      const body = {
+        filialId: filial.id,
+        contrato: contrato
+      };
+
+      this.http.post(url, body).subscribe({
+        next: (res: any) => {
+          this.consultando = false;
+          if (!res.success) {
+            this.errorMessage = res.error || 'Error en la consulta vía Proxy';
+            this.alertsService.error(this.errorMessage!);
+            return;
+          }
+          this.alertsService.success('Consulta exitosa (vía Proxy)');
+          this.resultado = res.data;
+        },
+        error: (err) => {
+          this.consultando = false;
+          console.error('Error Proxy:', err);
+          let errorMsg = err.error?.error || 'Error al consultar mediante Proxy.';
+          this.errorMessage = errorMsg;
+          this.alertsService.error(errorMsg);
+        }
+      });
+      return;
+    }
+
     // Logic adapted from ServicioCrudComponent
     const urlTemplate = filial.apiUrl.trim();
     let url = '';
@@ -109,19 +142,20 @@ export class ContratosComponent implements OnInit {
       },
       error: (err) => {
         this.consultando = false;
-        console.error('Error completo:', err);
+        console.error('Error completo (objeto):', err);
+        console.error('Error stringified:', JSON.stringify(err, null, 2));
         
         let errorMsg = 'Error al consultar el contrato.';
         
         if (err.status === 0) {
-            errorMsg = 'Error de conexión (Status 0). Posibles causas: \n1. Bloqueo CORS.\n2. URL mal formada.\n3. Servidor no disponible.';
+            errorMsg = 'Error de conexión (Status 0). Esto suele deberse a:\n1. Bloqueo de CORS en el servidor destino.\n2. URL inaccesible o servidor caído.\n3. Bloqueo de contenido mixto (HTTPS vs HTTP).\n\nIntente abrir la consola del navegador (F12) -> Network para ver el error real.';
         } else if (err.error && err.error.error) {
             errorMsg = err.error.error;
         } else if (err.error && typeof err.error === 'string') {
             errorMsg = err.error;
         } else {
             switch (err.status) {
-             case 400: errorMsg = 'Error de solicitud (400). Verifique los datos enviados.'; break;
+             case 400: errorMsg = `Error de solicitud (400): ${err.message}`; break;
              case 401: errorMsg = 'No autorizado (401). Verifique la API Key.'; break;
              case 403: errorMsg = 'Prohibido (403). No tiene permisos.'; break;
              case 404: errorMsg = 'Contrato no encontrado (404).'; break;
