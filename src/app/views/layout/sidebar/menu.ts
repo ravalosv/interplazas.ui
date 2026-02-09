@@ -16,7 +16,7 @@ export const MENU_ADMIN: MenuItem[] = [
     label: 'Cédulas',
     icon: 'file-text',
     link: 'operacion/cedulas',
-  },
+  },  
   {
     label: 'Periodos',
     icon: 'activity',
@@ -48,7 +48,7 @@ export const MENU_ADMIN: MenuItem[] = [
 
   // Configuración
   {
-    label: 'Configuración',
+    label: 'Estructura',
     isTitle: true,
   },
 
@@ -66,6 +66,15 @@ export const MENU_ADMIN: MenuItem[] = [
     label: 'Sucursales',
     icon: 'map-pin',
     link: 'config/sucursales-admin',
+  },
+   {
+    label: 'Usuarios',
+    icon: 'users',
+    link: 'config/usuarios',
+  },
+  {
+    label: 'Configuración',
+    isTitle: true,
   },
   {
     label: 'Tipos de documento',
@@ -88,26 +97,21 @@ export const MENU_ADMIN: MenuItem[] = [
     link: 'config/motivo-no-otorgado-admin',
   },
   {
-    label: 'Costos',
-    icon: 'dollar-sign',
-    link: 'config/costos-crud',
-  },
-  {
     label: 'Canales de comunicación',
     icon: 'message-square',
     link: 'config/canales-comunicacion-admin',
   },
- {
-    label: 'Usuarios',
-    icon: 'users',
-    link: 'config/usuarios',
-  },
+
 ];
 
 export const MENU_CLIENTE: MenuItem[] = [
   {
-    label: 'Consultar Contratos',
+    label: 'Contratos',
+    isTitle: true,
+  },
+  {
+    label: 'Consultar',
     icon: 'file-text',
-    link: 'client/contratos',
+    link: 'contratos',
   }
 ];

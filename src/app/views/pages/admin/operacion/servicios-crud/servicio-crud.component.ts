@@ -18,6 +18,7 @@ import { ServicioObservacionService, ServicioObservacionPayload } from 'src/app/
 import { PeriodoService } from 'src/app/core/services/periodo.service';
 import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
 import { environment } from 'src/environments/environment';
+import { ContratoProxyService } from 'src/app/core/services/contrato-proxy.service';
 
 @Component({
   selector: 'app-servicio-crud',
@@ -71,6 +72,8 @@ export class ServicioCrudComponent implements OnInit {
   // Modal Contrato API
   modalContratoRef: NgbModalRef | null = null;
   tempContratoSearch = '';
+  contratoSearchResult: any = null;
+  validatingContrato = false;
 
   months = [
     { id: 1, name: 'ENERO' },
@@ -103,7 +106,8 @@ export class ServicioCrudComponent implements OnInit {
     private fb: FormBuilder,
     private modalService: NgbModal,
     private servicioObservacionService: ServicioObservacionService,
-    private http: HttpClient
+    private http: HttpClient,
+    private contratoProxyService: ContratoProxyService
   ) {}
 
   ngOnInit(): void {
@@ -352,6 +356,24 @@ export class ServicioCrudComponent implements OnInit {
     });
   }
 
+  applyContratoData(data: any) {
+    if (data.saldo !== undefined) {
+      this.form.patchValue({ fori_Saldo_Contrato: data.saldo });
+    }
+
+    if (data.status) {
+      const statusName = data.status.toString().toUpperCase();
+      const foundStatus = this.statuses.find(s => s.nombre && s.nombre.toUpperCase() === statusName);
+      if (foundStatus) {
+        this.form.patchValue({ fori_Status_Contrato_Id: foundStatus.id });
+      }
+    }
+
+    if (data.nombre_titular || data.NombreTitular) {
+        this.form.patchValue({ fo_Nombre_Titular: data.nombre_titular || data.NombreTitular });
+    }
+  }
+
   consultarContrato(contratoManual?: string) {
     if (!this.selectedSucursalOrigen?.filial?.apiUrl) {
       this.alertsService.error('La filial origen no tiene configurada la API URL');
@@ -366,43 +388,18 @@ export class ServicioCrudComponent implements OnInit {
     contrato = contrato.trim();
 
     this.consultandoContrato = true;
-    
-    // Preparar URL y Headers
-    // Aseguramos que no haya espacios en la URL (causa común de errores)
-    const urlTemplate = this.selectedSucursalOrigen.filial.apiUrl.trim();
-    
-    // Si la URL tiene el placeholder {contrato}, lo reemplazamos.
-    // Si no, asumimos que es la base y concatenamos (fallback seguro)
-    let url = '';
-    if (urlTemplate.includes('{contrato}')) {
-        url = urlTemplate.replace('{contrato}', contrato);
-    } else {
-        // Fallback: Si no hay placeholder, construimos la URL estándar /contratos/info/1/CONTRATO
-        // Eliminamos trailing slash si existe para evitar doble //
-        const baseUrl = urlTemplate.replace(/\/$/, '');
-        url = `${baseUrl}/contratos/info/1/${contrato}`;
-    }
 
-    const apiKey = this.selectedSucursalOrigen.filial.apiKey ? this.selectedSucursalOrigen.filial.apiKey.trim() : '';
-
-    console.log(`[ConsultarContrato] URL: ${url}`);
-    console.log(`[ConsultarContrato] API Key presente: ${!!apiKey}`);
-
-    let headers = new HttpHeaders();
-    if (apiKey) {
-      headers = headers.set('api-key', apiKey);
-    }
-
-    this.http.get(url, { headers }).subscribe({
+    // Usar el servicio Proxy unificado
+    this.contratoProxyService.consultarContrato(this.selectedSucursalOrigen.filial.id, contrato).subscribe({
       next: (res: any) => {
         this.consultandoContrato = false;
 
         if (!res.success) {
-          this.alertsService.error(res.error || 'Error en la consulta');
+          this.alertsService.error(res.error || 'Error en la consulta vía Proxy');
           return;
         }
 
-        this.alertsService.success('Consulta exitosa');
+        this.alertsService.success('Consulta exitosa (vía Proxy)');
         
         if (contratoManual) {
           this.form.patchValue({ fo_Contrato: contratoManual });
@@ -413,44 +410,20 @@ export class ServicioCrudComponent implements OnInit {
         }
         
         if (res.data) {
-          if (res.data.saldo !== undefined) {
-            this.form.patchValue({ fori_Saldo_Contrato: res.data.saldo });
-          }
-
-          if (res.data.status) {
-            const statusName = res.data.status.toString().toUpperCase();
-            const foundStatus = this.statuses.find(s => s.nombre && s.nombre.toUpperCase() === statusName);
-            if (foundStatus) {
-              this.form.patchValue({ fori_Status_Contrato_Id: foundStatus.id });
-            }
-          }
-
-          if (res.data.nombre_titular || res.data.NombreTitular) {
-             this.form.patchValue({ fo_Nombre_Titular: res.data.nombre_titular || res.data.NombreTitular });
-          }
+          this.applyContratoData(res.data);
         }
       },
       error: (err) => {
         this.consultandoContrato = false;
-        console.error('Error completo:', err);
+        console.error('Error Proxy:', err);
         
         let errorMsg = 'Error al consultar el contrato.';
-        
-        // Manejo específico de Status 0 (CORS/Red)
-        if (err.status === 0) {
-            errorMsg = 'Error de conexión (Status 0). Posibles causas: \n1. Bloqueo CORS (el servidor Odoo no permite peticiones desde este dominio).\n2. URL mal formada.\n3. Servidor no disponible.\nVerifique la consola para más detalles.';
-        } else if (err.error && err.error.error) {
+        if (err.error && err.error.error) {
             errorMsg = err.error.error;
         } else if (err.error && typeof err.error === 'string') {
             errorMsg = err.error;
         } else {
-            switch (err.status) {
-             case 400: errorMsg = 'Error de solicitud (400). Verifique los datos enviados.'; break;
-             case 401: errorMsg = 'No autorizado (401). Verifique la API Key.'; break;
-             case 403: errorMsg = 'Prohibido (403). No tiene permisos.'; break;
-             case 404: errorMsg = 'Contrato no encontrado (404).'; break;
-             default: errorMsg = err.message || 'Error desconocido.';
-            }
+             errorMsg = err.message || 'Error desconocido en Proxy.';
         }
 
         this.alertsService.error(errorMsg);
@@ -462,7 +435,41 @@ export class ServicioCrudComponent implements OnInit {
     if (!this.selectedSucursalOrigen?.filial?.utilizaApi) return;
     
     this.tempContratoSearch = '';
-    this.modalContratoRef = this.modalService.open(modalTpl, { centered: true, size: 'sm' });
+    this.contratoSearchResult = null;
+    this.modalContratoRef = this.modalService.open(modalTpl, { centered: true, size: 'lg' });
+  }
+
+  validateContratoSearch() {
+    if (!this.selectedSucursalOrigen?.filial?.apiUrl) {
+      this.alertsService.error('La filial origen no tiene configurada la API URL');
+      return;
+    }
+
+    if (!this.tempContratoSearch) {
+      this.alertsService.error('Ingrese un número de contrato para validar');
+      return;
+    }
+
+    const contrato = this.tempContratoSearch.trim();
+    this.validatingContrato = true;
+    this.contratoSearchResult = null;
+
+    this.contratoProxyService.consultarContrato(this.selectedSucursalOrigen.filial.id, contrato).subscribe({
+      next: (res: any) => {
+        this.validatingContrato = false;
+        if (!res.success) {
+           this.alertsService.error(res.error || 'Error en la consulta vía Proxy');
+           return;
+        }
+        this.contratoSearchResult = res.data;
+      },
+      error: (err) => {
+        this.validatingContrato = false;
+        console.error('Error Proxy:', err);
+        let errorMsg = err.error?.error || 'Error al validar contrato.';
+        this.alertsService.error(errorMsg);
+      }
+    });
   }
 
   onAcceptContratoSearch() {
@@ -470,6 +477,18 @@ export class ServicioCrudComponent implements OnInit {
       this.alertsService.error('Ingrese el número de contrato');
       return;
     }
+
+    if (this.contratoSearchResult) {
+      this.form.patchValue({ fo_Contrato: this.tempContratoSearch });
+      this.applyContratoData(this.contratoSearchResult);
+      
+      if (this.modalContratoRef) {
+        this.modalContratoRef.close();
+        this.modalContratoRef = null;
+      }
+      return;
+    }
+
     this.consultarContrato(this.tempContratoSearch);
   }
 

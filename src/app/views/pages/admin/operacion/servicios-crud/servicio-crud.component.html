@@ -80,14 +80,43 @@
                 <div class="modal-body">
                   <div class="mb-3">
                     <label class="form-label">Ingrese el número de contrato</label>
-                    <input type="text" class="form-control" [(ngModel)]="tempContratoSearch" [ngModelOptions]="{standalone: true}" (keyup.enter)="onAcceptContratoSearch()">
+                    <div class="input-group">
+                      <input type="text" class="form-control" [(ngModel)]="tempContratoSearch" [ngModelOptions]="{standalone: true}" (keyup.enter)="validateContratoSearch()" (ngModelChange)="contratoSearchResult = null">
+                      <button class="btn btn-outline-secondary" type="button" (click)="validateContratoSearch()" [disabled]="validatingContrato">
+                        Validar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div *ngIf="contratoSearchResult" class="mt-4">
+                    <h5 class="mb-3">Resultados de la consulta</h5>
+                    
+                    <div class="row">
+                      <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Servicio:</label>
+                        <p class="h5">
+                          <span class="badge" [ngClass]="{'bg-danger': !contratoSearchResult.otorgar_servicio, 'bg-success': contratoSearchResult.otorgar_servicio}">
+                            {{ contratoSearchResult.otorgar_servicio ? 'Otorgar servicio' : 'No otorgar servicio' }}
+                          </span>
+                        </p>
+                      </div>
+                      <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Estatus:</label>
+                        <p class="h5">
+                          <span class="badge bg-info">{{ contratoSearchResult.status || 'N/A' }}</span>
+                        </p>
+                      </div>
+                      <div class="col-md-4 mb-3">
+                        <label class="fw-bold">Saldo:</label>
+                        <p class="h5 text-success">{{ contratoSearchResult.saldo | currency:'USD':'symbol':'1.2-2' }}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-secondary" (click)="modal.close()">Cerrar</button>
-                  <button type="button" class="btn btn-primary" (click)="onAcceptContratoSearch()" [disabled]="consultandoContrato">
-                    <span *ngIf="consultandoContrato" class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                    Aceptar
+                  <button type="button" class="btn btn-primary" (click)="onAcceptContratoSearch()" [disabled]="!contratoSearchResult">
+                    Usar
                   </button>
                 </div>
               </ng-template>

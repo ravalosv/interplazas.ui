@@ -50,8 +50,12 @@
           
           <div class="row">
             <div class="col-md-4 mb-3">
-              <label class="fw-bold">Titular:</label>
-              <p class="h5">{{ resultado.nombre_titular || resultado.NombreTitular || 'N/A' }}</p>
+              <label class="fw-bold">Servicio:</label>
+              <p class="h5">
+                <span class="badge" [ngClass]="{'bg-danger': !resultado.otorgar_servicio, 'bg-success': resultado.otorgar_servicio}">
+                  {{ resultado.otorgar_servicio ? 'Otorgar servicio' : 'No otorgar servicio' }}
+                </span>
+              </p>
             </div>
             <div class="col-md-4 mb-3">
               <label class="fw-bold">Estatus:</label>
@@ -64,20 +68,6 @@
               <p class="h5 text-success">{{ resultado.saldo | currency:'USD':'symbol':'1.2-2' }}</p>
             </div>
           </div>
-
-          <div class="mt-3">
-             <p>
-                <button class="btn btn-link p-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJson" aria-expanded="false" aria-controls="collapseJson">
-                  Ver detalles técnicos (JSON)
-                </button>
-              </p>
-              <div class="collapse" id="collapseJson">
-                <div class="card card-body bg-light">
-                  <pre>{{ resultado | json }}</pre>
-                </div>
-              </div>
-          </div>
-
         </div>
 
       </div>
