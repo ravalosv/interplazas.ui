@@ -77,9 +77,6 @@
   [(nzVisible)]="isVisible"
   [nzTitle]="modalTitle"
   (nzOnCancel)="handleCancel()"
-  (nzOnOk)="handleOk()"
-  [nzOkLoading]="isOkLoading"
-  [nzOkDisabled]="editDisabled"
   nzWidth="800px"
 >
   <ng-container *nzModalContent>
@@ -199,4 +196,8 @@
 
     </form>
   </ng-container>
+  <div *nzModalFooter>
+    <button nz-button nzType="default" (click)="handleCancel()">Cancelar</button>
+    <button nz-button nzType="primary" (click)="handleOk()" [appLoading]="isOkLoading" [disabled]="editDisabled">Aceptar</button>
+  </div>
 </nz-modal>
