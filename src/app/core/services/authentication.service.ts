@@ -96,7 +96,12 @@ export class AuthenticationService {
 
   isAdmin() {
     const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
-    return userRoles == 1;
+    return userRoles == 1 || userRoles == 3;
+  }
+
+  isCaptura() {
+    const userRoles = this.decodedToken.tipoUsuarioId;
+    return userRoles == 4;
   }
 
 

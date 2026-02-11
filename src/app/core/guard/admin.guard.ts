@@ -23,7 +23,7 @@ export class AdminGuard implements CanActivate {
     console.groupEnd(); */
 
     if (this.authService.loggedIn()) {
-      if (this.authService.isAdmin()) {
+      if (this.authService.isAdmin() || this.authService.isCaptura()) {
         return true;
       } else if (this.authService.isFilial()) {
         this.router.navigate(['/client/contratos']);

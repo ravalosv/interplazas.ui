@@ -11,7 +11,7 @@ import { DOCUMENT } from '@angular/common';
 
 import MetisMenu from 'metismenujs';
 
-import { MENU_ADMIN, MENU_CLIENTE } from './menu';
+import { MENU_ADMIN, MENU_CLIENTE, MENU_SUPER_ADMIN, MENU_CAPTURA } from './menu';
 import { MenuItem } from './menu.model';
 import { Router, NavigationEnd } from '@angular/router';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
@@ -54,6 +54,10 @@ export class SidebarComponent implements OnInit, AfterViewInit {
     this.authService.currentUser.subscribe((user) => {
       if (user?.user.tipoUsuarioId == 1) {
         this.menuItems = MENU_ADMIN;
+      } else if (user?.user.tipoUsuarioId == 3) {
+        this.menuItems = MENU_SUPER_ADMIN;
+      } else if (user?.user.tipoUsuarioId == 4) {
+        this.menuItems = MENU_CAPTURA;
       } else {
         this.menuItems = MENU_CLIENTE;
       }

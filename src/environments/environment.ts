@@ -27,7 +27,7 @@ export const environment = {
 
   /*   user: 'admin_dev',
   pass: 'admindev.123', */
-  user: 'admin@admin.com',
+  user: 'super@admin.com',
   pass: 'admin',
   theme: 'ocean',
   appVersion: '2026.02.10.02',
