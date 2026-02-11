@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CedulaService } from 'src/app/core/services/cedula.service';
 import { AlertsService } from 'src/app/core/services/alerts.service';
+import { CedulaExcelService } from 'src/app/core/services/cedula-excel.service';
 import { CedulaPayload, CedulaDetallePayload } from 'src/app/core/interfaces/payloads/cedula.payload';
 
 @Component({
@@ -12,6 +13,7 @@ import { CedulaPayload, CedulaDetallePayload } from 'src/app/core/interfaces/pay
 export class CedulaDetalleComponent implements OnInit {
   cedula: CedulaPayload | null = null;
   loading = false;
+  exporting = false;
   searchTermFavor = '';
   searchTermPagar = '';
   searchTermUSA = '';
@@ -20,7 +22,8 @@ export class CedulaDetalleComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private cedulaService: CedulaService,
-    private alertsService: AlertsService
+    private alertsService: AlertsService,
+    private cedulaExcelService: CedulaExcelService
   ) {}
 
   ngOnInit(): void {
@@ -163,7 +166,21 @@ export class CedulaDetalleComponent implements OnInit {
 
   exportExcel() {
     if (!this.cedula) return;
-    this.cedulaService.exportExcel(this.cedula.id);
+    this.exporting = true;
+    this.cedulaService.getById(this.cedula.id).subscribe({
+      next: (ret) => {
+        this.exporting = false;
+        if (ret.success) {
+          this.cedulaExcelService.generateExcel(ret.data);
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.exporting = false;
+        this.alertsService.error(e.error);
+      }
+    });
   }
 }
 

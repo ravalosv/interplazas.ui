@@ -21,7 +21,7 @@
       <strong>Filial:</strong> {{ cedula.filialNombre }}
     </div>
     <div class="col-md-6 text-end">
-      <button nz-button nzType="primary" class="me-2" (click)="exportExcel()">
+      <button nz-button nzType="primary" class="me-2" (click)="exportExcel()" [appLoading]="exporting">
         Exportar Excel
       </button>
       <button nz-button nzType="default" (click)="regresar()">

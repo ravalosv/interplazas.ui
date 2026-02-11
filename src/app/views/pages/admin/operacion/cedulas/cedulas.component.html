@@ -42,7 +42,7 @@
         nz-button 
         nzType="primary" 
         (click)="exportarTodo()" 
-        [nzLoading]="exporting" 
+        [appLoading]="exporting" 
         [disabled]="!selectedPeriodoId || cedulas.length === 0"
       >
         <i nz-icon nzType="download"></i> Exportar Cédulas

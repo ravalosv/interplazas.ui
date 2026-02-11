@@ -14,7 +14,8 @@ export class PeriodosComponent implements OnInit {
   periodos: PeriodoPayload[] = [];
   displayPeriodos: PeriodoPayload[] = [];
   loading = false;
-  generatingEC = false;
+  processingId: number | null = null;
+  processingAction: 'close' | 'open' | 'cedulas' | 'ec' | null = null;
 
   constructor(
     private periodoService: PeriodoService,
@@ -51,8 +52,12 @@ export class PeriodosComponent implements OnInit {
       titulo: 'Cerrar Periodo',
       message: `¿Está seguro de cerrar el periodo ${periodo.nombre}? Esta acción impedirá modificaciones en los servicios de este periodo.`,
       okCallback: () => {
+        this.processingId = periodo.id;
+        this.processingAction = 'close';
         this.periodoService.cerrar(periodo.id).subscribe({
           next: (ret) => {
+            this.processingId = null;
+            this.processingAction = null;
             if (ret.success) {
               this.alertsService.success('Periodo cerrado exitosamente');
               this.loadPeriodos();
@@ -60,7 +65,11 @@ export class PeriodosComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e.error),
+          error: (e) => {
+            this.processingId = null;
+            this.processingAction = null;
+            this.alertsService.error(e.error);
+          },
         });
       },
     });
@@ -79,8 +88,12 @@ export class PeriodosComponent implements OnInit {
       titulo: 'Abrir Periodo',
       message: message,
       okCallback: () => {
+        this.processingId = periodo.id;
+        this.processingAction = 'open';
         this.periodoService.abrir(periodo.id).subscribe({
           next: (ret) => {
+            this.processingId = null;
+            this.processingAction = null;
             if (ret.success) {
               this.alertsService.success('Periodo abierto exitosamente');
               this.loadPeriodos();
@@ -88,7 +101,11 @@ export class PeriodosComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e.error),
+          error: (e) => {
+            this.processingId = null;
+            this.processingAction = null;
+            this.alertsService.error(e.error);
+          },
         });
       },
     });
@@ -99,10 +116,12 @@ export class PeriodosComponent implements OnInit {
       titulo: 'Generar Cédulas',
       message: `¿Desea generar las cédulas para el periodo ${periodo.nombre}?`,
       okCallback: () => {
-        this.loading = true;
+        this.processingId = periodo.id;
+        this.processingAction = 'cedulas';
         this.periodoService.generarCedulas(periodo.anio, periodo.mes).subscribe({
           next: (ret) => {
-            this.loading = false;
+            this.processingId = null;
+            this.processingAction = null;
             if (ret.success) {
               this.alertsService.success('Cédulas generadas exitosamente');
               this.loadPeriodos();
@@ -111,7 +130,8 @@ export class PeriodosComponent implements OnInit {
             }
           },
           error: (e) => {
-            this.loading = false;
+            this.processingId = null;
+            this.processingAction = null;
             this.alertsService.error(e.error);
           },
         });
@@ -139,10 +159,12 @@ export class PeriodosComponent implements OnInit {
       titulo: 'Generar Estado de Cuenta',
       message: `¿Está seguro de generar el estado de cuenta para el periodo ${periodo.nombre}? Esta acción no se puede deshacer.`,
       okCallback: () => {
-        this.generatingEC = true;
+        this.processingId = periodo.id;
+        this.processingAction = 'ec';
         this.estadoCuentaService.generar(periodo.id).subscribe({
           next: (ret) => {
-            this.generatingEC = false;
+            this.processingId = null;
+            this.processingAction = null;
             if (ret.success) {
               this.alertsService.success(ret.data.message);
               this.loadPeriodos(); // Recargar para actualizar estado
@@ -151,7 +173,8 @@ export class PeriodosComponent implements OnInit {
             }
           },
           error: (e) => {
-            this.generatingEC = false;
+            this.processingId = null;
+            this.processingAction = null;
             this.alertsService.error(e.error);
           },
         });

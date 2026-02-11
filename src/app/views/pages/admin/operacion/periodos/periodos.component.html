@@ -35,14 +35,14 @@
           </span>
         </td>
         <td>
-          <button *ngIf="p.activo" nz-button nzType="default" class="me-2" (click)="cerrarPeriodo(p)" title="Cerrar Periodo">
+          <button *ngIf="p.activo" nz-button nzType="default" class="me-2" (click)="cerrarPeriodo(p)" title="Cerrar Periodo" [appLoading]="processingId === p.id && processingAction === 'close'">
             <i class="feather icon-lock me-2"></i> Cerrar
           </button>
-          <button *ngIf="!p.activo" nz-button nzType="primary" (click)="abrirPeriodo(p)" title="Abrir Periodo">
+          <button *ngIf="!p.activo" nz-button nzType="primary" (click)="abrirPeriodo(p)" title="Abrir Periodo" [appLoading]="processingId === p.id && processingAction === 'open'">
             <i class="feather icon-unlock me-2"></i> Abrir
           </button>
           
-          <button nz-button nzType="default" class="ms-2" (click)="generarCedulas(p)" [disabled]="p.cedulas && p.cedulas.length > 0" title="Generar Cédulas">
+          <button nz-button nzType="default" class="ms-2" (click)="generarCedulas(p)" [disabled]="p.cedulas && p.cedulas.length > 0" title="Generar Cédulas" [appLoading]="processingId === p.id && processingAction === 'cedulas'">
             <i class="feather icon-file-text me-2"></i> {{ (p.cedulas && p.cedulas.length > 0) ? 'Cédulas generadas' : 'Generar cédulas' }}
           </button>
 
@@ -54,7 +54,7 @@
             (click)="generarEstadoCuenta(p)" 
             title="Generar Estado de Cuenta"
             [disabled]="p.estadoCuentaGenerado || !p.cedulas || p.cedulas.length === 0"
-            [nzLoading]="generatingEC"
+            [appLoading]="processingId === p.id && processingAction === 'ec'"
           >
             <i class="feather icon-audit me-2"></i> {{ p.estadoCuentaGenerado ? 'EC Generado' : 'Generar EC' }}
           </button>

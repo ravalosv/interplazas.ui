@@ -618,7 +618,7 @@
           <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
             Editar
           </button>
-          <button nz-button nzType="default" nzDanger (click)="onDelete(item.id)" [nzLoading]="loadingDeleteId === item.id">Eliminar</button>
+          <button nz-button nzType="default" nzDanger (click)="onDelete(item.id)" [appLoading]="loadingDeleteId === item.id">Eliminar</button>
         </td>
       </tr>
     </tbody>
