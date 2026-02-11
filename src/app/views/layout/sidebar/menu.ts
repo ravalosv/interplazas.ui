@@ -99,7 +99,7 @@ export const MENU_SUPER_ADMIN: MenuItem[] = [
   {
     label: 'Canales de comunicación',
     icon: 'message-square',
-    link: 'config/canal-comunicacion-admin',
+    link: 'config/canales-comunicacion-admin',
   },
 ];
 
@@ -182,7 +182,7 @@ export const MENU_ADMIN: MenuItem[] = [
   {
     label: 'Canales de comunicación',
     icon: 'message-square',
-    link: 'config/canal-comunicacion-admin',
+    link: 'config/canales-comunicacion-admin',
   },
 ];
 
