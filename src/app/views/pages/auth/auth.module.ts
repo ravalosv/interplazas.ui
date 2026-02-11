@@ -28,8 +28,10 @@ const routes: Routes = [
   },
 ];
 
+import { SharedModule } from '../../../shared/shared.module';
+
 @NgModule({
   declarations: [LoginComponent, RegisterComponent, AuthComponent],
-  imports: [CommonModule, ReactiveFormsModule, RouterModule.forChild(routes)],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule.forChild(routes), SharedModule],
 })
 export class AuthModule {}

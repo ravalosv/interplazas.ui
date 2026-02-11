@@ -27,6 +27,7 @@ import { ContratoProxyService } from 'src/app/core/services/contrato-proxy.servi
 })
 export class ServicioCrudComponent implements OnInit {
   loading = false;
+  isSaving = false;
   servicios: ServicioPayload[] = [];
   displayServicios: ServicioPayload[] = [];
   searchTerm = '';
@@ -56,6 +57,9 @@ export class ServicioCrudComponent implements OnInit {
   observaciones: ServicioObservacionPayload[] = [];
   nuevaObservacion = '';
   loadingObservaciones = false;
+  loadingPenalizado = false;
+  processingField: string | null = null;
+  loadingDeleteId: number | null = null;
 
   form!: FormGroup;
   editingId: number | null = null;
@@ -612,7 +616,8 @@ export class ServicioCrudComponent implements OnInit {
                 this.form.patchValue({ [fieldName]: null });
                 this.loadServicios();
               }
-            }
+            },
+            error: () => this.processingField = null
           });
         }
       });
@@ -692,6 +697,7 @@ export class ServicioCrudComponent implements OnInit {
         return;
       }
 
+      this.loading = true;
       this.executeChangePeriod(this.changePeriodoId, modal);
     }
   }
@@ -757,8 +763,10 @@ export class ServicioCrudComponent implements OnInit {
         }
       });
 
+      this.isSaving = true;
       this.servicioService.create(formData).subscribe({
         next: (ret) => {
+          this.isSaving = false;
           if (ret.success) {
             this.alertsService.success('Servicio creado');
             this.loadServicios();
@@ -772,11 +780,16 @@ export class ServicioCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e.error),
+        error: (e) => {
+          this.isSaving = false;
+          this.alertsService.error(e.error);
+        },
       });
     } else {
+      this.isSaving = true;
       this.servicioService.update(this.editingId, finalPayload).subscribe({
         next: (ret) => {
+          this.isSaving = false;
           if (ret.success) {
             this.alertsService.success('Servicio actualizado');
             this.loadServicios();
@@ -790,7 +803,10 @@ export class ServicioCrudComponent implements OnInit {
             this.alertsService.error(ret.error);
           }
         },
-        error: (e) => this.alertsService.error(e.error),
+        error: (e) => {
+          this.isSaving = false;
+          this.alertsService.error(e.error);
+        },
       });
     }
   }
@@ -800,8 +816,10 @@ export class ServicioCrudComponent implements OnInit {
       titulo: '¿Está seguro de eliminar este servicio?',
       message: 'Esta acción no se puede deshacer',
       okCallback: () => {
+        this.loadingDeleteId = id;
         this.servicioService.delete(id).subscribe({
           next: (ret) => {
+            this.loadingDeleteId = null;
             if (ret.success) {
               this.alertsService.success('Servicio eliminado');
               this.loadServicios();
@@ -809,7 +827,10 @@ export class ServicioCrudComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e.error),
+          error: (e) => {
+            this.loadingDeleteId = null;
+            this.alertsService.error(e.error);
+          },
         });
       },
     });
@@ -828,8 +849,10 @@ export class ServicioCrudComponent implements OnInit {
       titulo,
       message,
       okCallback: () => {
+        this.loadingPenalizado = true;
         this.servicioService.updatePenalizado(this.editingId!, nuevoEstado).subscribe({
           next: (ret) => {
+            this.loadingPenalizado = false;
             if (ret.success) {
               this.isPenalizado = nuevoEstado;
               this.alertsService.success(`Servicio ${this.isPenalizado ? 'penalizado' : 'despenalizado'} exitosamente`);
@@ -838,7 +861,10 @@ export class ServicioCrudComponent implements OnInit {
               this.alertsService.error(ret.error);
             }
           },
-          error: (e) => this.alertsService.error(e.error),
+          error: (e) => {
+            this.loadingPenalizado = false;
+            this.alertsService.error(e.error);
+          },
         });
       },
     });

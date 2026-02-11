@@ -17,6 +17,7 @@ import { environment } from 'src/environments/environment';
 export class LoginComponent implements OnInit {
   loginForm: UntypedFormGroup;
   returnUrl: any;
+  isLoading = false;
 
   private isUsernameValid = true;
   private isPasswordValid = true;
@@ -61,8 +62,10 @@ export class LoginComponent implements OnInit {
     const email = this.loginForm.get('email')!.value;
     const password = this.loginForm.get('password')!.value;
 
+    this.isLoading = true;
     this.authService.login(email, password).subscribe({
       next: (ret) => {
+        this.isLoading = false;
         if (ret.success) {
           this.alertsService.success('Bienvenido!');
 

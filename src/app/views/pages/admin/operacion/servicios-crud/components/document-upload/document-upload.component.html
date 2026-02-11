@@ -10,7 +10,7 @@
       accept=".pdf,image/*"
     />
     
-    <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerUpload(fileInput)">
+    <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerUpload(fileInput)" [appLoading]="loading">
       <i class="feather icon-upload"></i> {{ hasFile ? 'Cambiar' : 'Cargar documento' }}
     </button>
 
@@ -20,6 +20,7 @@
       (click)="view.emit()"
       *ngIf="hasFile"
       title="Ver documento"
+      [disabled]="loading"
     >
       <i class="feather icon-eye"></i> Ver documento
     </button>
@@ -30,6 +31,7 @@
       (click)="delete.emit()"
       *ngIf="hasFile"
       title="Eliminar documento"
+      [appLoading]="loading"
     >
       <i class="feather icon-trash-2"></i>
     </button>

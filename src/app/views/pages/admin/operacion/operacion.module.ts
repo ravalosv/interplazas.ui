@@ -15,6 +15,7 @@ import { OperacionRoutingModule } from './operacion-routing.module';
 import { WebdatarocksPivotModule } from '@webdatarocks/ngx-webdatarocks';
 import { EstadoCuentaDetalladoComponent } from './estado-cuenta-detallado/estado-cuenta-detallado.component';
 import { DocumentUploadComponent } from './servicios-crud/components/document-upload/document-upload.component';
+import { SharedModule } from 'src/app/shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -36,6 +37,7 @@ import { DocumentUploadComponent } from './servicios-crud/components/document-up
     NgbModule,
     NgZorroModule,
     WebdatarocksPivotModule,
+    SharedModule
   ],
 })
 export class OperacionModule {
