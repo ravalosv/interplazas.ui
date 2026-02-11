@@ -30,7 +30,7 @@ export const environment = {
   user: 'admin@admin.com',
   pass: 'admin',
   theme: 'ocean',
-  appVersion: '2026.02.10.01',
+  appVersion: '2026.02.10.02',
 };
 
 /*
