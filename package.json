@@ -1,6 +1,6 @@
 {
   "name": "servicios-cci-ui",
-  "version": "2.1.0",
+  "version": "2026.02.10.01",
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
