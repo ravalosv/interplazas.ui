@@ -138,11 +138,11 @@ export class UsuariosNewComponent implements OnInit {
   }
 
   setupTipoUsuarioWatcher() {
-    const control = this.form.get('tipoUsuarioId');
-    control?.valueChanges.subscribe((val: any) => {
+    const handler = (val: any) => {
+      const filialCtrl = this.form.get('filialId');
       const isEmpty =
         val === null || val === undefined || val === '' || isNaN(Number(val));
-      const filialCtrl = this.form.get('filialId');
+
       if (isEmpty) {
         this.mostrarFilial = false;
         filialCtrl?.setValue(null);
@@ -150,41 +150,25 @@ export class UsuariosNewComponent implements OnInit {
         filialCtrl?.updateValueAndValidity();
         return;
       }
-      const isAdmin = Number(val) === 1;
-      this.mostrarFilial = !isAdmin;
-      if (isAdmin) {
+
+      const isFilial = Number(val) === 2;
+      this.mostrarFilial = isFilial;
+
+      if (isFilial) {
+        filialCtrl?.setValidators([Validators.required]);
+        filialCtrl?.updateValueAndValidity();
+      } else {
         filialCtrl?.setValue(null);
         filialCtrl?.clearValidators();
         filialCtrl?.updateValueAndValidity();
-      } else {
-        filialCtrl?.setValidators([Validators.required]);
-        filialCtrl?.updateValueAndValidity();
       }
-    });
+    };
+
+    const control = this.form.get('tipoUsuarioId');
+    control?.valueChanges.subscribe(handler);
+
     const initialVal = control?.value;
-    const filialCtrl = this.form.get('filialId');
-    const initialIsEmpty =
-      initialVal === null ||
-      initialVal === undefined ||
-      initialVal === '' ||
-      isNaN(Number(initialVal));
-    if (initialIsEmpty) {
-      this.mostrarFilial = false;
-      filialCtrl?.setValue(null);
-      filialCtrl?.clearValidators();
-      filialCtrl?.updateValueAndValidity();
-    } else {
-      const isAdmin = Number(initialVal) === 1;
-      this.mostrarFilial = !isAdmin;
-      if (isAdmin) {
-        filialCtrl?.setValue(null);
-        filialCtrl?.clearValidators();
-        filialCtrl?.updateValueAndValidity();
-      } else {
-        filialCtrl?.setValidators([Validators.required]);
-        filialCtrl?.updateValueAndValidity();
-      }
-    }
+    handler(initialVal);
   }
 
   loadTiposUsuario() {
