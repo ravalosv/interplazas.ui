@@ -47,5 +47,11 @@ export const AdminLayout_ROUTES: Routes = [
       },
     ],
   },
-
+  {
+    path: 'contratos',
+    loadChildren: () =>
+      import('../../views/pages/client/contratos/contratos.module').then(
+        (m) => m.ContratosModule
+      ),
+  },
 ];
