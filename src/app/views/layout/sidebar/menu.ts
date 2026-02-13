@@ -22,7 +22,16 @@ export const MENU_SUPER_ADMIN: MenuItem[] = [
     icon: 'activity',
     link: 'operacion/periodos',
   },
-
+  // Herramientas
+  {
+    label: 'Herramientas',
+    isTitle: true,
+  },
+  {
+    label: 'Consultar Contratos',
+    icon: 'file-text',
+    link: 'contratos',
+  },
     // Configuración
   {
     label: 'Estado de cuenta',
@@ -126,6 +135,16 @@ export const MENU_ADMIN: MenuItem[] = [
     link: 'operacion/periodos',
   },
 
+    // Herramientas
+  {
+    label: 'Herramientas',
+    isTitle: true,
+  },
+  {
+    label: 'Consultar Contratos',
+    icon: 'file-text',
+    link: 'contratos',
+  },
     // Configuración
   {
     label: 'Estado de cuenta',
@@ -196,7 +215,17 @@ export const MENU_CAPTURA: MenuItem[] = [
     label: 'Servicios',
     icon: 'activity',
     link: 'operacion/servicios',
-  }
+  },
+    // Herramientas
+  {
+    label: 'Herramientas',
+    isTitle: true,
+  },
+  {
+    label: 'Consultar Contratos',
+    icon: 'file-text',
+    link: 'contratos',
+  },
 ];
 
 export const MENU_CLIENTE: MenuItem[] = [
@@ -205,7 +234,7 @@ export const MENU_CLIENTE: MenuItem[] = [
     isTitle: true,
   },
   {
-    label: 'Consultar',
+    label: 'Consultar Contratos',
     icon: 'file-text',
     link: 'contratos',
   }

@@ -75,6 +75,7 @@ export class ServicioCrudComponent implements OnInit {
   
   // Modal Contrato API
   modalContratoRef: NgbModalRef | null = null;
+  contractSearchFilialId: number | null = null;
   tempContratoSearch = '';
   contratoSearchResult: any = null;
   validatingContrato = false;
@@ -119,6 +120,12 @@ export class ServicioCrudComponent implements OnInit {
     this.initForm();
     this.loadCatalogs();
     this.loadPeriodos();
+  }
+
+  get isPeriodoClosed(): boolean {
+    if (this.selectedPeriodoId == null) return false;
+    const p = this.periodos.find(x => x.id === this.selectedPeriodoId);
+    return p ? !p.activo : false;
   }
  
 
@@ -304,6 +311,10 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   openCreate(modalTpl: TemplateRef<any>) {
+    if (this.isPeriodoClosed) {
+      this.alertsService.warning('No se pueden agregar servicios a un periodo cerrado.');
+      return;
+    }
     this.editingId = null;
     this.initForm(); // Reset to defaults
     this.activeTab = 2;
@@ -357,7 +368,22 @@ export class ServicioCrudComponent implements OnInit {
       exp_Motivo_De_No_Otorgado_Id: item.exp_Motivo_De_No_Otorgado_Id,
       exp_Expediente_Completo: item.exp_Expediente_Completo,
       exp_Observaciones_cierre: item.exp_Observaciones_cierre,
+      exp_ine_responsable_url: item.exp_ine_responsable_url,
+      exp_comprobante_domicilio_resp_url: item.exp_comprobante_domicilio_resp_url,
+      exp_ine_aval_url: item.exp_ine_aval_url,
+      fori_estado_cuenta_url: item.fori_estado_cuenta_url
     });
+
+    if (this.isPeriodoClosed) {
+      this.form.disable();
+    } else {
+      this.form.enable();
+      this.setupConditionalValidation();
+      if (!this.form.get('fori_Acepta_Convenio')?.value) {
+        this.form.get('fo_Contrato_Monto_Convenio')?.disable();
+      }
+    }
+
     this.observaciones = [];
     this.nuevaObservacion = '';
     this.loadObservaciones(item.id);
@@ -398,6 +424,28 @@ export class ServicioCrudComponent implements OnInit {
 
     if (data.nombre_titular || data.NombreTitular) {
         this.form.patchValue({ fo_Nombre_Titular: data.nombre_titular || data.NombreTitular });
+    }
+  }
+
+  openBusquedaContrato(modalTpl: TemplateRef<any>) {
+    if (this.selectedSucursalOrigen?.filialId) {
+      this.contractSearchFilialId = this.selectedSucursalOrigen.filialId;
+      this.modalService.open(modalTpl, { 
+        centered: true, 
+        size: 'xl',
+        backdropClass: 'blur-backdrop',
+        windowClass: 'top-modal'
+      });
+    }
+  }
+
+  onContratoSelected(event: { contrato: string, data: any }, modal: any) {
+    if (event && event.contrato) {
+      this.form.patchValue({ fo_Contrato: event.contrato });
+      if (event.data) {
+        this.applyContratoData(event.data);
+      }
+      modal.close();
     }
   }
 
@@ -549,6 +597,10 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   onDeleteObservacion(item: ServicioObservacionPayload) {
+    if (this.isPeriodoClosed) {
+      this.alertsService.warning('No se pueden eliminar observaciones en un periodo cerrado.');
+      return;
+    }
     if (!this.editingId) {
       return;
     }
@@ -678,6 +730,10 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   saveChangePeriod(modal: any) {
+    if (this.isPeriodoClosed) {
+      this.alertsService.warning('No se puede cambiar el periodo de un servicio en un periodo cerrado.');
+      return;
+    }
     if (!this.editingId) return;
 
     if (this.createPeriodMode) {
@@ -747,6 +803,11 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   save(cerrar: boolean) {
+    if (this.isPeriodoClosed) {
+      this.alertsService.warning('No se pueden guardar cambios en un periodo cerrado.');
+      return;
+    }
+
     if (this.form.invalid) {
       Object.values(this.form.controls).forEach((c) => c.markAsTouched());
       this.alertsService.error('Por favor complete los campos requeridos');
@@ -860,6 +921,11 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   togglePenalizado() {
+    if (this.isPeriodoClosed) {
+      this.alertsService.warning('No se puede modificar el estado penalizado en un periodo cerrado.');
+      return;
+    }
+
     if (!this.editingId) {
       return;
     }

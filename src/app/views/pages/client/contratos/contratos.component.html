@@ -1,4 +1,4 @@
-<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin">
+<div class="d-flex justify-content-between align-items-center flex-wrap grid-margin" *ngIf="!isModal">
   <div>
     <h4 class="mb-3 mb-md-0">Contratos</h4>
   </div>
@@ -19,7 +19,8 @@
                          bindLabel="nombre" 
                          bindValue="id" 
                          placeholder="Seleccione una filial"
-                         [(ngModel)]="selectedFilialId">
+                         [(ngModel)]="selectedFilialId"
+                         [disabled]="isModal">
               </ng-select>
               <small *ngIf="filiales.length === 0" class="text-muted">Cargando filiales...</small>
             </div>
@@ -34,6 +35,11 @@
                 </button>
                 <button class="btn btn-secondary" type="button" (click)="limpiar()" [disabled]="consultando">
                   Limpiar
+                </button>
+                <button class="btn btn-success" type="button" 
+                        *ngIf="isModal && resultado" 
+                        (click)="usarContrato()">
+                  Usar
                 </button>
               </div>
             </div>

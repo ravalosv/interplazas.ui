@@ -19,6 +19,7 @@ const routes: Routes = [
     FormsModule,
     NgSelectModule,
     RouterModule.forChild(routes)
-  ]
+  ],
+  exports: [ContratosComponent]
 })
 export class ContratosModule { }

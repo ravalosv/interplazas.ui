@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { AuthenticationService } from 'src/app/core/services/authentication.service';
 import { FilialService } from 'src/app/core/services/filial.service';
@@ -13,6 +13,9 @@ import { ContratoProxyService } from 'src/app/core/services/contrato-proxy.servi
   styleUrls: ['./contratos.component.scss']
 })
 export class ContratosComponent implements OnInit {
+  @Input() isModal: boolean = false;
+  @Input() initialFilialId: number | null = null;
+  @Output() contractSelected = new EventEmitter<{ contrato: string, data: any }>();
 
   contratoInput: string = '';
   consultando: boolean = false;
@@ -39,6 +42,13 @@ export class ContratosComponent implements OnInit {
         if (res.success && res.data) {
           // Filtrar filiales que tienen API configurada (requerimiento explícito)
           this.filiales = res.data.filter(f => f.utilizaApi === true);
+          
+          if (this.initialFilialId) {
+            const exists = this.filiales.find(f => f.id === this.initialFilialId);
+            if (exists) {
+              this.selectedFilialId = this.initialFilialId;
+            }
+          }
         } else {
           this.alertsService.error('No se pudo cargar el listado de filiales.');
         }
@@ -110,6 +120,15 @@ export class ContratosComponent implements OnInit {
     this.errorMessage = null;
     // Opcional: limpiar filial seleccionada
     // this.selectedFilialId = null;
+  }
+
+  usarContrato() {
+    if (this.resultado && this.contratoInput) {
+      this.contractSelected.emit({
+        contrato: this.contratoInput,
+        data: this.resultado
+      });
+    }
   }
 
 }

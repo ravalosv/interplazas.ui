@@ -16,6 +16,7 @@ import { WebdatarocksPivotModule } from '@webdatarocks/ngx-webdatarocks';
 import { EstadoCuentaDetalladoComponent } from './estado-cuenta-detallado/estado-cuenta-detallado.component';
 import { DocumentUploadComponent } from './servicios-crud/components/document-upload/document-upload.component';
 import { SharedModule } from 'src/app/shared/shared.module';
+import { ContratosModule } from '../../client/contratos/contratos.module';
 
 @NgModule({
   declarations: [
@@ -37,7 +38,8 @@ import { SharedModule } from 'src/app/shared/shared.module';
     NgbModule,
     NgZorroModule,
     WebdatarocksPivotModule,
-    SharedModule
+    SharedModule,
+    ContratosModule
   ],
 })
 export class OperacionModule {

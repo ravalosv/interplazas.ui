@@ -10,7 +10,7 @@
       accept=".pdf,image/*"
     />
     
-    <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerUpload(fileInput)" [appLoading]="loading">
+    <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerUpload(fileInput)" [appLoading]="loading" [disabled]="disabled">
       <i class="feather icon-upload"></i> {{ hasFile ? 'Cambiar' : 'Cargar documento' }}
     </button>
 
@@ -32,6 +32,7 @@
       *ngIf="hasFile"
       title="Eliminar documento"
       [appLoading]="loading"
+      [disabled]="disabled"
     >
       <i class="feather icon-trash-2"></i>
     </button>

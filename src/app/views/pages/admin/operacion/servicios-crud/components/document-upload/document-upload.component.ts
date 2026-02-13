@@ -9,6 +9,7 @@ export class DocumentUploadComponent {
   @Input() label: string = '';
   @Input() hasFile: boolean = false;
   @Input() loading: boolean = false;
+  @Input() disabled: boolean = false;
   
   @Output() fileSelected = new EventEmitter<File>();
   @Output() view = new EventEmitter<void>();

@@ -176,3 +176,14 @@ $modal-header-border-color: red;
   --bs-link-hover-color: #00725A;
   --bs-warning: #FFDD57;
 }
+
+.blur-backdrop {
+  backdrop-filter: blur(8px) !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  opacity: 1 !important;
+  z-index: 2050 !important;
+}
+
+.top-modal {
+  z-index: 2060 !important;
+}

@@ -61,11 +61,12 @@
                     <label class="form-label">Contrato <span class="text-danger">*</span></label>
                     <div class="input-group">
                       <input type="text" class="form-control" formControlName="fo_Contrato" 
-                             [readonly]="selectedSucursalOrigen?.filial?.utilizaApi"
-                             [style.background-color]="selectedSucursalOrigen?.filial?.utilizaApi ? '#e9ecef' : ''"
-                             [style.cursor]="selectedSucursalOrigen?.filial?.utilizaApi ? 'pointer' : 'text'"
-                             (click)="openContratoSearch(modalContratoSearch)"
                              [ngClass]="{'is-invalid': form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)}" />
+                      <button class="btn btn-outline-primary" type="button" 
+                              *ngIf="selectedSucursalOrigen?.filial?.utilizaApi"
+                              (click)="openBusquedaContrato(modalBusquedaContrato)">
+                        Buscar
+                      </button>
                     </div>
                     <div class="invalid-feedback d-block" *ngIf="form.get('fo_Contrato')?.invalid && (form.get('fo_Contrato')?.dirty || form.get('fo_Contrato')?.touched)">Este campo es requerido</div>
                   </div>
@@ -121,6 +122,18 @@
                 </div>
               </ng-template>
 
+              <ng-template #modalBusquedaContrato let-modal>
+                <div class="modal-header">
+                  <h5 class="modal-title">Búsqueda de Contratos</h5>
+                  <button type="button" class="btn-close" (click)="modal.close()" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                   <app-contratos [initialFilialId]="contractSearchFilialId" 
+                                  [isModal]="true"
+                                  (contractSelected)="onContratoSelected($event, modal)"></app-contratos>
+                 </div>
+               </ng-template>
+
               <div class="row">
                 <div class="col-md-5">
                   <div class="mb-3">
@@ -158,6 +171,7 @@
                 <div class="col-md-6">
                   <label class="form-label d-block">&nbsp;</label>
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('fo_Documento_Cliente_url')"
                     (fileSelected)="onDocumentUpload($event, 'fo_Documento_Cliente_url')"
                     (view)="viewDocument('fo_Documento_Cliente_url')"
@@ -217,6 +231,7 @@
                 <div class="col-md-8">
                   <label class="form-label d-block">&nbsp;</label>
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('fo_Monto_devuelto_documento_url')"
                     (fileSelected)="onDocumentUpload($event, 'fo_Monto_devuelto_documento_url')"
                     (view)="viewDocument('fo_Monto_devuelto_documento_url')"
@@ -278,6 +293,7 @@
                   <div class="mb-3">
                     <label class="form-label">Estado de Cuenta</label>
                     <app-document-upload
+                      [disabled]="isPeriodoClosed"
                       [hasFile]="hasDocument('fori_estado_cuenta_url')"
                       (fileSelected)="onDocumentUpload($event, 'fori_estado_cuenta_url')"
                       (view)="viewDocument('fori_estado_cuenta_url')"
@@ -330,6 +346,7 @@
                 <div class="col-md-6">
                   <label class="form-label d-block">&nbsp;</label>
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('exp_Solicitud_Servicio_url')"
                     (fileSelected)="onDocumentUpload($event, 'exp_Solicitud_Servicio_url')"
                     (view)="viewDocument('exp_Solicitud_Servicio_url')"
@@ -353,6 +370,7 @@
                 <div class="col-md-6">
                   <label class="form-label d-block">&nbsp;</label>
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('exp_Comprobante_Pago_url')"
                     (fileSelected)="onDocumentUpload($event, 'exp_Comprobante_Pago_url')"
                     (view)="viewDocument('exp_Comprobante_Pago_url')"
@@ -376,6 +394,7 @@
                 <div class="col-md-6">
                   <label class="form-label d-block">&nbsp;</label>
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('exp_Convenio_url')"
                     (fileSelected)="onDocumentUpload($event, 'exp_Convenio_url')"
                     (view)="viewDocument('exp_Convenio_url')"
@@ -391,6 +410,7 @@
                 </div>
                 <div class="col-md-6">
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('exp_ine_responsable_url')"
                     (fileSelected)="onDocumentUpload($event, 'exp_ine_responsable_url')"
                     (view)="viewDocument('exp_ine_responsable_url')"
@@ -407,6 +427,7 @@
                 </div>
                 <div class="col-md-6">
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('exp_comprobante_domicilio_resp_url')"
                     (fileSelected)="onDocumentUpload($event, 'exp_comprobante_domicilio_resp_url')"
                     (view)="viewDocument('exp_comprobante_domicilio_resp_url')"
@@ -423,6 +444,7 @@
                 </div>
                 <div class="col-md-6">
                   <app-document-upload
+                    [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('exp_ine_aval_url')"
                     (fileSelected)="onDocumentUpload($event, 'exp_ine_aval_url')"
                     (view)="viewDocument('exp_ine_aval_url')"
@@ -454,6 +476,7 @@
                         rows="3"
                         [(ngModel)]="nuevaObservacion"
                         [ngModelOptions]="{ standalone: true }"
+                        [disabled]="isPeriodoClosed"
                       ></textarea>
                     </div>
                     <div class="text-end">
@@ -462,6 +485,7 @@
                         class="btn btn-primary btn-sm"
                         (click)="addObservacion()"
                         [appLoading]="loadingObservaciones"
+                        [disabled]="isPeriodoClosed"
                       >
                         Agregar
                       </button>
@@ -496,6 +520,7 @@
                               class="btn btn-danger btn-sm"
                               (click)="onDeleteObservacion(obs)"
                               [appLoading]="loadingObservaciones"
+                              [disabled]="isPeriodoClosed"
                             >
                               Eliminar
                             </button>
@@ -631,6 +656,7 @@
       <button type="button" class="btn btn-primary" (click)="saveChangePeriod(modal)" [appLoading]="loading">Guardar</button>
     </div>
   </ng-template>
+
 </nav>
 
 <nz-card>
@@ -681,7 +707,7 @@
           <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
             Editar
           </button>
-          <button nz-button nzType="default" nzDanger (click)="onDelete(item.id)" [appLoading]="loadingDeleteId === item.id">Eliminar</button>
+          <button nz-button nzType="default" nzDanger (click)="onDelete(item.id)" [appLoading]="loadingDeleteId === item.id" [disabled]="isPeriodoClosed">Eliminar</button>
         </td>
       </tr>
     </tbody>

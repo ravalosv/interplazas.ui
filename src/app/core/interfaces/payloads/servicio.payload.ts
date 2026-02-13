@@ -34,6 +34,10 @@ export interface ServicioPayload {
   exp_Motivo_De_No_Otorgado_Id: number | null;
   exp_Expediente_Completo: string;
   exp_Observaciones_cierre: string;
+  exp_ine_responsable_url: string;
+  exp_comprobante_domicilio_resp_url: string;
+  exp_ine_aval_url: string;
+  fori_estado_cuenta_url: string;
   penalizado: boolean;
   Usuario_CapturaId: number;
   Fecha_Captura: string;
@@ -87,4 +91,8 @@ export interface ServicioCreatePayload {
   exp_Motivo_De_No_Otorgado_Id: number | null;
   exp_Expediente_Completo: string;
   exp_Observaciones: string;
+  exp_ine_responsable_url?: string;
+  exp_comprobante_domicilio_resp_url?: string;
+  exp_ine_aval_url?: string;
+  fori_estado_cuenta_url?: string;
 }
