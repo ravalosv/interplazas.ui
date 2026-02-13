@@ -166,6 +166,10 @@ export class ServicioCrudComponent implements OnInit {
       exp_Motivo_De_No_Otorgado_Id: [null, []],
       exp_Expediente_Completo: ['NO', []],
       exp_Observaciones_cierre: ['', []],
+      exp_ine_responsable_url: ['', []],
+      exp_comprobante_domicilio_resp_url: ['', []],
+      exp_ine_aval_url: ['', []],
+      fori_estado_cuenta_url: ['', []],
       // Usuario_CapturaId & Fecha_Captura handled by backend usually
     });
 
@@ -189,6 +193,9 @@ export class ServicioCrudComponent implements OnInit {
       // Initial state
       if (!convenioCheck.value) {
         montoControl.disable();
+        // Los campos de expediente también deberían estar "inactivos" si no hay convenio,
+        // pero como son manejados por *ngIf en el HTML, aquí solo necesitamos asegurar
+        // que no se queden con valores basura si se desmarca.
       }
 
       // Subscription
@@ -198,6 +205,22 @@ export class ServicioCrudComponent implements OnInit {
         } else {
           montoControl.setValue(0);
           montoControl.disable();
+          
+          // Opcional: Limpiar valores de archivos si se desmarca "Se le puede dar convenio"
+          // Esto evita enviar datos ocultos al backend.
+          // Nota: No eliminamos los archivos del servidor aquí, solo del formulario local.
+          // Si el usuario vuelve a marcar, tendrá que volver a cargar o se asume que
+          // los archivos previos ya no son relevantes para este estado.
+          /*
+          this.form.patchValue({
+            exp_ine_responsable_url: '',
+            exp_comprobante_domicilio_resp_url: '',
+            exp_ine_aval_url: ''
+          });
+          this.selectedFiles.delete('exp_ine_responsable_url');
+          this.selectedFiles.delete('exp_comprobante_domicilio_resp_url');
+          this.selectedFiles.delete('exp_ine_aval_url');
+          */
         }
       });
     }

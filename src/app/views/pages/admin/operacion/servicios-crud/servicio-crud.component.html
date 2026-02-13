@@ -272,6 +272,21 @@
                   </div>
                 </div>
               </div>
+
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="mb-3">
+                    <label class="form-label">Estado de Cuenta</label>
+                    <app-document-upload
+                      [hasFile]="hasDocument('fori_estado_cuenta_url')"
+                      (fileSelected)="onDocumentUpload($event, 'fori_estado_cuenta_url')"
+                      (view)="viewDocument('fori_estado_cuenta_url')"
+                      (delete)="deleteDocument('fori_estado_cuenta_url')"
+                      [loading]="processingField === 'fori_estado_cuenta_url'">
+                    </app-document-upload>
+                  </div>
+                </div>
+              </div>
               
               <h6 class="mb-3 mt-3">Persona que otorga información</h6>
               <div class="row">
@@ -346,7 +361,7 @@
                   </app-document-upload>
                 </div>
               </div>
-              <div class="row">
+              <div class="row" *ngIf="form.get('fori_Acepta_Convenio')?.value">
                 <div class="col-md-6">
                   <div class="mb-3">
                     <label class="form-label">Convenio (si aplica)</label>
@@ -365,6 +380,54 @@
                     (fileSelected)="onDocumentUpload($event, 'exp_Convenio_url')"
                     (view)="viewDocument('exp_Convenio_url')"
                     (delete)="deleteDocument('exp_Convenio_url')">
+                  </app-document-upload>
+                </div>
+              </div>
+              <div class="row" *ngIf="form.get('fori_Acepta_Convenio')?.value">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">INE Responsable</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <app-document-upload
+                    [hasFile]="hasDocument('exp_ine_responsable_url')"
+                    (fileSelected)="onDocumentUpload($event, 'exp_ine_responsable_url')"
+                    (view)="viewDocument('exp_ine_responsable_url')"
+                    (delete)="deleteDocument('exp_ine_responsable_url')"
+                    [loading]="processingField === 'exp_ine_responsable_url'">
+                  </app-document-upload>
+                </div>
+              </div>
+              <div class="row" *ngIf="form.get('fori_Acepta_Convenio')?.value">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">Comprobante Domicilio Responsable</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <app-document-upload
+                    [hasFile]="hasDocument('exp_comprobante_domicilio_resp_url')"
+                    (fileSelected)="onDocumentUpload($event, 'exp_comprobante_domicilio_resp_url')"
+                    (view)="viewDocument('exp_comprobante_domicilio_resp_url')"
+                    (delete)="deleteDocument('exp_comprobante_domicilio_resp_url')"
+                    [loading]="processingField === 'exp_comprobante_domicilio_resp_url'">
+                  </app-document-upload>
+                </div>
+              </div>
+              <div class="row" *ngIf="form.get('fori_Acepta_Convenio')?.value">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label class="form-label">INE Aval</label>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <app-document-upload
+                    [hasFile]="hasDocument('exp_ine_aval_url')"
+                    (fileSelected)="onDocumentUpload($event, 'exp_ine_aval_url')"
+                    (view)="viewDocument('exp_ine_aval_url')"
+                    (delete)="deleteDocument('exp_ine_aval_url')"
+                    [loading]="processingField === 'exp_ine_aval_url'">
                   </app-document-upload>
                 </div>
               </div>
