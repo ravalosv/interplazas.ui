@@ -18,4 +18,28 @@ export class EmailTemplateService {
 
     return this.http.get<ApiReturn<IEmailTemplate[]>>(url).pipe(map((ret) => ret));
   }
+
+  getById(id: number) {
+    const url = `${this.baseUrl}/email-template/${id}`;
+
+    return this.http.get<ApiReturn<IEmailTemplate>>(url).pipe(map((ret) => ret));
+  }
+
+  create(data: IEmailTemplate) {
+    const url = `${this.baseUrl}/email-template`;
+
+    return this.http.post<ApiReturn<IEmailTemplate>>(url, data).pipe(map((ret) => ret));
+  }
+
+  update(id: number, data: IEmailTemplate) {
+    const url = `${this.baseUrl}/email-template/${id}`;
+
+    return this.http.put<ApiReturn<IEmailTemplate>>(url, data).pipe(map((ret) => ret));
+  }
+
+  delete(id: number) {
+    const url = `${this.baseUrl}/email-template/${id}`;
+
+    return this.http.delete<ApiReturn<boolean>>(url).pipe(map((ret) => ret));
+  }
 }

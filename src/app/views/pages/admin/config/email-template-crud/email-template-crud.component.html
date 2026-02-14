@@ -1,0 +1,97 @@
+<nav class="page-breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a routerLink="/admin/config">Configuración</a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">Email Templates</li>
+  </ol>
+  <div class="d-flex justify-content-end bd-highlight mb-3">
+    <div class="bd-highlight me-2">
+      <button class="btn btn-primary" (click)="openCreate(modalEditor)">
+        <i class="feather icon-file-plus pe-2"></i>
+        Nuevo Template
+      </button>
+    </div>
+  </div>
+
+  <ng-template #modalEditor let-modal>
+    <form [formGroup]="form">
+      <div class="modal-header">
+        <h5 class="modal-title">{{ modalTitle }}</h5>
+        <button type="button" class="btn-close" (click)="modal.close('by: close icon')" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Nombre</strong></label>
+          <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre interno del template" />
+          <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
+            El nombre es requerido
+          </div>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Tipo</strong></label>
+          <input type="text" class="form-control" formControlName="tipo" placeholder="Tipo de email (ej: WELCOME, ALERT)" />
+          <div class="alert alert-danger p-2" *ngIf="form.get('tipo')?.touched && form.get('tipo')?.errors?.required">
+            El tipo es requerido
+          </div>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>De (From)</strong></label>
+          <input type="text" class="form-control" formControlName="from" placeholder="Remitente (ej: info@interplazas.com)" />
+          <div class="alert alert-danger p-2" *ngIf="form.get('from')?.touched && form.get('from')?.errors?.required">
+            El remitente es requerido
+          </div>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Asunto (Titulo)</strong></label>
+          <input type="text" class="form-control" formControlName="titulo" placeholder="Asunto del correo" />
+          <div class="alert alert-danger p-2" *ngIf="form.get('titulo')?.touched && form.get('titulo')?.errors?.required">
+            El asunto es requerido
+          </div>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Nombre de Archivo de Plantilla</strong></label>
+          <input type="text" class="form-control" formControlName="template" placeholder="Ej: welcome.html" />
+          <div class="alert alert-danger p-2" *ngIf="form.get('template')?.touched && form.get('template')?.errors?.required">
+            El nombre del archivo de plantilla es requerido
+          </div>
+        </div>
+
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Contenido HTML</strong></label>
+          <textarea class="form-control" formControlName="htmlContent" rows="15" placeholder="Código HTML"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="modal.close()">Cancelar</button>
+        <button type="button" class="btn btn-primary" [disabled]="form.invalid" (click)="save()">Guardar</button>
+      </div>
+    </form>
+  </ng-template>
+</nav>
+
+<nz-card>
+  <nz-table [nzData]="templates" [nzLoading]="loading" [nzPageSize]="10">
+    <thead>
+      <tr>
+        <th>Nombre</th>
+        <th>Tipo</th>
+        <th>Asunto</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of templates">
+        <td>{{ item.nombre }}</td>
+        <td>{{ item.tipo }}</td>
+        <td>{{ item.titulo }}</td>
+        <td class="text-end">
+          <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
+            Editar
+          </button>
+          <button nz-button nzType="default" nzDanger (click)="onDelete(item)">Eliminar</button>
+        </td>
+      </tr>
+    </tbody>
+  </nz-table>
+</nz-card>

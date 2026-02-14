@@ -13,6 +13,7 @@ import { UsuariosComponent } from './usuarios/usuarios.component';
 import { GruposCrudComponent } from './grupos-crud/grupos-crud.component';
 import { SucursalesCrudComponent } from './sucursales-crud/sucursales-crud.component';
 import { CanalesComunicacionCrudComponent } from './canales-comunicacion-crud/canales-comunicacion-crud.component';
+import { EmailTemplateCrudComponent } from './email-template-crud/email-template-crud.component';
 
 const routes: Routes = [
   {
@@ -29,6 +30,7 @@ const routes: Routes = [
   { path: 'motivo-no-otorgado-admin', component: MotivoNoOtorgadoCrudComponent },
   { path: 'estado-cta-status-admin', component: EstadoCtaStatusCrudComponent },
   { path: 'canales-comunicacion-admin', component: CanalesComunicacionCrudComponent },
+  { path: 'email-templates-admin', component: EmailTemplateCrudComponent },
 
   { path: 'status-admin', component: StatusCrudComponent },
   { path: 'usuarios', component: UsuariosComponent },

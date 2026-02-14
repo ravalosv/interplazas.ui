@@ -5,4 +5,5 @@ export interface IEmailTemplate {
   from: string;
   titulo: string;
   template: string;
+  htmlContent?: string;
 }

@@ -32,6 +32,11 @@ export const MENU_SUPER_ADMIN: MenuItem[] = [
     icon: 'file-text',
     link: 'contratos',
   },
+  {
+    label: 'Plantillas de Correo',
+    icon: 'mail',
+    link: 'config/email-templates-admin',
+  },
     // Configuración
   {
     label: 'Estado de cuenta',

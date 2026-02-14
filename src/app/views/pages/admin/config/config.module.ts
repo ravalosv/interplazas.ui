@@ -45,6 +45,7 @@ import { EstadoCtaStatusCrudComponent } from './estado-cta-status-crud/estado-ct
 import { GruposCrudComponent } from './grupos-crud/grupos-crud.component';
 import { SucursalesCrudComponent } from './sucursales-crud/sucursales-crud.component';
 import { CanalesComunicacionCrudComponent } from './canales-comunicacion-crud/canales-comunicacion-crud.component';
+import { EmailTemplateCrudComponent } from './email-template-crud/email-template-crud.component';
 
 const antdModule = [
   NzButtonModule,
@@ -90,6 +91,7 @@ const antdModule = [
     UsuariosComponent,
     UsuariosNewComponent,
     CanalesComunicacionCrudComponent,
+    EmailTemplateCrudComponent,
   ],
   imports: [
     CommonModule,
