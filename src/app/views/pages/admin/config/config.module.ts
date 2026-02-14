@@ -46,6 +46,7 @@ import { GruposCrudComponent } from './grupos-crud/grupos-crud.component';
 import { SucursalesCrudComponent } from './sucursales-crud/sucursales-crud.component';
 import { CanalesComunicacionCrudComponent } from './canales-comunicacion-crud/canales-comunicacion-crud.component';
 import { EmailTemplateCrudComponent } from './email-template-crud/email-template-crud.component';
+import { QuillModule } from 'ngx-quill';
 
 const antdModule = [
   NzButtonModule,
@@ -98,6 +99,7 @@ const antdModule = [
     ConfigRoutingModule,
     NgZorroModule,
     NgbModule,
+    QuillModule.forRoot(),
     ...antdModule,
     FormsModule,
     ReactiveFormsModule,

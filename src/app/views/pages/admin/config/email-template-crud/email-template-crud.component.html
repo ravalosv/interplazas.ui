@@ -21,46 +21,62 @@
         <button type="button" class="btn-close" (click)="modal.close('by: close icon')" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Nombre</strong></label>
-          <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre interno del template" />
-          <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
-            El nombre es requerido
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Tipo</strong></label>
-          <input type="text" class="form-control" formControlName="tipo" placeholder="Tipo de email (ej: WELCOME, ALERT)" />
-          <div class="alert alert-danger p-2" *ngIf="form.get('tipo')?.touched && form.get('tipo')?.errors?.required">
-            El tipo es requerido
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>De (From)</strong></label>
-          <input type="text" class="form-control" formControlName="from" placeholder="Remitente (ej: info@interplazas.com)" />
-          <div class="alert alert-danger p-2" *ngIf="form.get('from')?.touched && form.get('from')?.errors?.required">
-            El remitente es requerido
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Asunto (Titulo)</strong></label>
-          <input type="text" class="form-control" formControlName="titulo" placeholder="Asunto del correo" />
-          <div class="alert alert-danger p-2" *ngIf="form.get('titulo')?.touched && form.get('titulo')?.errors?.required">
-            El asunto es requerido
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Nombre de Archivo de Plantilla</strong></label>
-          <input type="text" class="form-control" formControlName="template" placeholder="Ej: welcome.html" />
-          <div class="alert alert-danger p-2" *ngIf="form.get('template')?.touched && form.get('template')?.errors?.required">
-            El nombre del archivo de plantilla es requerido
-          </div>
-        </div>
-
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Contenido HTML</strong></label>
-          <textarea class="form-control" formControlName="htmlContent" rows="15" placeholder="Código HTML"></textarea>
-        </div>
+        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-tabs">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Información</a>
+            <ng-template ngbNavContent>
+              <div class="mt-3">
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Nombre</strong></label>
+                  <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre interno del template" />
+                  <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
+                    El nombre es requerido
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Tipo</strong></label>
+                  <input type="text" class="form-control" formControlName="tipo" placeholder="Tipo de email (ej: WELCOME, ALERT)" />
+                  <div class="alert alert-danger p-2" *ngIf="form.get('tipo')?.touched && form.get('tipo')?.errors?.required">
+                    El tipo es requerido
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>De (From)</strong></label>
+                  <input type="text" class="form-control" formControlName="from" placeholder="Remitente (ej: info@interplazas.com)" />
+                  <div class="alert alert-danger p-2" *ngIf="form.get('from')?.touched && form.get('from')?.errors?.required">
+                    El remitente es requerido
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Asunto (Titulo)</strong></label>
+                  <input type="text" class="form-control" formControlName="titulo" placeholder="Asunto del correo" />
+                  <div class="alert alert-danger p-2" *ngIf="form.get('titulo')?.touched && form.get('titulo')?.errors?.required">
+                    El asunto es requerido
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Nombre de Archivo de Plantilla</strong></label>
+                  <input type="text" class="form-control" formControlName="template" placeholder="Ej: welcome.html" />
+                  <div class="alert alert-danger p-2" *ngIf="form.get('template')?.touched && form.get('template')?.errors?.required">
+                    El nombre del archivo de plantilla es requerido
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink>Contenido HTML</a>
+            <ng-template ngbNavContent>
+              <div class="mt-3">
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Editor de Contenido</strong></label>
+                  <quill-editor formControlName="htmlContent" [styles]="{height: '400px'}" [modules]="quillConfig"></quill-editor>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+        </ul>
+        <div [ngbNavOutlet]="nav"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="modal.close()">Cancelar</button>
