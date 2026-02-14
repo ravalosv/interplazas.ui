@@ -8,6 +8,10 @@ export interface FilialAdminPayload {
   grupoId: number;
   apiUrl?: string;
   apiKey?: string;
+  templateSaldoPabsCero?: number;
+  templateSaldoPabsConConvenio?: number;
+  templateSaldoPabsSinConvenio?: number;
+  templateSaldoPabsParcial?: number;
   grupo?: GrupoAdminPayload;
   createdAt: Date;
   updatedAt: Date;

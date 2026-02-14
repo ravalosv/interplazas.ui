@@ -65,6 +65,28 @@
           <label class="form-label"><strong>API KEY</strong></label>
           <input type="text" class="form-control" formControlName="apiKey" placeholder="Key de la API" />
         </div>
+        <hr />
+        <h5 class="ms-1 mb-3">Templates de Mensajes (Saldo PABS)</h5>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Saldo = 0</strong></label>
+          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsCero" placeholder="Seleccione un template">
+          </ng-select>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Saldo > 1 (Con Convenio)</strong></label>
+          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsConConvenio" placeholder="Seleccione un template">
+          </ng-select>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Saldo > 1 (Sin Convenio)</strong></label>
+          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsSinConvenio" placeholder="Seleccione un template">
+          </ng-select>
+        </div>
+        <div class="row ms-1 me-1 mb-2">
+          <label class="form-label"><strong>Saldo Parcial (Con Convenio Cobrado Parcialmente)</strong></label>
+          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsParcial" placeholder="Seleccione un template">
+          </ng-select>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" [disabled]="form.invalid" (click)="save(true)">Guardar y cerrar</button>

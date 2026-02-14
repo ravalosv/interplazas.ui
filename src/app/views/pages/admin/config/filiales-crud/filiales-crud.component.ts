@@ -4,8 +4,10 @@ import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { FilialService } from 'src/app/core/services/filial.service';
 import { GrupoService } from 'src/app/core/services/grupo.service';
+import { EmailTemplateService } from 'src/app/core/services/email-template.service';
 import { FilialAdminPayload } from 'src/app/core/interfaces/payloads/filial.payload';
 import { GrupoAdminPayload } from 'src/app/core/interfaces/payloads/grupo.payload';
+import { IEmailTemplate } from 'src/app/core/interfaces/email-template.interface';
 
 @Component({
   selector: 'app-filiales-crud',
@@ -16,6 +18,7 @@ export class FilialesCrudComponent implements OnInit {
   loading = false;
   filiales: FilialAdminPayload[] = [];
   grupos: GrupoAdminPayload[] = [];
+  emailTemplates: IEmailTemplate[] = [];
   filtro = '';
 
   form!: FormGroup;
@@ -26,6 +29,7 @@ export class FilialesCrudComponent implements OnInit {
   constructor(
     private filialService: FilialService,
     private grupoService: GrupoService,
+    private emailTemplateService: EmailTemplateService,
     private alertsService: AlertsService,
     private fb: FormBuilder,
     private modalService: NgbModal
@@ -35,6 +39,20 @@ export class FilialesCrudComponent implements OnInit {
     this.initForm();
     this.loadFiliales();
     this.loadGrupos();
+    this.loadEmailTemplates();
+  }
+
+  loadEmailTemplates() {
+    this.emailTemplateService.getAll().subscribe({
+      next: (ret) => {
+        if (ret.success) {
+          this.emailTemplates = ret.data;
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => this.alertsService.error(e.error),
+    });
   }
 
   initForm() {
@@ -45,6 +63,10 @@ export class FilialesCrudComponent implements OnInit {
       grupoId: [null, [Validators.required]],
       apiUrl: [{ value: '', disabled: true }, []],
       apiKey: [{ value: '', disabled: true }, []],
+      templateSaldoPabsCero: [null, []],
+      templateSaldoPabsConConvenio: [null, []],
+      templateSaldoPabsSinConvenio: [null, []],
+      templateSaldoPabsParcial: [null, []],
     });
 
     this.form.get('utilizaApi')?.valueChanges.subscribe((val) => {
@@ -115,10 +137,21 @@ export class FilialesCrudComponent implements OnInit {
 
   openCreate(modalTpl: TemplateRef<any>) {
     this.editingId = null;
-    this.form.reset({ nombre: '', extranjera: false, utilizaApi: false, grupoId: null, apiUrl: '', apiKey: '' });
+    this.form.reset({
+      nombre: '',
+      extranjera: false,
+      utilizaApi: false,
+      grupoId: null,
+      apiUrl: '',
+      apiKey: '',
+      templateSaldoPabsCero: null,
+      templateSaldoPabsConConvenio: null,
+      templateSaldoPabsSinConvenio: null,
+      templateSaldoPabsParcial: null,
+    });
     this.toggleApiFields(false);
     this.modalTitle = 'Nueva Filial';
-    this.modalRef = this.modalService.open(modalTpl, { centered: true });
+    this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'lg' });
   }
 
   openEdit(modalTpl: TemplateRef<any>, item: FilialAdminPayload) {
@@ -130,10 +163,14 @@ export class FilialesCrudComponent implements OnInit {
       grupoId: item.grupoId,
       apiUrl: item.apiUrl,
       apiKey: item.apiKey,
+      templateSaldoPabsCero: item.templateSaldoPabsCero,
+      templateSaldoPabsConConvenio: item.templateSaldoPabsConConvenio,
+      templateSaldoPabsSinConvenio: item.templateSaldoPabsSinConvenio,
+      templateSaldoPabsParcial: item.templateSaldoPabsParcial,
     });
     this.toggleApiFields(item.utilizaApi);
     this.modalTitle = 'Editar Filial';
-    this.modalRef = this.modalService.open(modalTpl, { centered: true });
+    this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'lg' });
   }
 
   save(cerrar: boolean) {
@@ -150,6 +187,10 @@ export class FilialesCrudComponent implements OnInit {
       grupoId: number;
       apiUrl?: string;
       apiKey?: string;
+      templateSaldoPabsCero?: number;
+      templateSaldoPabsConConvenio?: number;
+      templateSaldoPabsSinConvenio?: number;
+      templateSaldoPabsParcial?: number;
     };
 
     if (this.editingId == null) {
@@ -161,7 +202,18 @@ export class FilialesCrudComponent implements OnInit {
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '', extranjera: false, utilizaApi: false, grupoId: null, apiUrl: '', apiKey: '' });
+              this.form.reset({
+                nombre: '',
+                extranjera: false,
+                utilizaApi: false,
+                grupoId: null,
+                apiUrl: '',
+                apiKey: '',
+                templateSaldoPabsCero: null,
+                templateSaldoPabsConConvenio: null,
+                templateSaldoPabsSinConvenio: null,
+                templateSaldoPabsParcial: null,
+              });
               this.toggleApiFields(false);
               this.editingId = null;
             }
@@ -180,7 +232,18 @@ export class FilialesCrudComponent implements OnInit {
             if (cerrar) {
               this.modalRef?.close();
             } else {
-              this.form.reset({ nombre: '', extranjera: false, utilizaApi: false, grupoId: null, apiUrl: '', apiKey: '' });
+              this.form.reset({
+                nombre: '',
+                extranjera: false,
+                utilizaApi: false,
+                grupoId: null,
+                apiUrl: '',
+                apiKey: '',
+                templateSaldoPabsCero: null,
+                templateSaldoPabsConConvenio: null,
+                templateSaldoPabsSinConvenio: null,
+                templateSaldoPabsParcial: null,
+              });
               this.toggleApiFields(false);
               this.editingId = null;
               this.modalTitle = 'Nueva Filial';
