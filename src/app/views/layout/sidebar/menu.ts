@@ -32,11 +32,6 @@ export const MENU_SUPER_ADMIN: MenuItem[] = [
     icon: 'file-text',
     link: 'contratos',
   },
-  {
-    label: 'Plantillas de Correo',
-    icon: 'mail',
-    link: 'config/email-templates-admin',
-  },
     // Configuración
   {
     label: 'Estado de cuenta',
@@ -114,6 +109,11 @@ export const MENU_SUPER_ADMIN: MenuItem[] = [
     label: 'Canales de comunicación',
     icon: 'message-square',
     link: 'config/canales-comunicacion-admin',
+  },
+  {
+    label: 'Plantillas de Correo',
+    icon: 'mail',
+    link: 'config/email-templates-admin',
   },
 ];
 
@@ -207,6 +207,11 @@ export const MENU_ADMIN: MenuItem[] = [
     label: 'Canales de comunicación',
     icon: 'message-square',
     link: 'config/canales-comunicacion-admin',
+  },
+  {
+    label: 'Plantillas de Correo',
+    icon: 'mail',
+    link: 'config/email-templates-admin',
   },
 ];
 
