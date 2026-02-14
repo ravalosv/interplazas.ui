@@ -17,6 +17,10 @@ export class PeriodosComponent implements OnInit {
   processingId: number | null = null;
   processingAction: 'close' | 'open' | 'cedulas' | 'ec' | null = null;
 
+  isVisibleModal = false;
+  isConfirmLoading = false;
+  editingPeriodo: PeriodoPayload | null = null;
+
   constructor(
     private periodoService: PeriodoService,
     private estadoCuentaService: EstadoCuentaService,
@@ -179,6 +183,45 @@ export class PeriodosComponent implements OnInit {
           },
         });
       },
+    });
+  }
+
+  openEditModal(periodo: PeriodoPayload) {
+    this.editingPeriodo = { ...periodo };
+    this.isVisibleModal = true;
+  }
+
+  handleCancel() {
+    this.isVisibleModal = false;
+    this.editingPeriodo = null;
+  }
+
+  handleOk() {
+    if (!this.editingPeriodo) return;
+    
+    this.isConfirmLoading = true;
+    const { id, fecha_revision, fecha_reenvio_cedulas, fecha_visto_bueno, fecha_cierre_periodo } = this.editingPeriodo;
+    
+    this.periodoService.update(id, {
+      fecha_revision,
+      fecha_reenvio_cedulas,
+      fecha_visto_bueno,
+      fecha_cierre_periodo
+    }).subscribe({
+      next: (ret) => {
+        this.isConfirmLoading = false;
+        if (ret.success) {
+          this.isVisibleModal = false;
+          this.alertsService.success('Fechas actualizadas correctamente');
+          this.loadPeriodos();
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.isConfirmLoading = false;
+        this.alertsService.error(e.error);
+      }
     });
   }
 

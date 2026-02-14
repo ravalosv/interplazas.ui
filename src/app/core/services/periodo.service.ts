@@ -26,6 +26,13 @@ export class PeriodoService {
       .pipe(map((ret) => ret));
   }
 
+  update(id: number, data: Partial<PeriodoPayload>) {
+    const url = `${this.baseUrl}/periodo/${id}`;
+    return this.http
+      .put<ApiReturn<PeriodoPayload>>(url, data)
+      .pipe(map((ret) => ret));
+  }
+
   cerrar(id: number) {
     const url = `${this.baseUrl}/periodo/${id}/cerrar`;
 

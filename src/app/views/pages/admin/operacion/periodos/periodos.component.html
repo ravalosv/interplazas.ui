@@ -14,6 +14,7 @@
         <th [nzSortFn]="sortMes">Mes</th>
         <th [nzSortFn]="sortAnio">Año</th>
         <th [nzSortFn]="sortEstado">Estado</th>
+        <th>Fechas</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -33,6 +34,11 @@
           <span *ngIf="p.estadoCuentaGenerado" class="badge bg-info">
             Estado de Cuenta
           </span>
+        </td>
+        <td>
+          <button nz-button nzType="default" nzSize="small" (click)="openEditModal(p)">
+            <i class="feather icon-edit me-2"></i> Editar
+          </button>
         </td>
         <td>
           <button *ngIf="p.activo" nz-button nzType="default" class="me-2" (click)="cerrarPeriodo(p)" title="Cerrar Periodo" [appLoading]="processingId === p.id && processingAction === 'close'">
@@ -63,3 +69,56 @@
     </tbody>
   </nz-table>
 </nz-card>
+
+<nz-modal
+  [(nzVisible)]="isVisibleModal"
+  nzTitle="Editar Fechas del Periodo"
+  (nzOnCancel)="handleCancel()"
+  nzWidth="800px"
+>
+  <ng-container *nzModalContent>
+    <form nz-form *ngIf="editingPeriodo">
+      <div class="row">
+        <div class="col-md-6">
+          <nz-form-item>
+            <nz-form-label [nzSm]="10" [nzXs]="24">Fecha Revisión</nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+              <input nz-input [(ngModel)]="editingPeriodo.fecha_revision" name="fecha_revision" placeholder="Ej. 2026-02-13" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div class="col-md-6">
+          <nz-form-item>
+            <nz-form-label [nzSm]="10" [nzXs]="24">Fecha Reenvío Cédulas</nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+              <input nz-input [(ngModel)]="editingPeriodo.fecha_reenvio_cedulas" name="fecha_reenvio_cedulas" placeholder="Ej. 2026-02-13" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6">
+          <nz-form-item>
+            <nz-form-label [nzSm]="10" [nzXs]="24">Fecha Visto Bueno</nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+              <input nz-input [(ngModel)]="editingPeriodo.fecha_visto_bueno" name="fecha_visto_bueno" placeholder="Ej. 2026-02-13" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+        <div class="col-md-6">
+          <nz-form-item>
+            <nz-form-label [nzSm]="10" [nzXs]="24">Fecha Cierre Periodo</nz-form-label>
+            <nz-form-control [nzSm]="14" [nzXs]="24">
+              <input nz-input [(ngModel)]="editingPeriodo.fecha_cierre_periodo" name="fecha_cierre_periodo" placeholder="Ej. 2026-02-13" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </div>
+    </form>
+  </ng-container>
+  <div *nzModalFooter>
+    <button nz-button nzType="default" (click)="handleCancel()">Cancelar</button>
+    <button nz-button nzType="primary" (click)="handleOk()" [appLoading]="isConfirmLoading">Aceptar</button>
+  </div>
+</nz-modal>
