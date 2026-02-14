@@ -20,20 +20,46 @@
         <button type="button" class="btn-close" (click)="modal.close('by: close icon')" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Nombre</strong></label>
-          <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre del grupo" />
-          <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
-            El nombre es requerido
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Cobro entre filiales</strong></label>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="cobroSwitch" formControlName="cobroEntreFiliales" />
-            <label class="form-check-label" for="cobroSwitch">Habilitado</label>
-          </div>
-        </div>
+        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-tabs">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Datos Grupo</a>
+            <ng-template ngbNavContent>
+              <div class="mt-3">
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Nombre</strong></label>
+                  <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre del grupo" />
+                  <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
+                    El nombre es requerido
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Cobro entre filiales</strong></label>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="cobroSwitch" formControlName="cobroEntreFiliales" />
+                    <label class="form-check-label" for="cobroSwitch">Habilitado</label>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink>Cédula</a>
+            <ng-template ngbNavContent>
+              <div class="mt-3">
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Template Cédula</strong></label>
+                  <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="cedula_template_id" placeholder="Seleccione un template">
+                  </ng-select>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Destinatarios Email Cédula</strong></label>
+                  <textarea class="form-control" formControlName="cedula_destinatarios_email" placeholder="Correos separados por coma" rows="3"></textarea>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+        </ul>
+        <div [ngbNavOutlet]="nav"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" [disabled]="form.invalid" (click)="save(true)">Guardar y cerrar</button>
