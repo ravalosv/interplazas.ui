@@ -68,6 +68,7 @@ export class FilialesCrudComponent implements OnInit {
       templateSaldoPabsConConvenio: [null, []],
       templateSaldoPabsSinConvenio: [null, []],
       templateSaldoPabsParcial: [null, []],
+      destinatarios_email: ['', []],
     });
 
     this.form.get('utilizaApi')?.valueChanges.subscribe((val) => {
@@ -149,6 +150,7 @@ export class FilialesCrudComponent implements OnInit {
       templateSaldoPabsConConvenio: null,
       templateSaldoPabsSinConvenio: null,
       templateSaldoPabsParcial: null,
+      destinatarios_email: '',
     });
     this.toggleApiFields(false);
     this.modalTitle = 'Nueva Filial';
@@ -168,6 +170,7 @@ export class FilialesCrudComponent implements OnInit {
       templateSaldoPabsConConvenio: item.templateSaldoPabsConConvenio,
       templateSaldoPabsSinConvenio: item.templateSaldoPabsSinConvenio,
       templateSaldoPabsParcial: item.templateSaldoPabsParcial,
+      destinatarios_email: item.destinatarios_email,
     });
     this.toggleApiFields(item.utilizaApi);
     this.modalTitle = 'Editar Filial';
@@ -192,6 +195,7 @@ export class FilialesCrudComponent implements OnInit {
       templateSaldoPabsConConvenio?: number;
       templateSaldoPabsSinConvenio?: number;
       templateSaldoPabsParcial?: number;
+      destinatarios_email?: string;
     };
 
     if (this.editingId == null) {

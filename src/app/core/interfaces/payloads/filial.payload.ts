@@ -12,6 +12,7 @@ export interface FilialAdminPayload {
   templateSaldoPabsConConvenio?: number;
   templateSaldoPabsSinConvenio?: number;
   templateSaldoPabsParcial?: number;
+  destinatarios_email?: string;
   grupo?: GrupoAdminPayload;
   createdAt: Date;
   updatedAt: Date;

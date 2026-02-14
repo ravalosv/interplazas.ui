@@ -104,6 +104,10 @@
                   <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsParcial" placeholder="Seleccione un template">
                   </ng-select>
                 </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Destinatarios Email</strong></label>
+                  <textarea class="form-control" formControlName="destinatarios_email" placeholder="Correos separados por coma" rows="3"></textarea>
+                </div>
               </div>
             </ng-template>
           </li>
