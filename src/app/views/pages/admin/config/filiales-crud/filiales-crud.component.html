@@ -28,65 +28,87 @@
         <button type="button" class="btn-close" (click)="modal.close('by: close icon')" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Nombre</strong></label>
-          <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre de la filial" />
-          <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
-            El nombre es requerido
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Grupo</strong></label>
-          <ng-select [items]="grupos" bindLabel="nombre" bindValue="id" formControlName="grupoId" placeholder="Seleccione un grupo">
-          </ng-select>
-          <div class="alert alert-danger p-2" *ngIf="form.get('grupoId')?.touched && form.get('grupoId')?.errors?.required">
-            El grupo es requerido
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Extranjera</strong></label>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="extranjeraSwitch" formControlName="extranjera" />
-            <label class="form-check-label" for="extranjeraSwitch">Extranjera</label>
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Utiliza API</strong></label>
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" id="utilizaApiSwitch" formControlName="utilizaApi" />
-            <label class="form-check-label" for="utilizaApiSwitch">Utiliza API</label>
-          </div>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>API URL</strong></label>
-          <input type="text" class="form-control" formControlName="apiUrl" placeholder="URL de la API" />
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>API KEY</strong></label>
-          <input type="text" class="form-control" formControlName="apiKey" placeholder="Key de la API" />
-        </div>
-        <hr />
-        <h5 class="ms-1 mb-3">Templates de Mensajes (Saldo PABS)</h5>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Saldo = 0</strong></label>
-          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsCero" placeholder="Seleccione un template">
-          </ng-select>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Saldo > 1 (Con Convenio)</strong></label>
-          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsConConvenio" placeholder="Seleccione un template">
-          </ng-select>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Saldo > 1 (Sin Convenio)</strong></label>
-          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsSinConvenio" placeholder="Seleccione un template">
-          </ng-select>
-        </div>
-        <div class="row ms-1 me-1 mb-2">
-          <label class="form-label"><strong>Saldo Parcial (Con Convenio Cobrado Parcialmente)</strong></label>
-          <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsParcial" placeholder="Seleccione un template">
-          </ng-select>
-        </div>
+        <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-tabs">
+          <li [ngbNavItem]="1">
+            <a ngbNavLink>Datos Filial</a>
+            <ng-template ngbNavContent>
+              <div class="mt-3">
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Nombre</strong></label>
+                  <input type="text" class="form-control" formControlName="nombre" placeholder="Nombre de la filial" />
+                  <div class="alert alert-danger p-2" *ngIf="form.get('nombre')?.touched && form.get('nombre')?.errors?.required">
+                    El nombre es requerido
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Grupo</strong></label>
+                  <ng-select [items]="grupos" bindLabel="nombre" bindValue="id" formControlName="grupoId" placeholder="Seleccione un grupo">
+                  </ng-select>
+                  <div class="alert alert-danger p-2" *ngIf="form.get('grupoId')?.touched && form.get('grupoId')?.errors?.required">
+                    El grupo es requerido
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Extranjera</strong></label>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="extranjeraSwitch" formControlName="extranjera" />
+                    <label class="form-check-label" for="extranjeraSwitch">Extranjera</label>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="2">
+            <a ngbNavLink>API</a>
+            <ng-template ngbNavContent>
+              <div class="mt-3">
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Utiliza API</strong></label>
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="utilizaApiSwitch" formControlName="utilizaApi" />
+                    <label class="form-check-label" for="utilizaApiSwitch">Utiliza API</label>
+                  </div>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>API URL</strong></label>
+                  <input type="text" class="form-control" formControlName="apiUrl" placeholder="URL de la API" />
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>API KEY</strong></label>
+                  <input type="text" class="form-control" formControlName="apiKey" placeholder="Key de la API" />
+                </div>
+              </div>
+            </ng-template>
+          </li>
+          <li [ngbNavItem]="3">
+            <a ngbNavLink>Templates</a>
+            <ng-template ngbNavContent>
+              <div class="mt-3">
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Saldo = 0</strong></label>
+                  <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsCero" placeholder="Seleccione un template">
+                  </ng-select>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Saldo > 1 (Con Convenio)</strong></label>
+                  <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsConConvenio" placeholder="Seleccione un template">
+                  </ng-select>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Saldo > 1 (Sin Convenio)</strong></label>
+                  <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsSinConvenio" placeholder="Seleccione un template">
+                  </ng-select>
+                </div>
+                <div class="row ms-1 me-1 mb-2">
+                  <label class="form-label"><strong>Saldo Parcial (Con Convenio Cobrado Parcialmente)</strong></label>
+                  <ng-select [items]="emailTemplates" bindLabel="nombre" bindValue="id" formControlName="templateSaldoPabsParcial" placeholder="Seleccione un template">
+                  </ng-select>
+                </div>
+              </div>
+            </ng-template>
+          </li>
+        </ul>
+        <div [ngbNavOutlet]="nav"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" [disabled]="form.invalid" (click)="save(true)">Guardar y cerrar</button>

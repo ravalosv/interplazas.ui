@@ -25,6 +25,7 @@ export class FilialesCrudComponent implements OnInit {
   editingId: number | null = null;
   modalTitle = '';
   modalRef: NgbModalRef | null = null;
+  activeTab = 1;
 
   constructor(
     private filialService: FilialService,
