@@ -574,7 +574,7 @@
                 </div>
                 <div class="col-md-6">
                   <div class="mb-3">
-                    <button type="button" class="btn btn-outline-primary btn-sm">
+                    <button type="button" class="btn btn-outline-primary btn-sm" (click)="enviarExpedienteCorreo()" [disabled]="!editingId">
                       Enviar expediente por correo
                     </button>
                   </div>

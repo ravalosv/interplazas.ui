@@ -13,6 +13,8 @@ export interface FilialAdminPayload {
   templateSaldoPabsSinConvenio?: number;
   templateSaldoPabsParcial?: number;
   destinatarios_email?: string;
+  cedula_destinatarios_email?: string;
+  cedula_template_id?: number;
   grupo?: GrupoAdminPayload;
   createdAt: Date;
   updatedAt: Date;
@@ -21,4 +23,3 @@ export interface FilialAdminPayload {
 export interface FilialDeletePayload {
   id: number;
 }
-

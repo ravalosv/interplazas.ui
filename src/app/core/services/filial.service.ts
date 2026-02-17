@@ -26,7 +26,21 @@ export class FilialService {
     return this.http.get<ApiReturn<FilialAdminPayload>>(url).pipe(map((ret) => ret));
   }
 
-  create(data: { nombre: string; extranjera: boolean; grupoId: number; apiUrl?: string; apiKey?: string }) {
+  create(data: {
+    nombre: string;
+    extranjera: boolean;
+    utilizaApi: boolean;
+    grupoId: number;
+    apiUrl?: string;
+    apiKey?: string;
+    templateSaldoPabsCero?: number;
+    templateSaldoPabsConConvenio?: number;
+    templateSaldoPabsSinConvenio?: number;
+    templateSaldoPabsParcial?: number;
+    destinatarios_email?: string;
+    cedula_destinatarios_email?: string;
+    cedula_template_id?: number;
+  }) {
     const url = `${this.baseUrl}/filial`;
 
     return this.http
@@ -34,7 +48,24 @@ export class FilialService {
       .pipe(map((ret) => ret));
   }
 
-  update(id: number, data: { nombre: string; extranjera: boolean; grupoId: number; apiUrl?: string; apiKey?: string }) {
+  update(
+    id: number,
+    data: {
+      nombre: string;
+      extranjera: boolean;
+      utilizaApi: boolean;
+      grupoId: number;
+      apiUrl?: string;
+      apiKey?: string;
+      templateSaldoPabsCero?: number;
+      templateSaldoPabsConConvenio?: number;
+      templateSaldoPabsSinConvenio?: number;
+      templateSaldoPabsParcial?: number;
+      destinatarios_email?: string;
+      cedula_destinatarios_email?: string;
+      cedula_template_id?: number;
+    }
+  ) {
     const url = `${this.baseUrl}/filial/${id}`;
 
     return this.http
@@ -50,4 +81,3 @@ export class FilialService {
       .pipe(map((ret) => ret));
   }
 }
-

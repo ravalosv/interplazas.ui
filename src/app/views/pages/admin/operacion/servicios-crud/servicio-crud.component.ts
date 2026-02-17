@@ -409,6 +409,23 @@ export class ServicioCrudComponent implements OnInit {
     });
   }
 
+  enviarExpedienteCorreo() {
+    if (!this.editingId) {
+      this.alertsService.error('Guarde el servicio antes de enviar el correo');
+      return;
+    }
+    this.servicioService.sendExpedienteEmail(this.editingId).subscribe({
+      next: (ret) => {
+        if (ret.success) {
+          this.alertsService.success('Expediente enviado por correo');
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => this.alertsService.error(e.error || 'Error al enviar el correo'),
+    });
+  }
+
   applyContratoData(data: any) {
     if (data.saldo !== undefined) {
       this.form.patchValue({ fori_Saldo_Contrato: data.saldo });

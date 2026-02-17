@@ -92,4 +92,11 @@ export class ServicioService {
       .delete<ApiReturn<{ message: string }>>(url)
       .pipe(map((ret) => ret));
   }
+
+  sendExpedienteEmail(id: number) {
+    const url = `${this.baseUrl}/servicio/${id}/send-expediente-email`;
+    return this.http
+      .post<ApiReturn<{ sent: boolean }>>(url, {})
+      .pipe(map((ret) => ret));
+  }
 }
