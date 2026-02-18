@@ -24,6 +24,9 @@
       <button nz-button nzType="primary" class="me-2" (click)="exportExcel()" [appLoading]="exporting">
         Exportar Excel
       </button>
+      <button nz-button nzType="default" class="me-2" (click)="enviarCedulaCorreo()" [appLoading]="sending" [disabled]="!cedula">
+        Enviar por correo
+      </button>
       <button nz-button nzType="default" (click)="regresar()">
         Regresar
       </button>
@@ -245,4 +248,3 @@
     </tbody>
   </nz-table>
 </nz-card>
-

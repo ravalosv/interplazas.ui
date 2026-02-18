@@ -1,9 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { CedulaService } from 'src/app/core/services/cedula.service';
 import { AlertsService } from 'src/app/core/services/alerts.service';
 import { CedulaExcelService } from 'src/app/core/services/cedula-excel.service';
 import { CedulaPayload, CedulaDetallePayload } from 'src/app/core/interfaces/payloads/cedula.payload';
+import { FilialService } from 'src/app/core/services/filial.service';
+import { PeriodoService } from 'src/app/core/services/periodo.service';
+import { EmailTemplateService } from 'src/app/core/services/email-template.service';
+import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
+import { ApiReturn } from 'src/app/core/interfaces/payloads/api_return';
+import { environment } from 'src/environments/environment';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-cedula-detalle',
@@ -14,6 +22,7 @@ export class CedulaDetalleComponent implements OnInit {
   cedula: CedulaPayload | null = null;
   loading = false;
   exporting = false;
+  sending = false;
   searchTermFavor = '';
   searchTermPagar = '';
   searchTermUSA = '';
@@ -23,7 +32,11 @@ export class CedulaDetalleComponent implements OnInit {
     private router: Router,
     private cedulaService: CedulaService,
     private alertsService: AlertsService,
-    private cedulaExcelService: CedulaExcelService
+    private cedulaExcelService: CedulaExcelService,
+    private filialService: FilialService,
+    private periodoService: PeriodoService,
+    private emailTemplateService: EmailTemplateService,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -182,5 +195,109 @@ export class CedulaDetalleComponent implements OnInit {
       }
     });
   }
-}
 
+  async enviarCedulaCorreo() {
+    if (!this.cedula) return;
+    this.sending = true;
+    try {
+      const cedulaRet = await firstValueFrom(this.cedulaService.getById(this.cedula.id));
+      if (!cedulaRet.success) {
+        this.alertsService.error(cedulaRet.error || 'Error al cargar la cédula');
+        this.sending = false;
+        return;
+      }
+
+      const cedula = cedulaRet.data;
+      const [filialRet, periodosRet] = await Promise.all([
+        firstValueFrom(this.filialService.getById(cedula.filialId)),
+        firstValueFrom(this.periodoService.getAll()),
+      ]);
+
+      if (!filialRet.success) {
+        this.alertsService.error(filialRet.error || 'Error al cargar la filial');
+        this.sending = false;
+        return;
+      }
+
+      if (!periodosRet.success) {
+        this.alertsService.error(periodosRet.error || 'Error al cargar los periodos');
+        this.sending = false;
+        return;
+      }
+
+      const filial = filialRet.data;
+      const periodo = (periodosRet.data as PeriodoPayload[]).find(p => p.id === cedula.periodoId);
+
+      if (!periodo) {
+        this.alertsService.error('Periodo no encontrado');
+        this.sending = false;
+        return;
+      }
+
+      const templateId = filial.cedula_template_id;
+      const destinatarios = filial.cedula_destinatarios_email;
+
+      if (!templateId) {
+        this.alertsService.error('EMAIL_TEMPLATE_NOT_CONFIGURED');
+        this.sending = false;
+        return;
+      }
+
+      if (!destinatarios) {
+        this.alertsService.error('RECIPIENTS_MISSING');
+        this.sending = false;
+        return;
+      }
+
+      const templateRet = await firstValueFrom(this.emailTemplateService.getById(templateId));
+      if (!templateRet.success) {
+        this.alertsService.error(templateRet.error || 'Error al cargar la plantilla de correo');
+        this.sending = false;
+        return;
+      }
+
+      const template = templateRet.data as any;
+
+      const tags: Record<string, string> = {
+        periodo: periodo.nombre || '',
+        fecha_revision: periodo.fecha_revision || '',
+        fecha_reenvio_cedulas: periodo.fecha_reenvio_cedulas || '',
+        fecha_visto_bueno: periodo.fecha_visto_bueno || '',
+        fecha_cierre_periodo: periodo.fecha_cierre_periodo || '',
+      };
+
+      const subject = this.applySubjectTags(template.titulo || '', tags);
+
+      const excel = await this.cedulaExcelService.getExcelBlob(cedula);
+
+      const formData = new FormData();
+      formData.append('to', destinatarios);
+      formData.append('subject', subject);
+      formData.append('template', template.template);
+      formData.append('tags', JSON.stringify(tags));
+      formData.append('attachments', excel.blob, excel.fileName);
+
+      const mailRet = await firstValueFrom(this.http.post<ApiReturn<{ sent: boolean }>>(`${environment.apiUrl}/mail`, formData));
+
+      if (mailRet.success) {
+        this.alertsService.success('Cédula enviada por correo');
+      } else {
+        this.alertsService.error(mailRet.error || 'Error al enviar la cédula');
+      }
+    } catch (e: any) {
+      const message = typeof e === 'string' ? e : e?.message || 'Error al enviar la cédula';
+      this.alertsService.error(message);
+    } finally {
+      this.sending = false;
+    }
+  }
+
+  private applySubjectTags(str: string, tags: Record<string, string>): string {
+    return Object.keys(tags).reduce((acc, key) => {
+      const val = tags[key] || '';
+      return acc
+        .replace(new RegExp(`\\{\\s*${key}\\s*\\}`, 'g'), val)
+        .replace(new RegExp(`\\{\\{\\s*${key}\\s*\\}\\}`, 'g'), val);
+    }, str || '');
+  }
+}
