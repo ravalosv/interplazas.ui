@@ -819,6 +819,27 @@ export class ServicioCrudComponent implements OnInit {
     });
   }
 
+  private showApiError(e: any, fallback: string) {
+    let msg = fallback;
+
+    if (!e) {
+      this.alertsService.error(msg);
+      return;
+    }
+
+    if (typeof e === 'string') {
+      msg = e;
+    } else if (typeof e.error === 'string') {
+      msg = e.error;
+    } else if (e.error && typeof e.error.error === 'string') {
+      msg = e.error.error;
+    } else if (e.message && typeof e.message === 'string') {
+      msg = e.message;
+    }
+
+    this.alertsService.error(msg);
+  }
+
   save(cerrar: boolean) {
     if (this.isPeriodoClosed) {
       this.alertsService.warning('No se pueden guardar cambios en un periodo cerrado.');
@@ -883,7 +904,7 @@ export class ServicioCrudComponent implements OnInit {
         },
         error: (e) => {
           this.isSaving = false;
-          this.alertsService.error(e.error);
+          this.showApiError(e, 'Error al crear servicio');
         },
       });
     } else {
@@ -906,7 +927,7 @@ export class ServicioCrudComponent implements OnInit {
         },
         error: (e) => {
           this.isSaving = false;
-          this.alertsService.error(e.error);
+          this.showApiError(e, 'Error al actualizar servicio');
         },
       });
     }
