@@ -41,6 +41,7 @@ export interface ServicioPayload {
   penalizado: boolean;
   Usuario_CapturaId: number;
   Fecha_Captura: string;
+  status: string;
 
   // Relations (optional as they come from GET but not POST)
   sucursalOtorgante?: any;
@@ -95,4 +96,5 @@ export interface ServicioCreatePayload {
   exp_comprobante_domicilio_resp_url?: string;
   exp_ine_aval_url?: string;
   fori_estado_cuenta_url?: string;
+  status?: string;
 }

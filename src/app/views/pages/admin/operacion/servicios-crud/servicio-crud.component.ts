@@ -95,6 +95,8 @@ export class ServicioCrudComponent implements OnInit {
     { id: 12, name: 'DICIEMBRE' },
   ];
 
+  statusOptions = ['En Proceso', 'Expediente Completo', 'Expediente enviado'];
+
   constructor(
     private servicioService: ServicioService,
     private sucursalService: SucursalService,
@@ -177,6 +179,7 @@ export class ServicioCrudComponent implements OnInit {
       exp_comprobante_domicilio_resp_url: ['', []],
       exp_ine_aval_url: ['', []],
       fori_estado_cuenta_url: ['', []],
+      status: ['En Proceso', [Validators.required]],
       // Usuario_CapturaId & Fecha_Captura handled by backend usually
     });
 
@@ -371,7 +374,8 @@ export class ServicioCrudComponent implements OnInit {
       exp_ine_responsable_url: item.exp_ine_responsable_url,
       exp_comprobante_domicilio_resp_url: item.exp_comprobante_domicilio_resp_url,
       exp_ine_aval_url: item.exp_ine_aval_url,
-      fori_estado_cuenta_url: item.fori_estado_cuenta_url
+      fori_estado_cuenta_url: item.fori_estado_cuenta_url,
+      status: item.status || 'En Proceso'
     });
 
     if (this.isPeriodoClosed) {
@@ -387,7 +391,7 @@ export class ServicioCrudComponent implements OnInit {
     this.observaciones = [];
     this.nuevaObservacion = '';
     this.loadObservaciones(item.id);
-    this.modalTitle = 'Editar Servicio';
+    this.modalTitle = 'Editar Servicio: ' + item.fo_Contrato;
     this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'xl' });
   }
 

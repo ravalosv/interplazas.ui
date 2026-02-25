@@ -40,7 +40,7 @@
             <ng-template ngbNavContent>
 
               <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <div class="mb-3">
                     <label class="form-label">Sucursal Origen <span class="text-danger">*</span></label>
                     <ng-select [items]="sucursales" bindLabel="nombre" bindValue="id" formControlName="fo_Sucursal_Origen_Id"
@@ -48,7 +48,7 @@
                     <div class="invalid-feedback d-block" *ngIf="form.get('fo_Sucursal_Origen_Id')?.invalid && (form.get('fo_Sucursal_Origen_Id')?.dirty || form.get('fo_Sucursal_Origen_Id')?.touched)">Este campo es requerido</div>
                   </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                   <div class="mb-3">
                     <label class="form-label">Sucursal Otorgante <span class="text-danger">*</span></label>
                     <ng-select [items]="sucursales" bindLabel="nombre" bindValue="id" formControlName="fo_Sucursal_otorgante_Id"
@@ -692,6 +692,7 @@
         <th [nzSortFn]="sortTitular">Titular</th>
         <th [nzSortFn]="sortFinado">Finado</th>
         <th [nzSortFn]="sortFecha">Fecha Servicio</th>
+        <th>Estatus</th>
         <th></th>
       </tr>
     </thead>
@@ -703,6 +704,13 @@
         <td>{{ item.fo_Nombre_Titular }}</td>
         <td>{{ item.fo_Nombre_Finado }}</td>
         <td>{{ item.fo_Fecha_Servicio | date:'dd-MMM-yyyy' }}</td>
+        <td>
+          <span class="badge" [ngClass]="{
+            'bg-warning': item.status === 'En Proceso',
+            'bg-primary': item.status === 'Expediente Completo',
+            'bg-success': item.status === 'Expediente enviado'
+          }">{{ item.status || 'En Proceso' }}</span>
+        </td>
         <td class="text-end">
           <button nz-button nzType="default" class="me-2" (click)="openEdit(modalEditor, item)">
             Editar
