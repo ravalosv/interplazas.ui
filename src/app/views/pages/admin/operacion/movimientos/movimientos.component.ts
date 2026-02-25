@@ -306,6 +306,19 @@ export class MovimientosComponent implements OnInit {
   }
 
   onComprobanteUpload(file: File, movimientoId: number | null) {
+    const allowedTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
+    if (!allowedTypes.includes(file.type)) {
+      this.message.error('Solo se permiten archivos PDF, Excel o Imágenes (JPG, PNG)');
+      return;
+    }
+
     if (movimientoId) {
         // Modo edición: subida inmediata
         this.estadoCuentaService.uploadComprobante(movimientoId, file).subscribe({

@@ -7,7 +7,7 @@
       #fileInput
       style="display:none"
       (change)="onFileChange($event)"
-      accept=".pdf,image/*"
+      accept=".pdf,.xlsx,.xls,image/*"
     />
     
     <button type="button" class="btn btn-outline-primary btn-sm" (click)="triggerUpload(fileInput)" [appLoading]="loading" [disabled]="disabled">

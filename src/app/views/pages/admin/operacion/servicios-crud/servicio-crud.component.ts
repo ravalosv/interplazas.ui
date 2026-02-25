@@ -669,9 +669,16 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   handleFileSelection(file: File, fieldName: string) {
-    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    const allowedTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/jpg',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel'
+    ];
     if (!allowedTypes.includes(file.type)) {
-      this.alertsService.error('Solo se permiten archivos PDF o Imágenes (JPG, PNG)');
+      this.alertsService.error('Solo se permiten archivos PDF, Excel o Imágenes (JPG, PNG)');
       return;
     }
 
