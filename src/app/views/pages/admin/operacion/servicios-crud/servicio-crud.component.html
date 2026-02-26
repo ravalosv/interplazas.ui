@@ -666,7 +666,7 @@
 
 <nz-card>
   <div class="row mb-3 align-items-end">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <label class="form-label">Periodo</label>
       <ng-select
         [items]="periodos"
@@ -677,7 +677,29 @@
         (change)="searchByPeriodo()">
       </ng-select>
     </div>
-    <div class="col-md-5">
+    <div class="col-md-3">
+      <label class="form-label">Mostrar</label>
+      <ng-select
+        [items]="viewScopeOptions"
+        bindLabel="name"
+        bindValue="id"
+        [(ngModel)]="selectedViewScope"
+        [clearable]="false"
+        (change)="search()">
+      </ng-select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Estatus</label>
+      <ng-select
+        [items]="statusFilterOptions"
+        bindLabel="name"
+        bindValue="id"
+        [(ngModel)]="selectedStatusFilter"
+        [clearable]="false"
+        (change)="search()">
+      </ng-select>
+    </div>
+    <div class="col-md-3">
       <label class="form-label">Filtrar</label>
       <input
         type="text"

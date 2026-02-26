@@ -38,7 +38,23 @@ export class ServicioCrudComponent implements OnInit {
   apiUrl = environment.apiUrl;
   selectedFiles: Map<string, File> = new Map();
   captureUserName: string = '';
+  currentUserId: number | null = null;
   
+  // Filters
+  viewScopeOptions = [
+    { id: 'all', name: 'Ver todos los servicios' },
+    { id: 'mine', name: 'Ver solo mis Servicios' }
+  ];
+  selectedViewScope = 'all';
+
+  statusFilterOptions = [
+    { id: 'all', name: 'Ver todos' },
+    { id: 'En Proceso', name: 'En Proceso' },
+    { id: 'Expediente Completo', name: 'Expediente Completo' },
+    { id: 'Expediente enviado', name: 'Expediente enviado' }
+  ];
+  selectedStatusFilter = 'all';
+
   // Periodo Filter
   periodos: PeriodoPayload[] = [];
   activePeriodosList: PeriodoPayload[] = [];
@@ -119,6 +135,12 @@ export class ServicioCrudComponent implements OnInit {
 
   ngOnInit(): void {
     this.isAdmin = this.authService.isAdmin();
+    
+    const currentUser = this.authService.currentUserValue;
+    if (currentUser && currentUser.user) {
+      this.currentUserId = currentUser.user.id;
+    }
+
     this.initForm();
     this.loadCatalogs();
     this.loadPeriodos();
@@ -301,7 +323,8 @@ export class ServicioCrudComponent implements OnInit {
   search() {
     const term = this.searchTerm.toLowerCase();
     this.displayServicios = this.servicios.filter((item) => {
-      return (
+      // 1. Text Search Filter
+      const matchesSearch = (
         (item.fo_Contrato && item.fo_Contrato.toLowerCase().includes(term)) ||
         (item.fo_Nombre_Titular && item.fo_Nombre_Titular.toLowerCase().includes(term)) ||
         (item.fo_Nombre_Finado && item.fo_Nombre_Finado.toLowerCase().includes(term)) ||
@@ -309,6 +332,25 @@ export class ServicioCrudComponent implements OnInit {
         (item.sucursalOtorgante?.nombre && item.sucursalOtorgante.nombre.toLowerCase().includes(term)) ||
         (item.fo_Fecha_Servicio && item.fo_Fecha_Servicio.toLowerCase().includes(term))
       );
+
+      if (!matchesSearch) return false;
+
+      // 2. View Scope Filter
+      if (this.selectedViewScope === 'mine') {
+         if (this.currentUserId && item.Usuario_CapturaId !== this.currentUserId) {
+             return false;
+         }
+      }
+
+      // 3. Status Filter
+      if (this.selectedStatusFilter !== 'all') {
+          const currentStatus = item.status || 'En Proceso';
+          if (currentStatus !== this.selectedStatusFilter) {
+              return false;
+          }
+      }
+
+      return true;
     });
   }
 
