@@ -56,10 +56,10 @@ export class ServicioService {
   }
 
   uploadDocument(id: number, fieldName: string, file: File) {
-    const url = `${this.baseUrl}/servicio/${id}/upload`;
+    const url = `${this.baseUrl}/servicio/${id}/upload?fieldName=${fieldName}`;
     const formData = new FormData();
-    formData.append('file', file);
     formData.append('fieldName', fieldName);
+    formData.append('file', file);
     return this.http
       .post<ApiReturn<ServicioPayload>>(url, formData)
       .pipe(map((ret) => ret));

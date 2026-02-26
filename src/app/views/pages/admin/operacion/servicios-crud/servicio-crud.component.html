@@ -582,6 +582,9 @@
                     <button type="button" class="btn btn-outline-primary btn-sm" (click)="enviarExpedienteCorreo()" [disabled]="!editingId || form.get('status')?.value !== 'Expediente Completo'">
                       Enviar expediente por correo
                     </button>
+                    <button type="button" class="btn btn-outline-info btn-sm ms-2" (click)="downloadDocuments()" [disabled]="!editingId" [appLoading]="loadingDownload">
+                      <i class="feather icon-download me-1"></i> Descargar documentos
+                    </button>
                   </div>
                 </div>
               </div>

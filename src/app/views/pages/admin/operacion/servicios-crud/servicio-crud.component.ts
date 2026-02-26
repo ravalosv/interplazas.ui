@@ -19,6 +19,9 @@ import { PeriodoService } from 'src/app/core/services/periodo.service';
 import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
 import { environment } from 'src/environments/environment';
 import { ContratoProxyService } from 'src/app/core/services/contrato-proxy.service';
+import * as JSZip from 'jszip';
+import * as FileSaver from 'file-saver';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-servicio-crud',
@@ -74,6 +77,7 @@ export class ServicioCrudComponent implements OnInit {
   nuevaObservacion = '';
   loadingObservaciones = false;
   loadingPenalizado = false;
+  loadingDownload = false;
   processingField: string | null = null;
   loadingDeleteId: number | null = null;
 
@@ -1010,6 +1014,7 @@ export class ServicioCrudComponent implements OnInit {
       // Append files
       this.selectedFiles.forEach((file, key) => {
         if (key === 'fo_Documento_Cliente_url') {
+           formData.append('fieldName', 'fo_Documento_Cliente_url');
            formData.append('file', file);
         }
       });
@@ -1124,6 +1129,86 @@ export class ServicioCrudComponent implements OnInit {
         });
       },
     });
+  }
+
+  async downloadDocuments() {
+    if (!this.editingId) return;
+
+    this.loadingDownload = true;
+    const attachmentFields = [
+      'exp_Solicitud_Servicio_url',
+      'exp_Comprobante_Pago_url',
+      'exp_Convenio_url',
+      'fo_Documento_Cliente_url',
+      'fo_Monto_devuelto_documento_url',
+      'exp_ine_responsable_url',
+      'exp_comprobante_domicilio_resp_url',
+      'exp_ine_aval_url',
+      'fori_estado_cuenta_url',
+    ];
+
+    const fileMap: { [key: string]: string } = {
+      'exp_Solicitud_Servicio_url': 'Solicitud_Servicio',
+      'exp_Comprobante_Pago_url': 'Comprobante_Pago',
+      'exp_Convenio_url': 'Convenio',
+      'fo_Documento_Cliente_url': 'Documento_Cliente',
+      'fo_Monto_devuelto_documento_url': 'Monto_Devuelto_Doc',
+      'exp_ine_responsable_url': 'INE_Responsable',
+      'exp_comprobante_domicilio_resp_url': 'Comprobante_Domicilio_Resp',
+      'exp_ine_aval_url': 'INE_Aval',
+      'fori_estado_cuenta_url': 'Estado_Cuenta'
+    };
+
+    const zip = new JSZip();
+    let count = 0;
+
+    try {
+      const promises = attachmentFields.map(async (field) => {
+        const url = this.form.get(field)?.value;
+        if (url) {
+          try {
+            let fullUrl = url;
+            if (!url.startsWith('http')) {
+              const baseUrl = environment.fotosUrl.endsWith('/') ? environment.fotosUrl : environment.fotosUrl + '/';
+              const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+              fullUrl = baseUrl + cleanPath;
+            }
+
+            const data = await firstValueFrom(this.http.get(fullUrl, { responseType: 'blob' }));
+            
+            // Extract extension from URL or original filename if possible, otherwise default to nothing or from MIME type (harder)
+            // Usually URL ends with .pdf, .jpg, etc.
+            let ext = url.split('.').pop();
+            if (ext === url) ext = ''; // No extension found
+            
+            const baseName = fileMap[field] || field;
+            const filename = ext ? `${baseName}.${ext}` : baseName;
+            
+            zip.file(filename, data);
+            count++;
+          } catch (error) {
+            console.error(`Error downloading ${field}:`, error);
+          }
+        }
+      });
+
+      await Promise.all(promises);
+
+      if (count > 0) {
+        const content = await zip.generateAsync({ type: 'blob' });
+        const contrato = this.form.get('fo_Contrato')?.value || this.editingId;
+        const safeContrato = String(contrato).replace(/[^a-zA-Z0-9-_]/g, '_');
+        FileSaver.saveAs(content, `Expediente_Servicio_${safeContrato}.zip`);
+        this.alertsService.success('Documentos descargados correctamente');
+      } else {
+        this.alertsService.warning('No hay documentos para descargar');
+      }
+    } catch (e) {
+      console.error(e);
+      this.alertsService.error('Error al generar el archivo ZIP');
+    } finally {
+      this.loadingDownload = false;
+    }
   }
 
   sortContrato = (a: ServicioPayload, b: ServicioPayload) => (a.fo_Contrato || '').localeCompare(b.fo_Contrato || '');
