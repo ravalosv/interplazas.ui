@@ -25,7 +25,13 @@
           <div class="col-md-12">
             <div class="mb-3 text-end">
               <label class="form-label fw-bold">
-                Fecha Captura: {{ form.get('displayFechaCaptura')?.value | date:'dd-MMM-yyyy' }}
+                Estatus: <span class="badge" [ngClass]="{
+                  'bg-warning': form.get('status')?.value === 'En Proceso',
+                  'bg-primary': form.get('status')?.value === 'Expediente Completo',
+                  'bg-success': form.get('status')?.value === 'Expediente enviado'
+                }">{{ form.get('status')?.value || 'En Proceso' }}</span>
+                <span class="ms-2">|</span>
+                <span class="ms-2">Fecha Captura: {{ form.get('displayFechaCaptura')?.value | date:'dd-MMM-yyyy' }}</span>
                 <span *ngIf="captureUserName">
                   | Usuario Captura: {{ captureUserName }}
                 </span>
@@ -564,9 +570,16 @@
                 </div>
               </div>
               <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                   <div class="mb-3">
-                    <button type="button" class="btn btn-outline-primary btn-sm" (click)="enviarExpedienteCorreo()" [disabled]="!editingId">
+                    <button type="button" 
+                            class="btn btn-sm me-2" 
+                            [ngClass]="form.get('status')?.value === 'Expediente Completo' ? 'btn-outline-danger' : 'btn-outline-success'"
+                            (click)="marcarExpedienteCompleto()" 
+                            [disabled]="!editingId || form.get('status')?.value === 'Expediente enviado'">
+                      {{ form.get('status')?.value === 'Expediente Completo' ? 'Marcar expediente INCOMPLETO' : 'Marcar expediente completo' }}
+                    </button>
+                    <button type="button" class="btn btn-outline-primary btn-sm" (click)="enviarExpedienteCorreo()" [disabled]="!editingId || form.get('status')?.value !== 'Expediente Completo'">
                       Enviar expediente por correo
                     </button>
                   </div>

@@ -416,15 +416,93 @@ export class ServicioCrudComponent implements OnInit {
       this.alertsService.error('Guarde el servicio antes de enviar el correo');
       return;
     }
-    this.servicioService.sendExpedienteEmail(this.editingId).subscribe({
+
+    if (this.form.invalid) {
+      Object.values(this.form.controls).forEach((c) => c.markAsTouched());
+      this.alertsService.error('Por favor complete los campos requeridos antes de enviar');
+      return;
+    }
+
+    // Actualizar status a 'Expediente enviado'
+    this.form.patchValue({ status: 'Expediente enviado' });
+
+    // Preparar payload para guardar
+    const payload = this.form.value as any;
+    delete payload.displayFechaCaptura;
+    const finalPayload = payload as ServicioCreatePayload;
+
+    this.isSaving = true;
+    
+    // Primero guardamos el cambio de estatus
+    this.servicioService.update(this.editingId, finalPayload).subscribe({
       next: (ret) => {
         if (ret.success) {
-          this.alertsService.success('Expediente enviado por correo');
+          this.alertsService.success('Estatus actualizado a "Expediente enviado"');
+          this.loadServicios(); // Refrescar lista
+
+          // Luego intentamos enviar el correo
+          this.servicioService.sendExpedienteEmail(this.editingId!).subscribe({
+            next: (emailRet) => {
+              this.isSaving = false;
+              if (emailRet.success) {
+                this.alertsService.success('Expediente enviado por correo exitosamente');
+              } else {
+                this.alertsService.warning('Estatus actualizado, pero hubo un error al enviar el correo: ' + emailRet.error);
+              }
+            },
+            error: (e) => {
+              this.isSaving = false;
+              this.alertsService.warning('Estatus actualizado, pero hubo un error al enviar el correo: ' + (e.error || e.message));
+            }
+          });
         } else {
-          this.alertsService.error(ret.error);
+          this.isSaving = false;
+          this.alertsService.error('Error al actualizar estatus: ' + ret.error);
         }
       },
-      error: (e) => this.alertsService.error(e.error || 'Error al enviar el correo'),
+      error: (e) => {
+        this.isSaving = false;
+        this.showApiError(e, 'Error al actualizar estatus');
+      }
+    });
+  }
+
+  marcarExpedienteCompleto() {
+    if (!this.editingId) {
+      this.alertsService.error('Guarde el servicio antes de cambiar el estatus');
+      return;
+    }
+
+    const currentStatus = this.form.get('status')?.value || 'En Proceso';
+    
+    // Si ya está enviado, no hacemos nada (aunque el botón debería estar deshabilitado)
+    if (currentStatus === 'Expediente enviado') {
+      return;
+    }
+
+    let newStatus = '';
+    let title = '';
+    let message = '';
+    let confirmBtn = 'Sí, cambiar estatus';
+
+    if (currentStatus === 'Expediente Completo') {
+      newStatus = 'En Proceso';
+      title = '¿Marcar expediente INCOMPLETO?';
+      message = 'El estatus del servicio regresará a "En Proceso".';
+    } else {
+      // Asumimos que es 'En Proceso' u otro estado inicial
+      newStatus = 'Expediente Completo';
+      title = '¿Marcar expediente completo?';
+      message = 'El estatus del servicio cambiará a "Expediente Completo".';
+    }
+    
+    this.alertsService.confirm({
+      titulo: title,
+      message: message,
+      okCallback: () => {
+        this.form.patchValue({ status: newStatus });
+        this.save(true);
+      }
     });
   }
 
