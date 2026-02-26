@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { ApiReturn } from '../interfaces/payloads/api_return';
+import { IServicioLog } from '../interfaces/models/servicio-log';
 import { ServicioCreatePayload, ServicioPayload } from '../interfaces/payloads/servicio.payload';
 
 @Injectable({
@@ -17,6 +18,13 @@ export class ServicioService {
     const url = `${this.baseUrl}/servicio`;
     return this.http
       .get<ApiReturn<ServicioPayload[]>>(url)
+      .pipe(map((ret) => ret));
+  }
+
+  getLogs(id: number) {
+    const url = `${this.baseUrl}/servicio/${id}/logs`;
+    return this.http
+      .get<ApiReturn<IServicioLog[]>>(url)
       .pipe(map((ret) => ret));
   }
 

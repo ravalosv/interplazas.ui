@@ -590,6 +590,61 @@
               </div>
             </ng-template>
           </li>
+          <!-- Historial de Cambios -->
+          <li [ngbNavItem]="8">
+            <a ngbNavLink>Historial de Cambios</a>
+            <ng-template ngbNavContent>
+              <div class="row mt-3">
+                <div class="col-md-12">
+                  <div class="d-flex justify-content-between mb-2 align-items-center">
+                    <div class="w-50">
+                      <input type="text" class="form-control form-control-sm" placeholder="Filtrar historial..." [(ngModel)]="logSearchTerm" (ngModelChange)="filterLogs()" [ngModelOptions]="{standalone: true}">
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" (click)="loadLogs(editingId)" [disabled]="loadingLogs">
+                      <i class="feather icon-refresh-cw me-1" [class.spin]="loadingLogs"></i> Actualizar
+                    </button>
+                  </div>
+                  <div *ngIf="loadingLogs" class="text-muted text-center p-3">
+                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    Cargando historial...
+                  </div>
+                  <div *ngIf="!loadingLogs && logs.length === 0" class="text-muted p-3">
+                    No hay movimientos registrados.
+                  </div>
+                  
+                  <nz-table #logsTable [nzData]="filteredLogs" [nzLoading]="loadingLogs" [nzPageSize]="10" [nzShowPagination]="true" nzSize="small" *ngIf="logs.length > 0 || loadingLogs">
+                    <thead>
+                      <tr>
+                        <th nzWidth="15%">Fecha</th>
+                        <th nzWidth="20%">Usuario</th>
+                        <th nzWidth="15%">Acción</th>
+                        <th>Detalles</th>
+                        <th nzWidth="80px" class="text-center">Ver</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let log of logsTable.data">
+                        <td>{{ log.fecha | date: 'dd-MMM-yyyy HH:mm' }}</td>
+                        <td>
+                          <div class="fw-bold">{{ log.usuario?.name || 'Sistema' }}</div>
+                          <div class="text-muted fst-italic" style="font-size: 0.8em;">{{ log.usuario?.email }}</div>
+                        </td>
+                        <td class="fw-bold">{{ log.accion }}</td>
+                        <td>
+                          <div class="log-details">{{ log.detalles }}</div>
+                        </td>
+                        <td class="text-center">
+                          <button type="button" class="btn btn-sm btn-info" (click)="openLogDetails(logDetailsModal, log)">
+                            <i class="feather icon-eye"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </nz-table>
+                </div>
+              </div>
+            </ng-template>
+          </li>
         </ul>
         <div [ngbNavOutlet]="nav" class="mt-3"></div>
       </div>
@@ -662,6 +717,42 @@
     <div class="modal-footer">
       <button type="button" class="btn btn-secondary" (click)="modal.close()">Cancelar</button>
       <button type="button" class="btn btn-primary" (click)="saveChangePeriod(modal)" [appLoading]="loading">Guardar</button>
+    </div>
+  </ng-template>
+
+  <ng-template #logDetailsModal let-modal>
+    <div class="modal-header">
+      <h5 class="modal-title">Detalle del Movimiento</h5>
+      <button type="button" class="btn-close" (click)="modal.close()" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <label class="fw-bold">Fecha:</label>
+          <div>{{ selectedLog?.fecha | date: 'dd-MMM-yyyy HH:mm:ss' }}</div>
+        </div>
+        <div class="col-md-6">
+          <label class="fw-bold">Usuario:</label>
+          <div>{{ selectedLog?.usuario?.name }} ({{ selectedLog?.usuario?.email }})</div>
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-md-12">
+          <label class="fw-bold">Acción:</label>
+          <div class="text-primary fw-bold">{{ selectedLog?.accion }}</div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-12">
+          <label class="fw-bold">Detalles de cambios:</label>
+          <div class="p-3 bg-light border rounded" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">
+            {{ selectedLog?.detalles }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.close()">Cerrar</button>
     </div>
   </ng-template>
 

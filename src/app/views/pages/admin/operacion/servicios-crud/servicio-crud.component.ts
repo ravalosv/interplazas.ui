@@ -14,6 +14,7 @@ import { StatusService } from 'src/app/core/services/status.service';
 import { EstadoCtaStatusService } from 'src/app/core/services/estado-cta-status.service';
 import { CanalComunicacionService } from 'src/app/core/services/canal-comunicacion.service';
 import { ServicioCreatePayload, ServicioPayload } from 'src/app/core/interfaces/payloads/servicio.payload';
+import { IServicioLog } from 'src/app/core/interfaces/models/servicio-log';
 import { ServicioObservacionService, ServicioObservacionPayload } from 'src/app/core/services/servicio-observacion.service';
 import { PeriodoService } from 'src/app/core/services/periodo.service';
 import { PeriodoPayload } from 'src/app/core/interfaces/payloads/periodo.payload';
@@ -116,6 +117,12 @@ export class ServicioCrudComponent implements OnInit {
   ];
 
   statusOptions = ['En Proceso', 'Expediente Completo', 'Expediente enviado'];
+
+  loadingLogs = false;
+  logs: IServicioLog[] = [];
+  filteredLogs: IServicioLog[] = [];
+  logSearchTerm: string = '';
+  selectedLog: IServicioLog | null = null;
 
   constructor(
     private servicioService: ServicioService,
@@ -368,6 +375,7 @@ export class ServicioCrudComponent implements OnInit {
     this.activeTab = 2;
     this.isPenalizado = false;
     this.observaciones = [];
+    this.logs = [];
     this.nuevaObservacion = '';
     this.modalTitle = 'Nuevo Servicio';
     this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'xl' });
@@ -435,6 +443,8 @@ export class ServicioCrudComponent implements OnInit {
     this.observaciones = [];
     this.nuevaObservacion = '';
     this.loadObservaciones(item.id);
+    this.logs = [];
+    this.loadLogs(item.id);
     this.modalTitle = 'Editar Servicio: ' + item.fo_Contrato;
     this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'xl' });
   }
@@ -455,6 +465,41 @@ export class ServicioCrudComponent implements OnInit {
         this.alertsService.error(e.error);
       },
     });
+  }
+
+  loadLogs(servicioId: number | null) {
+    if (!servicioId) return;
+    this.loadingLogs = true;
+    this.servicioService.getLogs(servicioId).subscribe({
+      next: (ret: any) => {
+        this.loadingLogs = false;
+        if (ret.success) {
+          this.logs = ret.data;
+          this.filteredLogs = [...this.logs];
+          this.filterLogs(); // Re-apply filter if term exists or reset
+        } else {
+          console.error('Error loading logs:', ret.error);
+        }
+      },
+      error: (e: any) => {
+        this.loadingLogs = false;
+        console.error('Error loading logs:', e);
+      },
+    });
+  }
+
+  filterLogs() {
+    if (!this.logSearchTerm) {
+      this.filteredLogs = [...this.logs];
+      return;
+    }
+    const term = this.logSearchTerm.toLowerCase();
+    this.filteredLogs = this.logs.filter(log => 
+      (log.usuario?.name?.toLowerCase().includes(term) || '') ||
+      (log.usuario?.email?.toLowerCase().includes(term) || '') ||
+      (log.accion?.toLowerCase().includes(term) || '') ||
+      (log.detalles?.toLowerCase().includes(term) || '')
+    );
   }
 
   enviarExpedienteCorreo() {
@@ -1209,6 +1254,11 @@ export class ServicioCrudComponent implements OnInit {
     } finally {
       this.loadingDownload = false;
     }
+  }
+
+  openLogDetails(content: any, log: IServicioLog) {
+    this.selectedLog = log;
+    this.modalService.open(content, { size: 'lg', centered: true });
   }
 
   sortContrato = (a: ServicioPayload, b: ServicioPayload) => (a.fo_Contrato || '').localeCompare(b.fo_Contrato || '');

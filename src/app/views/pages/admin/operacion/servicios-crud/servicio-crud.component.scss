@@ -1,3 +1,11 @@
 .text-end {
   text-align: end;
 }
+
+.log-details {
+  max-height: 100px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-size: 0.9em;
+  padding-right: 5px; /* Space for scrollbar */
+}
