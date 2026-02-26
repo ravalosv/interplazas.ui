@@ -55,6 +55,7 @@ export interface ServicioPayload {
   convenioStatus?: any;
   motivoNoOtorgado?: any;
   usuarioCaptura?: any;
+  logs?: { usuarioId: number }[];
 }
 
 export interface ServicioCreatePayload {

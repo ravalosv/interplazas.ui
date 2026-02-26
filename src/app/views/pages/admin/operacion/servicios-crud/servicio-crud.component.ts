@@ -348,8 +348,13 @@ export class ServicioCrudComponent implements OnInit {
 
       // 2. View Scope Filter
       if (this.selectedViewScope === 'mine') {
-         if (this.currentUserId && item.Usuario_CapturaId !== this.currentUserId) {
-             return false;
+         if (this.currentUserId) {
+            const createdByMe = item.Usuario_CapturaId === this.currentUserId;
+            const modifiedByMe = item.logs?.some(log => log.usuarioId === this.currentUserId);
+            
+            if (!createdByMe && !modifiedByMe) {
+                return false;
+            }
          }
       }
 
