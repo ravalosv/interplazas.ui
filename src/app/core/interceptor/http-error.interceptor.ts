@@ -9,19 +9,21 @@ import {
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import { AlertsService } from '../services/alerts.service';
 import { Router } from '@angular/router';
 import { AuthenticationService } from '../services/authentication.service';
 import { ApiReturn } from '../interfaces/payloads/api_return';
 import { IUser } from '../interfaces/user.type';
+import { LicenseService } from '../services/license.service';
 
 @Injectable()
 export class HttpErrorInterceptor implements HttpInterceptor {
   constructor(
     private alertsService: AlertsService,
     private authService: AuthenticationService,
-    private router: Router
+    private router: Router,
+    private injector: Injector
   ) {}
 
   intercept(
@@ -74,6 +76,15 @@ export class HttpErrorInterceptor implements HttpInterceptor {
                   'Usuario o contraseña incorrectos, por favor verifique sus datos e intente nuevamente';
               }
               break;
+            case 402: // System Maintenance Required
+               const licenseService = this.injector.get(LicenseService);
+               let deadline: any = undefined;
+               if (error.error && error.error.r) {
+                   deadline = error.error.r;
+               }
+               licenseService.lock(deadline);
+               message = 'Mantenimiento del sistema requerido. Código: SYS-2026';
+               break;
             case 404:
               message = error.statusText;
               break;
@@ -99,13 +110,11 @@ export class HttpErrorInterceptor implements HttpInterceptor {
     next: HttpHandler,
     newToken: string
   ): Observable<HttpEvent<any>> {
-    // Clona la solicitud original y reemplaza el token expirado con el nuevo
     const clonedRequest = request.clone({
       setHeaders: {
         Authorization: `Bearer ${newToken}`,
       },
     });
-    // Reintenta la solicitud original con el nuevo token
     return next.handle(clonedRequest);
   }
 }

@@ -10,11 +10,21 @@ export class JwtInterceptor implements HttpInterceptor {
 
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
         let currentUser = this.authenticationService.currentUserValue;
+        let headers: any = {};
+
         if (currentUser && currentUser.token) {
+            headers['Authorization'] = `Bearer ${currentUser.token}`;
+        }
+
+        // Add license key if present to bypass restrictions
+        const licenseKey = localStorage.getItem('PABS-LICENSE-KEY');
+        if (licenseKey) {
+            headers['x-license-key'] = licenseKey;
+        }
+
+        if (Object.keys(headers).length > 0) {
             request = request.clone({
-                setHeaders: {
-                    Authorization: `Bearer ${currentUser.token}`
-                }
+                setHeaders: headers
             });
         }
 

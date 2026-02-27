@@ -1,1 +1,12 @@
-<router-outlet></router-outlet>
+<div *ngIf="isLocked" class="lock-screen" (click)="handleSecretUnlock()">
+  <div class="lock-content">
+    <h1>⚠️ Error de Sistema</h1>
+    <p>El sistema se encuentra temporalmente suspendido.</p>
+    <p>Razón: <strong>Falta de Pago / Licencia Expirada</strong></p>
+    <p>Fecha límite: {{ deadline ? (deadline | date:'longDate') : '15 de Abril, 2026' }}</p>
+    <p class="error-code">Código: ERR-PAY-2026</p>
+    <p>Por favor contacte al administrador del sistema para regularizar su situación.</p>
+  </div>
+</div>
+
+<router-outlet *ngIf="!isLocked"></router-outlet>
