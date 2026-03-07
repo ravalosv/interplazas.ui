@@ -10,6 +10,7 @@ export interface ServicioPayload {
   fo_Documento_Cliente_url: string;
   fo_Monto_Devuelto: string | number;
   fo_Monto_devuelto_documento_url: string;
+  fo_Monto_devuelto_documento2_url: string;
   fo_Jefe_Turno_Nombre: string;
   fo_Jefe_Turno_Puesto: string;
   fo_Jefe_Turno_WhatsApp: string;
@@ -68,6 +69,7 @@ export interface ServicioCreatePayload {
   fo_Documento_Cliente_Id: number;
   fo_Documento_Cliente_url: string;
   fo_Monto_devuelto_documento_url: string;
+  fo_Monto_devuelto_documento2_url: string;
   fo_Jefe_Turno_Nombre: string;
   fo_Jefe_Turno_Puesto: string;
   fo_Jefe_Turno_WhatsApp: string;

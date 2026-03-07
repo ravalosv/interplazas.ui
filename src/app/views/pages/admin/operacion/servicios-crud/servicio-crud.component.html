@@ -234,14 +234,24 @@
                     <input type="number" class="form-control" formControlName="fo_Monto_Devuelto" />
                   </div>
                 </div>
-                <div class="col-md-8">
-                  <label class="form-label d-block">&nbsp;</label>
+                <div class="col-md-4">
+                  <label class="form-label d-block">Comprobante 1</label>
                   <app-document-upload
                     [disabled]="isPeriodoClosed"
                     [hasFile]="hasDocument('fo_Monto_devuelto_documento_url')"
                     (fileSelected)="onDocumentUpload($event, 'fo_Monto_devuelto_documento_url')"
                     (view)="viewDocument('fo_Monto_devuelto_documento_url')"
                     (delete)="deleteDocument('fo_Monto_devuelto_documento_url')">
+                  </app-document-upload>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label d-block">Comprobante 2</label>
+                  <app-document-upload
+                    [disabled]="isPeriodoClosed"
+                    [hasFile]="hasDocument('fo_Monto_devuelto_documento2_url')"
+                    (fileSelected)="onDocumentUpload($event, 'fo_Monto_devuelto_documento2_url')"
+                    (view)="viewDocument('fo_Monto_devuelto_documento2_url')"
+                    (delete)="deleteDocument('fo_Monto_devuelto_documento2_url')">
                   </app-document-upload>
                 </div>
               </div>
