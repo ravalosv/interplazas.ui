@@ -13,6 +13,15 @@
       </button>
     </div>
     <div class="bd-highlight me-2">
+      <button class="btn btn-outline-success"
+              (click)="exportConcentradoServicios()"
+              [appLoading]="exportingExcel"
+              [disabled]="!selectedPeriodoId || servicios.length === 0">
+        <i class="feather icon-download pe-2"></i>
+        Concentrado de servicios
+      </button>
+    </div>
+    <div class="bd-highlight me-2">
       <button class="btn btn-primary" (click)="openCreate(modalEditor)">
         <i class="feather icon-file-plus pe-2"></i>
         Nuevo Servicio

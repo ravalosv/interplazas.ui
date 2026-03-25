@@ -22,6 +22,8 @@ import { environment } from 'src/environments/environment';
 import { ContratoProxyService } from 'src/app/core/services/contrato-proxy.service';
 import * as JSZip from 'jszip';
 import * as FileSaver from 'file-saver';
+import * as XLSX from 'xlsx-js-style';
+import { DatePipe } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 
 @Component({
@@ -30,6 +32,7 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ['./servicio-crud.component.scss'],
 })
 export class ServicioCrudComponent implements OnInit {
+  private datePipe = new DatePipe('es-MX');
   loading = false;
   isSaving = false;
   servicios: ServicioPayload[] = [];
@@ -79,6 +82,7 @@ export class ServicioCrudComponent implements OnInit {
   loadingObservaciones = false;
   loadingPenalizado = false;
   loadingDownload = false;
+  exportingExcel = false;
   processingField: string | null = null;
   loadingDeleteId: number | null = null;
 
@@ -178,6 +182,75 @@ export class ServicioCrudComponent implements OnInit {
     return !this.isPeriodoClosed && this.authService.isAdmin();
   }
  
+  exportConcentradoServicios() {
+    if (!this.selectedPeriodoId || this.servicios.length === 0) return;
+    this.exportingExcel = true;
+    try {
+      const periodo = this.periodos.find(p => Number(p.id) === Number(this.selectedPeriodoId));
+      const periodoNombre = periodo?.nombre || `Periodo_${this.selectedPeriodoId}`;
+      const data = this.servicios.map(s => {
+        const filialOrigenName = s.sucursalOrigen?.filial?.nombre || s.sucursalOrigen?.nombre || '';
+        const filialOtorganteName = s.sucursalOtorgante?.filial?.nombre || s.sucursalOtorgante?.nombre || '';
+        const extranjera = !!s.sucursalOtorgante?.filial?.extranjera;
+        const monto = extranjera ? (s.concepto?.montoUSD ?? 0) : (s.concepto?.montoMXN ?? 0);
+        const tipoDocNombre = s.tipoDocumento?.nombre || this.tiposDocumento.find(t => t.id === s.fo_Documento_Cliente_Id)?.nombre || '';
+        return {
+          'FILIAL ORIGEN': filialOrigenName,
+          'FILIAL OTORGANTE': filialOtorganteName,
+          'CONTRATO': s.fo_Contrato || '',
+          'TITULAR': s.fo_Nombre_Titular || '',
+          'FINADO': s.fo_Nombre_Finado || '',
+          'FECHA': this.datePipe.transform(s.fo_Fecha_Servicio, 'dd/MM/yyyy') || '',
+          'CONCEPTO': s.concepto?.nombre || '',
+          'MONTO': Number(monto) || 0,
+          'SALDO PABS': Number(s.fori_Saldo_Contrato || 0),
+          'SALDO RECUPERADO': Number(s.fo_Contrato_Monto_Recuperado || 0),
+          'DOCUMENTO - DOCUMENTO DEL CLIENTE': tipoDocNombre,
+          'EDO DE CUENTA': s.fori_estado_cuenta_url ? 'SI' : 'NO',
+          'CONVENIO': s.fori_Acepta_Convenio ? 'SI' : 'NO',
+          'AGENTE': s.usuarioCaptura?.name || '',
+          'COMENTARIO DE SEGUIMIENTO': s.exp_Observaciones_cierre || '',
+          'SERVICIO OTORGADO': s.exp_Motivo_De_No_Otorgado_Id ? 'NO' : 'SI',
+        };
+      });
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const headers = data.length > 0 ? Object.keys(data[0]) : [];
+      for (let c = 0; c < headers.length; c++) {
+        const addr = XLSX.utils.encode_cell({ r: 0, c });
+        const cell = worksheet[addr];
+        if (cell) {
+          cell.s = {
+            font: { bold: true },
+            fill: { patternType: 'solid', fgColor: { rgb: 'D8E1F2' } }
+          };
+        }
+      }
+      worksheet['!cols'] = [
+        { wch: 22 },
+        { wch: 22 },
+        { wch: 16 },
+        { wch: 24 },
+        { wch: 24 },
+        { wch: 12 },
+        { wch: 22 },
+        { wch: 12 },
+        { wch: 14 },
+        { wch: 18 },
+        { wch: 36 },
+        { wch: 16 },
+        { wch: 12 },
+        { wch: 22 },
+        { wch: 60 },
+        { wch: 18 },
+      ];
+      const workbook = { Sheets: { 'Concentrado': worksheet }, SheetNames: ['Concentrado'] };
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      FileSaver.saveAs(blob, `Concentrado_de_servicios_${periodoNombre}.xlsx`);
+    } finally {
+      this.exportingExcel = false;
+    }
+  }
 
   initForm() {
     const now = new Date();
