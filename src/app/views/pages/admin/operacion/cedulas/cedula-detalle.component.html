@@ -103,9 +103,9 @@
           <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
           <div *ngIf="d.esFilialesHermanas" class="chip chip-filiales-hermanas">Filiales hermanas</div>
           <div *ngIf="d.aceptaConvenio" class="chip chip-convenio">Saldo PABS Conveniado</div>
-          <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0">
-            <div *ngIf="(d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
-            <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
+          <div *ngIf="((d.saldoEfectivamenteCobrado || 0) + (d.montoDevuelto || 0)) > 0">
+            <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
+            <div *ngIf="(d.saldoEfectivamenteCobrado || 0) <= 0 && (d.montoDevuelto || 0) > 0" class="chip chip-devuelto">Saldo PABS devuelto</div>
           </div>
         </td>
         <td class="text-end">{{ d.saldoEfectivamenteCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
@@ -167,9 +167,9 @@
           <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
           <div *ngIf="d.esFilialesHermanas" class="chip chip-filiales-hermanas">Filiales hermanas</div>
           <div *ngIf="d.aceptaConvenio" class="chip chip-convenio">Saldo PABS Conveniado</div>
-          <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0">
-            <div *ngIf="(d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
-            <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
+          <div *ngIf="((d.saldoEfectivamenteCobrado || 0) + (d.montoDevuelto || 0)) > 0">
+            <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
+            <div *ngIf="(d.saldoEfectivamenteCobrado || 0) <= 0 && (d.montoDevuelto || 0) > 0" class="chip chip-devuelto">Saldo PABS devuelto</div>
           </div>
         </td>
         <td class="text-end">{{ d.saldoEfectivamenteCobrado | currency:'USD':'symbol':'1.2-2' }}</td>
@@ -231,9 +231,9 @@
           <div *ngIf="d.penalizado" class="chip chip-penalizado">Reportado fuera de tiempo</div>
           <div *ngIf="d.esFilialesHermanas" class="chip chip-filiales-hermanas">Filiales hermanas</div>
           <div *ngIf="d.aceptaConvenio" class="chip chip-convenio">Saldo PABS Conveniado</div>
-          <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0">
-            <div *ngIf="(d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
-            <div *ngIf="(d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)" class="chip chip-devuelto">Saldo PABS devuelto</div>
+          <div *ngIf="((d.saldoEfectivamenteCobrado || 0) + (d.montoDevuelto || 0)) > 0">
+            <div *ngIf="(d.saldoEfectivamenteCobrado || 0) > 0" class="chip chip-pendiente">Saldo PABS pendiente de depositar</div>
+            <div *ngIf="(d.saldoEfectivamenteCobrado || 0) <= 0 && (d.montoDevuelto || 0) > 0" class="chip chip-devuelto">Saldo PABS devuelto</div>
           </div>
         </td>
         <td class="text-end">{{ d.saldoEfectivamenteCobrado | currency:'USD':'symbol':'1.2-2' }}</td>

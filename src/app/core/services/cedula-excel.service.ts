@@ -703,10 +703,10 @@ export class CedulaExcelService {
     if (d.esFilialesHermanas) chips.push('Filiales hermanas');
     if (d.aceptaConvenio) chips.push('Saldo PABS Conveniado');
     
-    if ((d.saldoEfectivamenteCobrado || 0) > 0) {
-        if ((d.montoDevuelto || 0) < (d.saldoEfectivamenteCobrado || 0)) {
+    if (((d.saldoEfectivamenteCobrado || 0) + (d.montoDevuelto || 0)) > 0) {
+        if ((d.saldoEfectivamenteCobrado || 0) > 0) {
             chips.push('Saldo PABS pendiente de depositar');
-        } else if ((d.montoDevuelto || 0) >= (d.saldoEfectivamenteCobrado || 0)) {
+        } else if ((d.montoDevuelto || 0) > 0) {
             chips.push('Saldo PABS devuelto');
         }
     }
