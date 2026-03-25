@@ -26,6 +26,7 @@ export class CedulasComponent implements OnInit {
   exporting = false;
   selectedPeriodoId: number | null = null;
   filterText = '';
+  private readonly selectedPeriodoStorageKey = 'cedulas.selectedPeriodoId';
 
   constructor(
     private cedulaService: CedulaService,
@@ -39,6 +40,7 @@ export class CedulasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.selectedPeriodoId = this.getStoredSelectedPeriodoId();
     this.loadPeriodos();
     this.route.queryParamMap.subscribe((params) => {
       const periodoIdParam = params.get('periodoId');
@@ -46,10 +48,32 @@ export class CedulasComponent implements OnInit {
         const periodoId = Number(periodoIdParam);
         if (!isNaN(periodoId)) {
           this.selectedPeriodoId = periodoId;
+          this.storeSelectedPeriodoId(this.selectedPeriodoId);
           this.loadCedulas();
         }
       }
     });
+  }
+
+  private getStoredSelectedPeriodoId(): number | null {
+    try {
+      const raw = localStorage.getItem(this.selectedPeriodoStorageKey);
+      if (!raw) return null;
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private storeSelectedPeriodoId(periodoId: number | null): void {
+    try {
+      if (periodoId == null) {
+        localStorage.removeItem(this.selectedPeriodoStorageKey);
+      } else {
+        localStorage.setItem(this.selectedPeriodoStorageKey, String(periodoId));
+      }
+    } catch {}
   }
 
   loadPeriodos() {
@@ -59,14 +83,21 @@ export class CedulasComponent implements OnInit {
         this.loading = false;
         if (ret.success) {
           this.periodos = ret.data;
-          if (!this.selectedPeriodoId && this.periodos.length > 0) {
-            // Preseleccionar el periodo más reciente
+          const selectedExists =
+            this.selectedPeriodoId != null && this.periodos.some(p => Number(p.id) === Number(this.selectedPeriodoId));
+
+          if (!selectedExists && this.periodos.length > 0) {
             const mostRecent = this.periodos.reduce((prev, current) => {
               if (current.anio > prev.anio) return current;
               if (current.anio === prev.anio && current.mes > prev.mes) return current;
               return prev;
             });
             this.selectedPeriodoId = mostRecent.id;
+          }
+
+          this.storeSelectedPeriodoId(this.selectedPeriodoId);
+
+          if (this.selectedPeriodoId && this.cedulas.length === 0) {
             this.loadCedulas();
           }
         } else {
@@ -82,6 +113,7 @@ export class CedulasComponent implements OnInit {
 
   onPeriodoChange(periodoId: number | null) {
     this.selectedPeriodoId = periodoId;
+    this.storeSelectedPeriodoId(this.selectedPeriodoId);
     if (this.selectedPeriodoId) {
       this.loadCedulas();
     } else {
