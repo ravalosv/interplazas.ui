@@ -7,6 +7,7 @@ export class LoadingBtnDirective implements OnChanges {
   @Input('appLoading') isLoading: boolean = false;
   
   private spinnerElement: any;
+  private previousDisabled: boolean | null = null;
 
   constructor(private el: ElementRef, private renderer: Renderer2) {}
 
@@ -21,7 +22,7 @@ export class LoadingBtnDirective implements OnChanges {
   }
 
   private addSpinner() {
-    // Deshabilitar el botón
+    this.previousDisabled = this.el.nativeElement.disabled;
     this.renderer.setProperty(this.el.nativeElement, 'disabled', true);
     
     // Crear el spinner usando clases de Bootstrap 5
@@ -37,8 +38,10 @@ export class LoadingBtnDirective implements OnChanges {
   }
 
   private removeSpinner() {
-    // Habilitar el botón
-    this.renderer.setProperty(this.el.nativeElement, 'disabled', false);
+    if (this.previousDisabled !== null) {
+      this.renderer.setProperty(this.el.nativeElement, 'disabled', this.previousDisabled);
+      this.previousDisabled = null;
+    }
     
     // Remover el spinner si existe
     if (this.spinnerElement) {

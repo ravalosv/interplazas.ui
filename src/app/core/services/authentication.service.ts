@@ -95,23 +95,27 @@ export class AuthenticationService {
   }
 
   isAdmin() {
-    const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
+    const userRoles =
+      this.currentUserValue?.user?.tipoUsuarioId ?? this.decodedToken?.tipoUsuarioId;
     return userRoles == 1 || userRoles == 3;
   }
 
   isCaptura() {
-    const userRoles = this.decodedToken.tipoUsuarioId;
+    const userRoles =
+      this.currentUserValue?.user?.tipoUsuarioId ?? this.decodedToken?.tipoUsuarioId;
     return userRoles == 4;
   }
 
 
   isReportsUser() {
-    const userRoles = this.decodedToken.tipoUsuarioId; //as Array<string>;
+    const userRoles =
+      this.currentUserValue?.user?.tipoUsuarioId ?? this.decodedToken?.tipoUsuarioId; //as Array<string>;
     return userRoles == 'reports';
   }
 
   isFilial() {
-    const userRoles = this.decodedToken.tipoUsuarioId;
+    const userRoles =
+      this.currentUserValue?.user?.tipoUsuarioId ?? this.decodedToken?.tipoUsuarioId;
     // Check for both ID 3 and string 'filial' to be safe
     return userRoles == 2 || userRoles == 'filial';
   }

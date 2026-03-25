@@ -151,7 +151,10 @@ export class ServicioCrudComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.isAdmin = this.authService.isAdmin();
+    this.authService.currentUser.subscribe(() => {
+      this.isAdmin = this.authService.isAdmin();
+      this.updateMontoDevueltoEditability();
+    });
     
     const currentUser = this.authService.currentUserValue;
     if (currentUser && currentUser.user) {
@@ -164,9 +167,15 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   get isPeriodoClosed(): boolean {
-    if (this.selectedPeriodoId == null) return false;
-    const p = this.periodos.find(x => x.id === this.selectedPeriodoId);
-    return p ? !p.activo : false;
+    if (this.selectedPeriodoId == null) return true;
+    const p = this.periodos.find(x => Number(x.id) === Number(this.selectedPeriodoId));
+    return p ? !p.activo : true;
+  }
+
+  get canEditMontoDevueltoOrigen(): boolean {
+    console.log("this.isPeriodoClosed: ", this.isPeriodoClosed);
+    console.log("this.authService.isAdmin: ", this.authService.isAdmin());
+    return !this.isPeriodoClosed && this.authService.isAdmin();
   }
  
 
@@ -222,6 +231,8 @@ export class ServicioCrudComponent implements OnInit {
       // Usuario_CapturaId & Fecha_Captura handled by backend usually
     });
 
+    this.updateMontoDevueltoEditability();
+
     this.form.get('fo_Sucursal_Origen_Id')?.valueChanges.subscribe(val => {
       this.selectedSucursalOrigen = this.sucursales.find(s => s.id === val);
       
@@ -232,6 +243,17 @@ export class ServicioCrudComponent implements OnInit {
     });
     
     this.setupConditionalValidation();
+  }
+
+  private updateMontoDevueltoEditability() {
+    const montoDevueltoControl = this.form?.get('fo_Monto_Devuelto');
+    if (!montoDevueltoControl) return;
+
+    if (!this.canEditMontoDevueltoOrigen) {
+      montoDevueltoControl.disable({ emitEvent: false });
+    } else {
+      montoDevueltoControl.enable({ emitEvent: false });
+    }
   }
 
   setupConditionalValidation() {
@@ -455,6 +477,7 @@ export class ServicioCrudComponent implements OnInit {
         this.form.get('fo_Contrato_Monto_Convenio')?.disable();
       }
     }
+    this.updateMontoDevueltoEditability();
 
     this.observaciones = [];
     this.nuevaObservacion = '';

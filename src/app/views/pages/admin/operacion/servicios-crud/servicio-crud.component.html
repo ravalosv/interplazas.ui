@@ -307,7 +307,7 @@
                 <div class="col-md-4">
                   <label class="form-label d-block">Comprobante 1</label>
                   <app-document-upload
-                    [disabled]="isPeriodoClosed"
+                    [disabled]="!canEditMontoDevueltoOrigen"
                     [hasFile]="hasDocument('fo_Monto_devuelto_documento_url')"
                     (fileSelected)="onDocumentUpload($event, 'fo_Monto_devuelto_documento_url')"
                     (view)="viewDocument('fo_Monto_devuelto_documento_url')"
@@ -317,7 +317,7 @@
                 <div class="col-md-4">
                   <label class="form-label d-block">Comprobante 2</label>
                   <app-document-upload
-                    [disabled]="isPeriodoClosed"
+                    [disabled]="!canEditMontoDevueltoOrigen"
                     [hasFile]="hasDocument('fo_Monto_devuelto_documento2_url')"
                     (fileSelected)="onDocumentUpload($event, 'fo_Monto_devuelto_documento2_url')"
                     (view)="viewDocument('fo_Monto_devuelto_documento2_url')"
