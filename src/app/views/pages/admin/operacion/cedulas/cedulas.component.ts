@@ -221,5 +221,36 @@ export class CedulasComponent implements OnInit {
       this.exporting = false;
     }
   }
+
+  private getFilialDisplayName(cedula: CedulaPayload): string {
+    const name = cedula.filial?.nombre || cedula.filialNombre;
+    if (name) return String(name);
+    if (cedula.filialId != null) return String(cedula.filialId);
+    return '';
+  }
+
+  private toSortableNumber(value: unknown): number {
+    if (value == null) return 0;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    if (typeof value === 'string') {
+      const cleaned = value.replace(/[^0-9.-]/g, '');
+      const parsed = Number(cleaned);
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    const parsed = Number(value as any);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  sortFilial = (a: CedulaPayload, b: CedulaPayload) =>
+    this.getFilialDisplayName(a).localeCompare(this.getFilialDisplayName(b));
+
+  sortTotalUsa = (a: CedulaPayload, b: CedulaPayload) =>
+    this.toSortableNumber(a.totalUsa) - this.toSortableNumber(b.totalUsa);
+
+  sortTotalComisiones = (a: CedulaPayload, b: CedulaPayload) =>
+    this.toSortableNumber(a.totalComisiones) - this.toSortableNumber(b.totalComisiones);
+
+  sortTotalFinal = (a: CedulaPayload, b: CedulaPayload) =>
+    this.toSortableNumber(a.totalFinal) - this.toSortableNumber(b.totalFinal);
 }
 

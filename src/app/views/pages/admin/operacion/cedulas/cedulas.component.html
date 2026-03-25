@@ -57,10 +57,10 @@
   >
     <thead>
       <tr>
-        <th>Filial</th>
-        <th class="text-end">Total USA</th>
-        <th class="text-end">Total Comisiones</th>
-        <th class="text-end">Total Final</th>
+        <th [nzSortFn]="sortFilial">Filial</th>
+        <th class="text-end" [nzSortFn]="sortTotalUsa">Total USA</th>
+        <th class="text-end" [nzSortFn]="sortTotalComisiones">Total Comisiones</th>
+        <th class="text-end" [nzSortFn]="sortTotalFinal">Total Final</th>
         <th class="text-center">Acciones</th>
       </tr>
     </thead>
