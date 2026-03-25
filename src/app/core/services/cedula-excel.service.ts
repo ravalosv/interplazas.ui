@@ -770,9 +770,16 @@ export class CedulaExcelService {
   }
 
   private insertEmptyDetailRow(worksheet: XLSX.WorkSheet, row: number) {
-    const setCell = (col: number, styleOverrides?: any) => {
+    const setCell = (
+      col: number,
+      val: any,
+      type: 's' | 'n' = 's',
+      fmt: string = '',
+      styleOverrides?: any
+    ) => {
       const ref = XLSX.utils.encode_cell({c: col, r: row});
-      worksheet[ref] = { t: 's', v: '' };
+      worksheet[ref] = { t: type, v: val };
+      if (fmt) worksheet[ref].z = fmt;
       
       let style: any = { font: { name: 'Calibri', sz: 10 } };
       if (styleOverrides) {
@@ -783,19 +790,19 @@ export class CedulaExcelService {
     };
 
     // 0-6: Standard
-    for (let c = 0; c <= 6; c++) setCell(c);
+    for (let c = 0; c <= 6; c++) setCell(c, '');
     
     // 7: Monto
-    setCell(7);
+    setCell(7, 0, 'n', this.ACCOUNTING_FORMAT);
     
     // 8: Saldo PABS (Grey)
-    setCell(8, { fill: { fgColor: { rgb: this.GREY_COLOR } } });
+    setCell(8, 0, 'n', this.ACCOUNTING_FORMAT, { fill: { fgColor: { rgb: this.GREY_COLOR } } });
     
     // 9: Observacion
-    setCell(9, { alignment: { wrapText: true, vertical: 'center' } });
+    setCell(9, '', 's', '', { alignment: { wrapText: true, vertical: 'center' } });
     
     // 10: Saldo Efectivamente Cobrado (Secondary)
-    setCell(10, { fill: { fgColor: { rgb: this.SECONDARY_COLOR } } });
+    setCell(10, 0, 'n', this.ACCOUNTING_FORMAT, { fill: { fgColor: { rgb: this.SECONDARY_COLOR } } });
   }
 
   private generateBlob(workbook: XLSX.WorkBook, cedula: CedulaPayload): { blob: Blob, fileName: string } {
