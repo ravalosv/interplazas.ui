@@ -7,12 +7,82 @@
   </ol>
   <div class="d-flex justify-content-end bd-highlight mb-3">
     <div class="bd-highlight me-2">
+      <button class="btn btn-outline-primary" (click)="openBusquedaContratosServicios(modalBusquedaContratosServicios)">
+        <i class="feather icon-search pe-2"></i>
+        Busqueda de contratos
+      </button>
+    </div>
+    <div class="bd-highlight me-2">
       <button class="btn btn-primary" (click)="openCreate(modalEditor)">
         <i class="feather icon-file-plus pe-2"></i>
         Nuevo Servicio
       </button>
     </div>
   </div>
+
+  <ng-template #modalBusquedaContratosServicios let-modal>
+    <div class="modal-header">
+      <h5 class="modal-title">Busqueda de contratos</h5>
+      <button type="button" class="btn-close" (click)="modal.close()" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+      <div class="mb-3">
+        <label class="form-label">Número de contrato</label>
+        <div class="input-group">
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="contratoServiciosTerm"
+            [ngModelOptions]="{standalone: true}"
+            (keyup.enter)="buscarServiciosPorContrato()" />
+          <button class="btn btn-outline-secondary" type="button" (click)="buscarServiciosPorContrato()" [appLoading]="contratoServiciosBuscando">
+            Buscar
+          </button>
+        </div>
+      </div>
+
+      <div class="alert alert-info" *ngIf="contratoServiciosSearched && !contratoServiciosBuscando && contratoServiciosResults.length === 0">
+        No se encontraron servicios para el contrato ingresado.
+      </div>
+
+      <nz-table *ngIf="contratoServiciosResults.length > 0" [nzData]="contratoServiciosResults" [nzLoading]="contratoServiciosBuscando">
+        <thead>
+          <tr>
+            <th>Contrato</th>
+            <th>Titular</th>
+            <th>Finado</th>
+            <th>Periodo</th>
+            <th>Fecha Servicio</th>
+            <th>Estatus</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of contratoServiciosResults">
+            <td>{{ item.fo_Contrato }}</td>
+            <td>{{ item.fo_Nombre_Titular }}</td>
+            <td>{{ item.fo_Nombre_Finado }}</td>
+            <td>
+              <span>{{ item.periodo?.nombre || ('Periodo #' + (item.PeriodoId || '')) }}</span>
+              <span class="badge ms-2" [ngClass]="{ 'bg-success': item.periodo?.activo, 'bg-secondary': item.periodo && !item.periodo.activo }">
+                {{ item.periodo?.activo ? 'Abierto' : 'Cerrado' }}
+              </span>
+            </td>
+            <td>{{ item.fo_Fecha_Servicio | date:'dd-MMM-yyyy' }}</td>
+            <td>{{ item.status || 'En Proceso' }}</td>
+            <td class="text-end">
+              <button type="button" class="btn btn-sm btn-primary" (click)="openServicioDesdeBusquedaContrato(item, modal, modalEditor)">
+                Abrir
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </nz-table>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="modal.close()">Cerrar</button>
+    </div>
+  </ng-template>
 
   <ng-template #modalEditor let-modal>
     <form [formGroup]="form">

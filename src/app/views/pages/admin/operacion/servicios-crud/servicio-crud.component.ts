@@ -101,6 +101,12 @@ export class ServicioCrudComponent implements OnInit {
   contratoSearchResult: any = null;
   validatingContrato = false;
 
+  // Búsqueda de servicios por contrato (todos los periodos)
+  contratoServiciosTerm = '';
+  contratoServiciosBuscando = false;
+  contratoServiciosSearched = false;
+  contratoServiciosResults: ServicioPayload[] = [];
+
   months = [
     { id: 1, name: 'ENERO' },
     { id: 2, name: 'FEBRERO' },
@@ -388,6 +394,10 @@ export class ServicioCrudComponent implements OnInit {
   }
 
   openEdit(modalTpl: TemplateRef<any>, item: ServicioPayload) {
+    const periodoId = item.PeriodoId ?? item.periodo?.id ?? null;
+    if (periodoId != null && periodoId !== this.selectedPeriodoId) {
+      this.selectedPeriodoId = periodoId;
+    }
     this.selectedFiles.clear();
     this.editingId = item.id;
     this.activeTab = 2;
@@ -453,6 +463,51 @@ export class ServicioCrudComponent implements OnInit {
     this.loadLogs(item.id);
     this.modalTitle = 'Editar Servicio: ' + item.fo_Contrato;
     this.modalRef = this.modalService.open(modalTpl, { centered: true, size: 'xl' });
+  }
+
+  openBusquedaContratosServicios(modalTpl: TemplateRef<any>) {
+    this.contratoServiciosTerm = '';
+    this.contratoServiciosBuscando = false;
+    this.contratoServiciosSearched = false;
+    this.contratoServiciosResults = [];
+    this.modalService.open(modalTpl, { centered: true, size: 'lg' });
+  }
+
+  buscarServiciosPorContrato() {
+    const term = (this.contratoServiciosTerm || '').trim();
+    if (!term) {
+      this.alertsService.error('Ingrese un número de contrato');
+      return;
+    }
+
+    this.contratoServiciosBuscando = true;
+    this.contratoServiciosSearched = true;
+    this.contratoServiciosResults = [];
+
+    this.servicioService.searchByContrato(term).subscribe({
+      next: (ret) => {
+        this.contratoServiciosBuscando = false;
+        if (ret.success) {
+          this.contratoServiciosResults = ret.data || [];
+        } else {
+          this.alertsService.error(ret.error);
+        }
+      },
+      error: (e) => {
+        this.contratoServiciosBuscando = false;
+        this.alertsService.error(e.error);
+      },
+    });
+  }
+
+  openServicioDesdeBusquedaContrato(item: ServicioPayload, modal: any, modalEditorTpl: TemplateRef<any>) {
+    const periodoId = item.PeriodoId ?? item.periodo?.id ?? null;
+    if (periodoId != null && periodoId !== this.selectedPeriodoId) {
+      this.selectedPeriodoId = periodoId;
+      this.searchByPeriodo();
+    }
+    modal.close();
+    this.openEdit(modalEditorTpl, item);
   }
 
   loadObservaciones(servicioId: number) {

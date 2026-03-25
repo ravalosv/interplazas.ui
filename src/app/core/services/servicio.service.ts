@@ -49,6 +49,13 @@ export class ServicioService {
       .pipe(map((ret) => ret));
   }
 
+  searchByContrato(contrato: string) {
+    const url = `${this.baseUrl}/servicio/search?contrato=${encodeURIComponent(contrato)}`;
+    return this.http
+      .get<ApiReturn<ServicioPayload[]>>(url)
+      .pipe(map((ret) => ret));
+  }
+
   create(data: ServicioCreatePayload | FormData) {
     const url = `${this.baseUrl}/servicio`;
     return this.http

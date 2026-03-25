@@ -1,3 +1,5 @@
+import { PeriodoPayload } from './periodo.payload';
+
 export interface ServicioPayload {
   id: number;
   canalComunicacionId: number | null;
@@ -43,6 +45,7 @@ export interface ServicioPayload {
   Usuario_CapturaId: number;
   Fecha_Captura: string;
   status: string;
+  PeriodoId?: number;
 
   // Relations (optional as they come from GET but not POST)
   sucursalOtorgante?: any;
@@ -56,6 +59,7 @@ export interface ServicioPayload {
   convenioStatus?: any;
   motivoNoOtorgado?: any;
   usuarioCaptura?: any;
+  periodo?: PeriodoPayload;
   logs?: { usuarioId: number }[];
 }
 
