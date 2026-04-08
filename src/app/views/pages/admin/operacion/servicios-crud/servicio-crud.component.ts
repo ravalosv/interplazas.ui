@@ -194,6 +194,7 @@ export class ServicioCrudComponent implements OnInit {
         const extranjera = !!s.sucursalOtorgante?.filial?.extranjera;
         const monto = extranjera ? (s.concepto?.montoUSD ?? 0) : (s.concepto?.montoMXN ?? 0);
         const tipoDocNombre = s.tipoDocumento?.nombre || this.tiposDocumento.find(t => t.id === s.fo_Documento_Cliente_Id)?.nombre || '';
+        const servicioOtorgado = s.exp_Motivo_De_No_Otorgado_Id == null || Number(s.exp_Motivo_De_No_Otorgado_Id) === 6;
         return {
           'FILIAL ORIGEN': filialOrigenName,
           'FILIAL OTORGANTE': filialOtorganteName,
@@ -210,7 +211,7 @@ export class ServicioCrudComponent implements OnInit {
           'CONVENIO': s.fori_Acepta_Convenio ? 'SI' : 'NO',
           'AGENTE': s.usuarioCaptura?.name || '',
           'COMENTARIO DE SEGUIMIENTO': s.exp_Observaciones_cierre || '',
-          'SERVICIO OTORGADO': s.exp_Motivo_De_No_Otorgado_Id ? 'NO' : 'SI',
+          'SERVICIO OTORGADO': servicioOtorgado ? 'SI' : 'NO',
         };
       });
       const worksheet = XLSX.utils.json_to_sheet(data);
