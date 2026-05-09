@@ -106,7 +106,7 @@ export class CedulaExcelService {
     Object.assign(summaryRefs, cobrarResult.refs);
 
     // 2. Section PAGAR (Common)
-    const pagarResult = this.insertPagarDetails(worksheet, cedula, lastCobrarRow);
+    const pagarResult = this.insertPagarDetails(worksheet, cedula, lastCobrarRow, isForeign);
     Object.assign(summaryRefs, pagarResult.refs);
     
     const lastPagarRow = pagarResult.lastRow;
@@ -431,14 +431,14 @@ export class CedulaExcelService {
   }
 
   private insertCobrarExtranjeraDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload): any {
-    const detallesUSA = (cedula.detalles || []).filter(d => d.tipo === 'USA');
+    const detallesCobrar = (cedula.detalles || []).filter(d => d.tipo === 'FAVOR' || d.tipo === 'USA');
     
     // Título en fila 8 (índice 7), Headers en fila 9 (índice 8), Datos inician en fila 10 (índice 9)
     // Usamos el mismo layout que favor
     const startRow = 7;
     const shiftFromRow = 9;
 
-    return this.insertGenericSection(worksheet, detallesUSA, startRow, {
+    return this.insertGenericSection(worksheet, detallesCobrar, startRow, {
         title: "SERVICIOS OTORGADOS EN SUCURSAL | POR COBRAR A FAVOR DE LA FILIAL",
         headers: [
             "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
@@ -609,7 +609,7 @@ export class CedulaExcelService {
     return { lastRow: subtotalRow, refs };
   }
 
-  private insertPagarDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastFavorRow: number): any {
+  private insertPagarDetails(worksheet: XLSX.WorkSheet, cedula: CedulaPayload, lastFavorRow: number, isForeign: boolean): any {
     const detallesPagar = (cedula.detalles || []).filter(d => d.tipo === 'PAGAR');
     
     const startSectionRow = lastFavorRow + 2;
@@ -618,7 +618,7 @@ export class CedulaExcelService {
         title: "SERVICIOS OTORGADOS EN OTRA SUCURSAL | POR PAGAR A OTRAS FILIALES",
         headers: [
             "SUCURSAL ORIGEN", "SUCURSAL OTORGANTE", "TITULAR", "FINADO", "CONTRATO", 
-            "FECHA", "CONCEPTO", "MONTO", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
+            "FECHA", "CONCEPTO", isForeign ? "MONTO DLLS" : "MONTO", "SALDO PABS*", "OBSERVACION", "SALDOS EFECTIVAMENTE COBRADOS"
         ],
         refKeys: { monto: 'subtotalPagar', saldos: 'subtotalSaldosPagar' }
     });
