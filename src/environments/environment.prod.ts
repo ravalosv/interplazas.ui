@@ -10,5 +10,5 @@ export const environment = {
   user: '',
   pass: '',
   theme: 'modern',
-  appVersion: '2026.04.23.01',
+  appVersion: '2026.05.09.01',
 };
