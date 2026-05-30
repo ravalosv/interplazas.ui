@@ -744,6 +744,24 @@ export class ServicioCrudComponent implements OnInit {
       title = '¿Marcar expediente completo?';
       message = 'El estatus del servicio cambiará a "Expediente Completo".';
     }
+
+    if (newStatus === 'Expediente Completo') {
+      const faltantes: string[] = [];
+
+      if (!this.hasDocument('fo_Documento_Cliente_url')) faltantes.push('Documento del cliente');
+      if (!this.hasDocument('fori_estado_cuenta_url')) faltantes.push('Estado de cuenta');
+      if (!this.hasDocument('exp_Solicitud_Servicio_url')) faltantes.push('Solicitud de servicio');
+
+      const solicitudStatusId = this.form.get('exp_Solicitud_Servicio_Status_id')?.value;
+      const solicitudStatus = this.estadoCtaStatuses.find(s => Number(s.id) === Number(solicitudStatusId));
+      const solicitudEsCompletado = (solicitudStatus?.nombre || '').toString().trim().toUpperCase() === 'COMPLETADO';
+      if (!solicitudEsCompletado) faltantes.push('Estatus de solicitud de servicio: Completado');
+
+      if (faltantes.length > 0) {
+        this.alertsService.error(`No se puede marcar expediente completo. Falta: ${faltantes.join(', ')}`);
+        return;
+      }
+    }
     
     this.alertsService.confirm({
       titulo: title,

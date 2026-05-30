@@ -77,13 +77,14 @@ export class HttpErrorInterceptor implements HttpInterceptor {
               }
               break;
             case 402: // System Maintenance Required
+            /*
                const licenseService = this.injector.get(LicenseService);
                let deadline: any = undefined;
                if (error.error && error.error.r) {
                    deadline = error.error.r;
                }
                licenseService.lock(deadline);
-               message = 'Mantenimiento del sistema requerido. Código: SYS-2026';
+               message = 'Mantenimiento del sistema requerido. Código: SYS-2026';*/
                break;
             case 404:
               message = error.statusText;

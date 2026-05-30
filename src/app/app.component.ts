@@ -28,13 +28,14 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     // Subscribe to license status changes
+    /*
     this.licenseService.isLocked$.subscribe(locked => {
       this.isLocked = locked;
     });
 
     this.licenseService.deadline$.subscribe(date => {
       this.deadline = date;
-    });
+    });*/
 
     const theme = environment.theme || 'ocean';
     document.body.classList.add(`theme-${theme}`);
