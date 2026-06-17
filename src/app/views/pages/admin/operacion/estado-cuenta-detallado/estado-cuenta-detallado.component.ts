@@ -49,12 +49,17 @@ export class EstadoCuentaDetalladoComponent implements OnInit {
             { uniqueName: "Fecha.Month", caption: "Mes" }
           ],
           measures: [
-            { uniqueName: "Monto MXN", aggregation: "sum", format: "currency", caption: "Monto MXN" },
+            { uniqueName: "Monto MXN", aggregation: "sum", format: "currencyMXN", caption: "Monto MXN" },
+            { uniqueName: "Monto USD", aggregation: "sum", format: "currencyUSD", caption: "Monto USD" },
           ]
         },
         formats: [{
-            name: "currency",
-            currencySymbol: "$",
+            name: "currencyMXN",
+            currencySymbol: "MX$",
+            decimalPlaces: 2
+        }, {
+            name: "currencyUSD",
+            currencySymbol: "US$",
             decimalPlaces: 2
         }],
         options: {
